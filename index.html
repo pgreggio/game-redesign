@@ -184,6 +184,33 @@ button.dot.n:hover{background:#4A2219}
 .legend span{display:flex;align-items:center;gap:6px}
 .legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
 
+/* overview: every sample's results added up per version */
+.wrap > [hidden]{display:none}
+.nav-sep{height:1px;background:var(--line);margin:10px 6px 12px}
+.lede{margin:0;font-size:14.5px;line-height:1.6;color:var(--text-3);max-width:78ch}
+.cover{display:flex;flex-direction:column;gap:36px}
+.sec{display:flex;flex-direction:column;gap:14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;
+      display:flex;flex-direction:column;gap:8px;min-width:0}
+.tile-l{font-size:13px;font-weight:500;color:var(--text-3)}
+.tile-v{font-family:var(--mono);font-size:30px;font-weight:500;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile-s{font-size:12.5px;color:var(--dim)}
+.meter{height:6px;border-radius:3px;background:var(--hover);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:3px}
+.pct{margin-left:6px;font-size:12px;color:var(--dim)}
+button.crit{border:0;background:none;text-align:left;width:100%}
+button.crit:hover .desc{text-decoration:underline}
+.crit small{font-size:12.5px;color:var(--dim)}
+.score{border:0;background:none;padding:4px 8px;border-radius:6px;font-family:var(--mono);font-size:13.5px;
+       font-variant-numeric:tabular-nums}
+.score:hover{background:var(--hover)}
+.tier-s{font-size:12px;color:var(--dim)}
+.where{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:none;border-radius:999px;padding:1px 10px;font-size:12px;color:var(--text-3)}
+.chip:hover{background:var(--hover);color:var(--text)}
+.fails{font-family:var(--mono);font-size:13.5px;color:var(--fail-fg);background:var(--fail-bg);border-radius:6px;padding:1px 9px}
+
 @media (max-width:700px){
   .bar{padding:12px 16px}
   .nav{flex-basis:100%;border-right:0;border-bottom:1px solid var(--line);padding:16px}
@@ -209,7 +236,9 @@ button.dot.n:hover{background:#4A2219}
         <section class="head" id="head"></section>
         <section class="tabs" id="cards" role="tablist" aria-label="Versions"></section>
 
-        <section class="stage">
+        <section class="cover" id="cover" hidden></section>
+
+        <section class="stage" id="stage">
           <div class="stage-bar" id="stagebar"></div>
           <div class="holder" id="holder"></div>
         </section>
@@ -225,7 +254,8 @@ button.dot.n:hover{background:#4A2219}
 <script src="games.js"></script>
 <script>
 const DATA  = window.GAMES || [];
-const state = { game:0, col:0, open:false, notes:false };
+const OVERVIEW = -1;                                   // state.game on the cover page
+const state = { game:OVERVIEW, col:0, open:false, notes:false };
 
 const esc   = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const plain = s => esc(String(s ?? '').replace(/\*\*/g,''));
@@ -268,10 +298,13 @@ function score(g, v){
 }
 const scoreText = s => s.scored ? s.passed + '/' + s.total : '—';
 const ratio     = s => s.scored && s.total ? s.passed / s.total : null;
+const tone      = r => r === null ? 'var(--dim)' : r >= 1 ? 'var(--pass)' : r >= .5 ? 'var(--mid)' : 'var(--fail)';
+const pct       = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
 
 /* ---------- sidebar ---------- */
 function drawNav(){
-  $('nav').innerHTML = `<div class="nav-h">Games</div>` + DATA.map((g,i) =>
+  $('nav').innerHTML = `<button class="nav-item ${state.game===OVERVIEW?'sel':''}" data-i="${OVERVIEW}">Overview</button>
+    <div class="nav-sep"></div><div class="nav-h">Games</div>` + DATA.map((g,i) =>
     `<button class="nav-item ${i===state.game?'sel':''}" data-i="${i}">${esc(g.nav || g.title)}</button>`).join('');
   $('nav').querySelectorAll('.nav-item').forEach(b =>
     b.onclick = () => go(+b.dataset.i, 0));
@@ -279,6 +312,15 @@ function drawNav(){
 
 /* ---------- scene header ---------- */
 function drawHead(){
+  if (state.game === OVERVIEW){
+    const versions = new Set(DATA.flatMap(g => (g.versions || []).map(v => v.label)));
+    $('head').innerHTML = `
+      <div class="kicker">Overview</div>
+      <h1>Consolidated results</h1>
+      <p class="lede">Every game's rubric checks added up per version: ${DATA.length} games · ${versions.size} versions.
+        Click a game or a score to open it.</p>`;
+    return;
+  }
   const g = DATA[state.game];
   if (!g){ $('head').innerHTML = '<h1>No games yet</h1>'; return; }
   $('head').innerHTML = `
@@ -300,8 +342,7 @@ function drawCards(){
   const g = DATA[state.game];
   if (!g){ $('cards').innerHTML = ''; return; }
   $('cards').innerHTML = (g.versions || []).map((v,i) => {
-    const s = score(g,v), r = ratio(s);
-    const color = r === null ? 'var(--dim)' : r >= 1 ? 'var(--pass)' : r >= .5 ? 'var(--mid)' : 'var(--fail)';
+    const s = score(g,v), color = tone(ratio(s));
     return `<button class="tab ${i===state.col?'sel':''}" role="tab" aria-selected="${i===state.col}" data-k="${i}">
       ${esc(v.label)}${(g.questions||[]).length ? `<span class="sc" style="color:${color}" title="Checks passed">${scoreText(s)}</span>` : ''}</button>`;
   }).join('');
@@ -501,6 +542,107 @@ function drawRubric(){
     b.onclick = () => go(state.game, +b.dataset.k));
 }
 
+/* ---------- overview: all samples, added up per version ----------
+   Versions are matched across samples by label, rubric tiers by name. */
+const areaOf = q => /^\*\*(.+?)\*\*\s*[—–-]/.exec(String(q.q ?? ''))?.[1] || 'Other';
+function consolidate(){
+  const labels = [...new Set(DATA.flatMap(g => (g.versions || []).map(v => v.label)))];
+  const tiers  = [...new Set(DATA.flatMap(g => (g.questions || []).filter(q => !q.rating).map(q => q.tier)))];
+  const per = labels.map(label => {
+    const out = { label, passed:0, total:0, scored:false, tiers:{}, ratings:[] };
+    DATA.forEach(g => {
+      const v = (g.versions || []).find(v => v.label === label);
+      const s = v && score(g, v);
+      if (!s?.scored) return;
+      out.scored = true; out.passed += s.passed; out.total += s.total; out.ratings.push(...s.ratings);
+      Object.entries(s.tiers).forEach(([t,[p,n]]) => { const a = out.tiers[t] ||= [0,0]; a[0] += p; a[1] += n; });
+    });
+    out.avg = out.ratings.length ? out.ratings.reduce((a,b) => a+b, 0) / out.ratings.length : null;
+    return out;
+  });
+  // failed checks grouped by the criterion's area tag, with the samples they failed in
+  const areas = {};
+  DATA.forEach((g,gi) => (g.questions || []).forEach((q,r) => {
+    if (q.rating) return;
+    (g.versions || []).forEach((v,k) => {
+      if (v.marks?.[r] !== false) return;
+      const a = areas[areaOf(q)] ||= { name:areaOf(q), tier:q.tier, n:{}, all:0, where:new Map() };
+      a.n[v.label] = (a.n[v.label] || 0) + 1; a.all++;
+      if (!a.where.has(gi)) a.where.set(gi, k);
+    });
+  }));
+  return { labels, tiers, per, areas:Object.values(areas).sort((a,b) => b.all - a.all) };
+}
+
+function drawCover(){
+  const c = consolidate();
+  const cols = `style="grid-template-columns:minmax(0,1fr) repeat(${c.labels.length},120px)"`;
+  const hrow = first => `<div class="grid hrow" ${cols}><span class="th">${first}</span>` +
+    c.labels.map(l => `<span class="th">${esc(l)}</span>`).join('') + `</div>`;
+  const frac = ([p, n]) => n ? `${p}/${n}<span class="pct">${pct(p, n)}</span>` : '—';
+  const name = g => esc(g.nav || g.title);
+
+  const tiles = c.per.map(p => {
+    const r = ratio(p);
+    return `<div class="tile"><span class="tile-l">${esc(p.label)}</span>
+      <span class="tile-v" style="color:${tone(r)}">${r === null ? '—' : pct(p.passed, p.total)}</span>
+      <div class="meter"><i style="width:${(r ?? 0) * 100}%;background:${tone(r)}"></i></div>
+      <span class="tile-s">${p.scored ? `${p.passed} of ${p.total} checks passed · ${p.total - p.passed} failed` : 'Not scored'}</span>
+    </div>`;
+  }).join('');
+
+  let tiers = hrow('Rubric tier');
+  c.tiers.forEach(t => tiers += `<div class="grid r" ${cols}><span class="tot-l">${esc(t.split('—')[0].trim())}</span>` +
+    c.per.map(p => `<span class="tot-v">${p.tiers[t] ? frac(p.tiers[t]) : '—'}</span>`).join('') + `</div>`);
+  tiers += `<div class="grid r strong" ${cols}><span class="tot-l">All checks passed</span>` +
+    c.per.map(p => `<span class="tot-v">${p.scored ? frac([p.passed, p.total]) : '—'}</span>`).join('') + `</div>`;
+  if (c.per.some(p => p.avg !== null))
+    tiers += `<div class="grid r strong" ${cols}><span class="tot-l">Rating average</span>` +
+      c.per.map(p => `<span class="tot-v">${p.avg === null ? '—' : p.avg.toFixed(2)}</span>`).join('') + `</div>`;
+
+  let samples = hrow('Game');
+  DATA.forEach((g,gi) => {
+    samples += `<div class="grid r" ${cols}>
+      <button class="crit pick" data-g="${gi}" data-k="0"><span class="desc">${name(g)}</span><small>${esc(g.title)}</small></button>` +
+      c.labels.map(l => {
+        const k = (g.versions || []).findIndex(v => v.label === l);
+        if (k < 0) return `<div class="cell"><span class="u" title="No such version">–</span></div>`;
+        const s = score(g, g.versions[k]);
+        return `<div class="cell"><button class="score pick" data-g="${gi}" data-k="${k}" style="color:${tone(ratio(s))}"
+          title="Open ${name(g)} · ${esc(l)}">${scoreText(s)}</button></div>`;
+      }).join('') + `</div>`;
+  });
+
+  let fails = hrow('Area');
+  c.areas.forEach(a => fails += `<div class="grid r" ${cols}><div class="crit">
+      <div class="q"><span class="area">${esc(a.name)}</span><span class="tier-s">${esc(a.tier.split('—')[0].trim())}</span></div>
+      <div class="where">${[...a.where].map(([gi,k]) =>
+        `<button class="chip pick" data-g="${gi}" data-k="${k}">${name(DATA[gi])}</button>`).join('')}</div>
+    </div>` +
+    c.labels.map(l => `<div class="cell">${a.n[l] ? `<span class="fails" title="${a.n[l]} failed">${a.n[l]}</span>` : `<span class="u">–</span>`}</div>`).join('') + `</div>`);
+
+  $('cover').innerHTML = `
+    <section class="sec">
+      <div class="rubric-h"><h2>By version</h2><span>All games combined</span></div>
+      <div class="tiles">${tiles}</div>
+    </section>
+    <section class="sec">
+      <div class="rubric-h"><h2>By rubric tier</h2><span>Checks passed, summed over every game</span></div>
+      <div class="table"><div class="table-in">${tiers}</div></div>
+    </section>
+    <section class="sec">
+      <div class="rubric-h"><h2>By Game</h2><span>Checks passed per version</span></div>
+      <div class="table"><div class="table-in">${samples}</div></div>
+    </section>
+    <section class="sec">
+      <div class="rubric-h"><h2>Where checks failed</h2><span>Failed checks by area, most first</span></div>
+      ${c.areas.length ? `<div class="table"><div class="table-in">${fails}</div></div>`
+                       : `<p class="lede">No failed checks.</p>`}
+    </section>`;
+  $('cover').querySelectorAll('.pick').forEach(b =>
+    b.onclick = () => go(+b.dataset.g, +b.dataset.k));
+}
+
 /* ---------- trajectory download ----------
    A version's own `trajectory` wins; otherwise the scene-level one is used. */
 const trajectoryOf = () => cur()?.trajectory || DATA[state.game]?.trajectory || null;
@@ -529,7 +671,17 @@ function go(game, col){
   drawAll();
 }
 function drawAll(){
-  drawNav(); drawHead(); drawCards(); drawStage(); drawRubric();
+  const ov = state.game === OVERVIEW;
+  $('cover').hidden = !ov;
+  $('cards').hidden = $('stage').hidden = $('rubric').hidden = ov;
+  drawNav(); drawHead();
+  if (ov){
+    $('notesbox').hidden = true;
+    drawCover();
+    if (loadedKey !== null){ loadToken++; loadedKey = null; $('holder').innerHTML = ''; }   // stop the running game
+    return;
+  }
+  drawCards(); drawStage(); drawRubric();
   // only a different scene/version reloads the stage; toggling notes or the prompt doesn't
   if (loadedKey !== state.game + ':' + state.col) loadScene();
 }
@@ -539,14 +691,14 @@ document.fonts?.ready.then(drawHead);                  // re-measure the prompt 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && state.notes){ state.notes = false; drawStage(); return; }
   if (/INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
-  const g = DATA[state.game];
-  if (!g) return;
-  if (e.key >= '1' && e.key <= '9' && g.versions?.[+e.key-1]) go(state.game, +e.key-1);
-  else if (e.key === 'ArrowDown' && state.game < DATA.length-1) go(state.game + 1, 0);
-  else if (e.key === 'ArrowUp'   && state.game > 0)             go(state.game - 1, 0);
+  const g = DATA[state.game];                            // undefined on the overview
+  if (e.key === 'ArrowDown' && state.game < DATA.length-1)     go(state.game + 1, 0);
+  else if (e.key === 'ArrowUp' && state.game > OVERVIEW)       go(state.game - 1, 0);
+  else if (e.key.toLowerCase() === 'm') toggleNav();
+  else if (!g) return;
+  else if (e.key >= '1' && e.key <= '9' && g.versions?.[+e.key-1]) go(state.game, +e.key-1);
   else if (e.key.toLowerCase() === 'r') loadScene();
   else if (e.key.toLowerCase() === 'f') openFull();
-  else if (e.key.toLowerCase() === 'm') toggleNav();
   else return;
   e.preventDefault();
 });

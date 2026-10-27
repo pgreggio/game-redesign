@@ -1,0 +1,4 @@
+# Source export: only needed to rebuild the Redesign entries, not to view the page.
+Redesign/exported_tasks_*.jsonl
+
+.DS_Store

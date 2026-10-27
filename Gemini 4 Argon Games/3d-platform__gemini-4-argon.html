@@ -1,0 +1,2450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Long Slide Home</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #0a1628;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #f0f7ff;
+  }
+  #glCanvas {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: block;
+    z-index: 1;
+  }
+  #uiLayer {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .screen {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    padding: 24px;
+  }
+  .screen.active { display: flex; }
+  .glass-panel {
+    background: linear-gradient(155deg, rgba(12, 32, 58, 0.88), rgba(7, 19, 36, 0.94));
+    border: 2px solid rgba(145, 215, 255, 0.45);
+    border-radius: 18px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    padding: 28px 36px;
+    max-width: 780px;
+    width: 92%;
+    text-align: center;
+    backdrop-filter: blur(6px);
+  }
+  h1.game-title {
+    font-size: 3.1rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, #ffffff 0%, #b8e7ff 55%, #5cb8ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 12px rgba(10, 40, 80, 0.9));
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 1.08rem;
+    color: #b7dcff;
+    margin-bottom: 22px;
+    line-height: 1.45;
+  }
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    align-items: center;
+    margin-top: 16px;
+  }
+  .btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  button.btn {
+    min-width: 240px;
+    padding: 12px 26px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: #061527;
+    background: linear-gradient(180deg, #e8f7ff 0%, #7fd1ff 100%);
+    border: 2px solid #ffffff;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 140, 255, 0.35);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    pointer-events: auto;
+  }
+  button.btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    background: linear-gradient(180deg, #ffffff 0%, #9ee0ff 100%);
+    box-shadow: 0 9px 24px rgba(80, 195, 255, 0.55);
+  }
+  button.btn:active { transform: translateY(1px); }
+  button.btn.secondary {
+    color: #e4f4ff;
+    background: linear-gradient(180deg, rgba(35, 76, 122, 0.9) 0%, rgba(18, 43, 74, 0.95) 100%);
+    border-color: rgba(140, 210, 255, 0.55);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  }
+  button.btn.secondary:hover {
+    background: linear-gradient(180deg, rgba(50, 102, 160, 0.95) 0%, rgba(26, 60, 100, 0.98) 100%);
+  }
+  button.btn.warm {
+    color: #231002;
+    background: linear-gradient(180deg, #ffe299 0%, #ff9d3b 100%);
+    border-color: #fff3d1;
+    box-shadow: 0 6px 20px rgba(255, 145, 30, 0.45);
+  }
+
+  /* Intro Banner & Cinematic Bars */
+  #introScreen, #cutsceneScreen, #endingScreen {
+    justify-content: space-between;
+    padding: 28px;
+  }
+  .cinematic-top {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .caption-box {
+    background: rgba(8, 22, 42, 0.86);
+    border: 1.5px solid rgba(155, 220, 255, 0.45);
+    border-radius: 14px;
+    padding: 18px 28px;
+    max-width: 720px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.65);
+  }
+  .caption-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #ffd57e;
+    margin-bottom: 6px;
+  }
+  .caption-text {
+    font-size: 1.08rem;
+    color: #eaf6ff;
+    line-height: 1.45;
+  }
+
+  /* Grids in How to Play & Story */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    text-align: left;
+    margin: 14px 0 18px;
+  }
+  .info-card {
+    background: rgba(16, 44, 78, 0.65);
+    border: 1px solid rgba(135, 205, 255, 0.3);
+    border-radius: 12px;
+    padding: 12px 15px;
+  }
+  .info-card h3 {
+    font-size: 0.98rem;
+    color: #ffd275;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .info-card p, .info-card li {
+    font-size: 0.88rem;
+    color: #d8eeff;
+    line-height: 1.42;
+  }
+  .info-card ul { padding-left: 16px; }
+  .key-badge {
+    display: inline-block;
+    background: #e3f4ff;
+    color: #08203e;
+    font-weight: 800;
+    font-size: 0.78rem;
+    padding: 1px 7px;
+    border-radius: 5px;
+    margin-right: 4px;
+  }
+
+  /* HUD */
+  #hud {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: none;
+    pointer-events: none;
+  }
+  #hud.active { display: block; }
+  .hud-top {
+    position: absolute; top: 14px; left: 18px; right: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .hud-card {
+    background: rgba(8, 24, 46, 0.82);
+    border: 1.5px solid rgba(145, 215, 255, 0.42);
+    border-radius: 12px;
+    padding: 10px 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+    min-width: 185px;
+  }
+  .hud-center-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .clock-box {
+    background: linear-gradient(180deg, rgba(10, 28, 54, 0.92), rgba(6, 16, 32, 0.95));
+    border: 2px solid #8ad4ff;
+    border-radius: 16px;
+    padding: 8px 26px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.55);
+  }
+  .clock-box.urgent {
+    border-color: #ff5e5e;
+    background: linear-gradient(180deg, rgba(85, 14, 20, 0.92), rgba(45, 6, 12, 0.95));
+    animation: pulseUrgent 0.55s infinite alternate;
+  }
+  @keyframes pulseUrgent {
+    from { transform: scale(1); }
+    to { transform: scale(1.06); }
+  }
+  .clock-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #9fd8ff;
+  }
+  .clock-value {
+    font-size: 2.15rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: #ffffff;
+  }
+  .goal-compass {
+    background: rgba(9, 27, 50, 0.84);
+    border: 1.5px solid rgba(155, 225, 255, 0.45);
+    border-radius: 999px;
+    padding: 5px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #dff3ff;
+  }
+  #goalArrow {
+    display: inline-block;
+    font-size: 1.25rem;
+    color: #ffd46b;
+    transition: transform 0.08s linear;
+  }
+  .boss-bar-wrap {
+    background: rgba(24, 12, 34, 0.88);
+    border: 1.5px solid rgba(255, 140, 110, 0.6);
+    border-radius: 10px;
+    padding: 6px 14px;
+    min-width: 280px;
+    text-align: center;
+  }
+  .boss-bar-title {
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #ffb899;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .boss-bar-track {
+    width: 100%; height: 10px;
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .boss-bar-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #ff5252, #ffb142);
+    transition: width 0.2s ease;
+  }
+  .hud-bottom {
+    position: absolute; bottom: 16px; left: 18px; right: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .speed-value {
+    font-size: 1.85rem;
+    font-weight: 900;
+    color: #7ee8ff;
+    font-variant-numeric: tabular-nums;
+  }
+  .stance-pill {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    background: rgba(120, 215, 255, 0.22);
+    color: #d6f3ff;
+  }
+  #tutorialOverlay {
+    position: absolute;
+    bottom: 96px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, rgba(12, 38, 68, 0.94), rgba(6, 20, 40, 0.96));
+    border: 2px solid #ffd470;
+    border-radius: 14px;
+    padding: 12px 24px;
+    max-width: 580px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.65);
+    display: none;
+  }
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin: 12px 0;
+  }
+  .lvl-chip {
+    padding: 7px 6px;
+    border-radius: 9px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    background: rgba(25, 62, 104, 0.75);
+    border: 1px solid rgba(145, 215, 255, 0.4);
+    color: #e4f4ff;
+  }
+  .lvl-chip.active {
+    border-color: #ffd470;
+    background: rgba(255, 195, 70, 0.25);
+    color: #ffe7a8;
+  }
+</style>
+</head>
+<body>
+  <canvas id="glCanvas"></canvas>
+
+  <div id="uiLayer">
+    <!-- 1. INTRO SCENE -->
+    <div id="introScreen" class="screen active">
+      <div class="cinematic-top">
+        <div>
+          <h1 class="game-title" style="font-size:2.2rem;">The Long Slide Home</h1>
+          <div style="color:#b8e1ff;font-size:0.95rem;">A Mother Penguin's Race Against the Failing Light</div>
+        </div>
+        <button class="btn secondary" id="btnSkipIntro" style="min-width:160px;padding:9px 18px;">Skip Intro (Esc)</button>
+      </div>
+      <div class="caption-box">
+        <div class="caption-title" id="introCaptionTitle">High atop the Frostcrown Peaks...</div>
+        <div class="caption-text" id="introCaptionText">A sudden gale and a circling giant Skua scatter your eight chicks across the eight descending mountains!</div>
+      </div>
+    </div>
+
+    <!-- 2. MAIN MENU -->
+    <div id="mainMenuScreen" class="screen">
+      <div class="glass-panel">
+        <h1 class="game-title">The Long Slide Home</h1>
+        <p class="subtitle">Race down eight icy mountains before the clock runs out and the bird of prey snatches your lost chicks.</p>
+        <div style="margin:10px 0 6px;font-size:0.88rem;color:#ffd77a;font-weight:700;" id="menuFlockStatus">Rescued Flock: 0 / 8 Chicks</div>
+        <div class="level-grid" id="menuLevelGrid"></div>
+        <div class="btn-group">
+          <button class="btn warm" id="btnStartGame">Start Descent</button>
+          <button class="btn" id="btnHowToPlay">How to Play</button>
+          <button class="btn secondary" id="btnSettings">Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. HOW TO PLAY -->
+    <div id="howToPlayScreen" class="screen">
+      <div class="glass-panel" style="max-width:860px;">
+        <h1 class="game-title" style="font-size:2.1rem;">How to Play</h1>
+        <div class="info-grid">
+          <div class="info-card">
+            <h3>Controls</h3>
+            <ul>
+              <li><span class="key-badge">W A S D</span> or <span class="key-badge">Arrows</span> Move & steer across the snow</li>
+              <li><span class="key-badge">Mouse</span> Turn the camera to look around</li>
+              <li><span class="key-badge">Space</span> Jump over crevasses & spurs</li>
+              <li><span class="key-badge">Esc</span> Pause / Resume or go back</li>
+              <li style="color:#ffd885;margin-top:4px;"><em>Secret move taught on the first steep slope!</em></li>
+            </ul>
+          </div>
+          <div class="info-card">
+            <h3>The Slide & Surfaces</h3>
+            <p>On steep slopes, drop to your belly to build massive speed, though faster speed makes steering wider. <strong>Packed snow</strong> gives balanced grip, <strong>loose snow</strong> slows you down, and <strong>sheer blue ice</strong> preserves high momentum with lower grip.</p>
+          </div>
+          <div class="info-card">
+            <h3>Hazards, Shortcuts & Clock</h3>
+            <p>Each mountain starts a countdown clock. <strong>Crevasses, ice spurs, and falling snow slabs</strong> knock the mother down and cost recovery time. Hunt <strong>hidden chutes & ice caves</strong> to cut distance!</p>
+          </div>
+          <div class="info-card">
+            <h3>Predator, Bosses & Power-Ups</h3>
+            <p>The Skua circles overhead and swoops at you. On Boss mountains, dodge its talons and strike the resonant ice crystals/snowbanks to drive it off! Collect <strong>Fish</strong> for score, <strong>Speed-Bursts</strong>, and <strong>Ice Shields</strong>.</p>
+          </div>
+        </div>
+        <button class="btn" id="btnHowToBack">Back to Main Menu (Esc)</button>
+      </div>
+    </div>
+
+    <!-- 4. SETTINGS -->
+    <div id="settingsScreen" class="screen">
+      <div class="glass-panel" style="max-width:560px;">
+        <h1 class="game-title" style="font-size:2.1rem;">Settings</h1>
+        <p class="subtitle">Customize audio, camera feel, or preview the finale.</p>
+        <div class="btn-group">
+          <button class="btn" id="btnToggleSound">Sound: ON</button>
+          <button class="btn secondary" id="btnSensitivity">Mouse Sensitivity: Normal</button>
+          <button class="btn warm" id="btnPlayEnding">Play Ending Scene Directly</button>
+          <button class="btn secondary" id="btnSettingsBack">Back to Main Menu (Esc)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. PAUSE MENU -->
+    <div id="pauseScreen" class="screen">
+      <div class="glass-panel" style="max-width:520px;">
+        <h1 class="game-title" style="font-size:2.2rem;">Game Paused</h1>
+        <p class="subtitle" id="pauseSubtitle">All timers, physics, and music are frozen.</p>
+        <div class="btn-group">
+          <button class="btn warm" id="btnResume">Resume (Esc)</button>
+          <button class="btn" id="btnPauseSound">Sound: ON</button>
+          <button class="btn secondary" id="btnRestartLevel">Restart Level</button>
+          <button class="btn secondary" id="btnPauseMainMenu">Back to Main Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. LEVEL FAIL SCREEN -->
+    <div id="failScreen" class="screen">
+      <div class="glass-panel" style="max-width:560px;">
+        <h1 class="game-title" style="font-size:2.3rem;-webkit-text-fill-color:#ff7b7b;">Time Ran Out!</h1>
+        <p class="subtitle" id="failReasonText">The circling bird of prey swooped in and carried the chick's ice cradle higher up the peak. Don't give up!</p>
+        <div class="btn-row">
+          <button class="btn warm" id="btnRetryLevel">Retry Mountain</button>
+          <button class="btn secondary" id="btnFailMainMenu">Back to Main Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. STORY SCREEN (BETWEEN MOUNTAINS) -->
+    <div id="storyScreen" class="screen" style="justify-content:flex-end;padding-bottom:32px;">
+      <div class="glass-panel" style="max-width:760px;">
+        <div style="font-size:0.85rem;text-transform:uppercase;letter-spacing:1.4px;color:#ffd576;font-weight:800;" id="storyHeader">Chick Rescued!</div>
+        <h1 class="game-title" style="font-size:2.1rem;margin-bottom:6px;" id="storyTitle">The Growing Flock</h1>
+        <p class="subtitle" style="margin-bottom:12px;" id="storyBody"></p>
+        <div class="info-grid" style="margin:8px 0 12px;">
+          <div class="info-card">
+            <h3>Flock Bonus Unlocked</h3>
+            <p id="storyBonusText"></p>
+          </div>
+          <div class="info-card">
+            <h3>Next Mountain Ahead</h3>
+            <p id="storyNextText"></p>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn warm" id="btnNextMountain">Start Next Mountain</button>
+          <button class="btn secondary" id="btnStoryMainMenu">Back to Main Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. CUTSCENE SCREEN (LEVEL WIN / BOSS INTRO) -->
+    <div id="cutsceneScreen" class="screen">
+      <div></div>
+      <div class="caption-box">
+        <div class="caption-title" id="cutsceneTitle">Chick Freed!</div>
+        <div class="caption-text" id="cutsceneText">Your little chick waddles joyfully into your warm flippers!</div>
+      </div>
+    </div>
+
+    <!-- 9. ENDING SCENE -->
+    <div id="endingScreen" class="screen">
+      <div class="cinematic-top">
+        <div>
+          <h1 class="game-title" style="font-size:2.2rem;">Family Reunited</h1>
+          <div style="color:#ffd885;font-size:0.98rem;">All Eight Chicks Safe at Home</div>
+        </div>
+        <button class="btn warm" id="btnEndingMainMenu" style="min-width:210px;">Return to Main Menu</button>
+      </div>
+      <div class="caption-box">
+        <div class="caption-title" id="endingCaptionTitle">The Long Slide Home is Complete!</div>
+        <div class="caption-text" id="endingCaptionText">As the golden aurora warms the glacier, all eight chicks huddle safely around their mother.</div>
+      </div>
+    </div>
+
+    <!-- IN-PLAY HUD -->
+    <div id="hud">
+      <div class="hud-top">
+        <div class="hud-card">
+          <div style="font-size:0.76rem;color:#9cd4ff;text-transform:uppercase;letter-spacing:1px;" id="hudMountainName">MT 1: GENTLE CREST</div>
+          <div style="font-size:1.3rem;font-weight:900;color:#ffd573;margin-top:2px;">🐟 <span id="hudFish">0</span> <span style="font-size:0.85rem;color:#bfe4ff;font-weight:600;">(Score: <span id="hudScore">0</span>)</span></div>
+          <div style="font-size:0.8rem;color:#b8e2ff;margin-top:3px;" id="hudFlockCount">Flock Rescued: 0 / 8</div>
+        </div>
+
+        <div class="hud-center-stack">
+          <div class="clock-box" id="hudClockBox">
+            <div class="clock-label">Time Remaining</div>
+            <div class="clock-value" id="hudClock">01:30.0</div>
+          </div>
+          <div class="goal-compass">
+            <span id="goalArrow">⬇</span>
+            <span id="hudGoalText">CHICK: 600m</span>
+          </div>
+          <div class="boss-bar-wrap" id="hudBossWrap">
+            <div class="boss-bar-title" id="hudBossTitle">PREDATOR: CIRCLING HIGH</div>
+            <div class="boss-bar-track"><div class="boss-bar-fill" id="hudBossFill"></div></div>
+          </div>
+        </div>
+
+        <div class="hud-card" style="text-align:right;">
+          <div style="font-size:0.76rem;color:#9cd4ff;text-transform:uppercase;letter-spacing:1px;">Active Perks & Controls</div>
+          <div style="font-size:0.88rem;font-weight:700;color:#7ef5ff;margin-top:3px;" id="hudPowerups">Shield: Ready | Boost: None</div>
+          <div style="font-size:0.78rem;color:#cbe8ff;margin-top:4px;">[Esc] Pause &nbsp;|&nbsp; [Mouse] Look</div>
+        </div>
+      </div>
+
+      <div id="tutorialOverlay">
+        <div style="font-size:0.8rem;font-weight:800;color:#ffd470;text-transform:uppercase;letter-spacing:1px;" id="tutHeader">New Move</div>
+        <div style="font-size:1.02rem;color:#ffffff;margin-top:3px;" id="tutBody">Use W A S D or Arrow Keys to run down the packed snow.</div>
+      </div>
+
+      <div class="hud-bottom">
+        <div class="hud-card">
+          <div style="font-size:0.74rem;color:#9cd4ff;text-transform:uppercase;letter-spacing:1px;">Descent Speed</div>
+          <div class="speed-value"><span id="hudSpeed">0</span> <span style="font-size:0.95rem;color:#b8e2ff;">km/h</span></div>
+          <div>
+            <span class="stance-pill" id="hudStance">STANDING</span>
+            <span class="stance-pill" id="hudSurface" style="background:rgba(255,255,255,0.15);">PACKED SNOW</span>
+          </div>
+        </div>
+        <div class="hud-card" style="text-align:right;">
+          <div style="font-size:0.75rem;color:#9cd4ff;text-transform:uppercase;letter-spacing:1px;">Route Progress</div>
+          <div style="width:180px;height:10px;background:rgba(255,255,255,0.15);border-radius:999px;overflow:hidden;margin:6px 0 4px auto;">
+            <div id="hudProgressFill" style="width:0%;height:100%;background:linear-gradient(90deg,#63d2ff,#ffd56b);"></div>
+          </div>
+          <div style="font-size:0.82rem;color:#d6eeff;" id="hudShortcutHint">Path: Main Trail</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// === PART 1: WEBGL 3D ENGINE, MATH, SHADERS & PROCEDURAL MODELS ===
+const canvas = document.getElementById('glCanvas');
+const gl = canvas.getContext('webgl', { antialias: true, alpha: false });
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  if (gl) gl.viewport(0, 0, canvas.width, canvas.height);
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+const VS_SRC = `
+  attribute vec3 aPos;
+  attribute vec3 aNorm;
+  attribute vec3 aCol;
+  uniform mat4 uProj;
+  uniform mat4 uView;
+  uniform mat4 uModel;
+  varying vec3 vNorm;
+  varying vec3 vCol;
+  varying vec3 vWorldPos;
+  varying float vEyeDist;
+  void main() {
+    vec4 worldPos = uModel * vec4(aPos, 1.0);
+    vec4 eyePos = uView * worldPos;
+    vWorldPos = worldPos.xyz;
+    vEyeDist = length(eyePos.xyz);
+    vNorm = normalize(mat3(uModel[0].xyz, uModel[1].xyz, uModel[2].xyz) * aNorm);
+    vCol = aCol;
+    gl_Position = uProj * eyePos;
+  }
+`;
+
+const FS_SRC = `
+  precision mediump float;
+  varying vec3 vNorm;
+  varying vec3 vCol;
+  varying vec3 vWorldPos;
+  varying float vEyeDist;
+  uniform vec3 uSunDir;
+  uniform vec3 uSunCol;
+  uniform vec3 uSkyCol;
+  uniform vec3 uFogCol;
+  uniform vec3 uCamPos;
+  uniform vec4 uTint;
+  uniform float uSpecularity;
+  uniform float uFogDensity;
+  void main() {
+    vec3 N = normalize(vNorm);
+    vec3 L = normalize(uSunDir);
+    vec3 V = normalize(uCamPos - vWorldPos);
+    vec3 H = normalize(L + V);
+    float ndl = max(dot(N, L), 0.0);
+    float hemi = 0.5 + 0.5 * N.y;
+    vec3 ambient = mix(vec3(0.20, 0.28, 0.44), uSkyCol, hemi) * 0.52;
+    vec3 diffuse = uSunCol * (0.20 + 0.62 * ndl);
+    float spec = pow(max(dot(N, H), 0.0), 28.0) * uSpecularity;
+    float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0) * 0.14;
+    vec3 baseCol = mix(vCol, uTint.rgb, uTint.a);
+    vec3 lit = baseCol * (ambient + diffuse) + vec3(0.85, 0.95, 1.0) * (spec + rim);
+    float fogFactor = clamp(1.0 - exp(-uFogDensity * vEyeDist * 0.0022), 0.0, 1.0);
+    vec3 finalCol = mix(lit, uFogCol, fogFactor);
+    gl_FragColor = vec4(finalCol, 1.0);
+  }
+`;
+
+function compileShader(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, VS_SRC));
+gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, FS_SRC));
+gl.linkProgram(prog);
+gl.useProgram(prog);
+
+const loc = {
+  aPos: gl.getAttribLocation(prog, 'aPos'),
+  aNorm: gl.getAttribLocation(prog, 'aNorm'),
+  aCol: gl.getAttribLocation(prog, 'aCol'),
+  uProj: gl.getUniformLocation(prog, 'uProj'),
+  uView: gl.getUniformLocation(prog, 'uView'),
+  uModel: gl.getUniformLocation(prog, 'uModel'),
+  uSunDir: gl.getUniformLocation(prog, 'uSunDir'),
+  uSunCol: gl.getUniformLocation(prog, 'uSunCol'),
+  uSkyCol: gl.getUniformLocation(prog, 'uSkyCol'),
+  uFogCol: gl.getUniformLocation(prog, 'uFogCol'),
+  uCamPos: gl.getUniformLocation(prog, 'uCamPos'),
+  uTint: gl.getUniformLocation(prog, 'uTint'),
+  uSpecularity: gl.getUniformLocation(prog, 'uSpecularity'),
+  uFogDensity: gl.getUniformLocation(prog, 'uFogDensity')
+};
+gl.enableVertexAttribArray(loc.aPos);
+gl.enableVertexAttribArray(loc.aNorm);
+gl.enableVertexAttribArray(loc.aCol);
+gl.enable(gl.DEPTH_TEST);
+gl.enable(gl.CULL_FACE);
+
+const M4 = {
+  ident() {
+    return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);
+  },
+  persp(fov, aspect, near, far) {
+    const f = 1 / Math.tan(fov * 0.5), nf = 1 / (near - far);
+    return new Float32Array([
+      f/aspect, 0, 0, 0,
+      0, f, 0, 0,
+      0, 0, (far+near)*nf, -1,
+      0, 0, (2*far*near)*nf, 0
+    ]);
+  },
+  lookAt(ex, ey, ez, tx, ty, tz, ux=0, uy=1, uz=0) {
+    let zx = ex-tx, zy = ey-ty, zz = ez-tz;
+    let zl = Math.hypot(zx, zy, zz) || 1; zx/=zl; zy/=zl; zz/=zl;
+    let xx = uy*zz - uz*zy, xy = uz*zx - ux*zz, xz = ux*zy - uy*zx;
+    let xl = Math.hypot(xx, xy, xz) || 1; xx/=xl; xy/=xl; xz/=xl;
+    let yx = zy*xz - zz*xy, yy = zz*xx - zx*xz, yz = zx*xy - zy*xx;
+    return new Float32Array([
+      xx, yx, zx, 0,
+      xy, yy, zy, 0,
+      xz, yz, zz, 0,
+      -(xx*ex+xy*ey+xz*ez), -(yx*ex+yy*ey+yz*ez), -(zx*ex+zy*ey+zz*ez), 1
+    ]);
+  },
+  mul(a, b) {
+    const o = new Float32Array(16);
+    for (let i=0; i<4; i++) {
+      const ai0=a[i], ai1=a[i+4], ai2=a[i+8], ai3=a[i+12];
+      o[i]   = ai0*b[0]  + ai1*b[1]  + ai2*b[2]  + ai3*b[3];
+      o[i+4] = ai0*b[4]  + ai1*b[5]  + ai2*b[6]  + ai3*b[7];
+      o[i+8] = ai0*b[8]  + ai1*b[9]  + ai2*b[10] + ai3*b[11];
+      o[i+12]= ai0*b[12] + ai1*b[13] + ai2*b[14] + ai3*b[15];
+    }
+    return o;
+  },
+  trs(tx, ty, tz, rx, ry, rz, sx=1, sy=1, sz=1) {
+    const cx=Math.cos(rx), sx0=Math.sin(rx), cy=Math.cos(ry), sy0=Math.sin(ry), cz=Math.cos(rz), sz0=Math.sin(rz);
+    return new Float32Array([
+      (cy*cz)*sx, (cy*sz0)*sx, (-sy0)*sx, 0,
+      (sx0*sy0*cz - cx*sz0)*sy, (sx0*sy0*sz0 + cx*cz)*sy, (sx0*cy)*sy, 0,
+      (cx*sy0*cz + sx0*sz0)*sz, (cx*sy0*sz0 - sx0*cz)*sz, (cx*cy)*sz, 0,
+      tx, ty, tz, 1
+    ]);
+  }
+};
+
+class MeshBuilder {
+  constructor() { this.verts = []; }
+  tri(p1, p2, p3, col, nOverride) {
+    let nx, ny, nz;
+    if (nOverride) { [nx, ny, nz] = nOverride; }
+    else {
+      const ux=p2[0]-p1[0], uy=p2[1]-p1[1], uz=p2[2]-p1[2];
+      const vx=p3[0]-p1[0], vy=p3[1]-p1[1], vz=p3[2]-p1[2];
+      nx = uy*vz - uz*vy; ny = uz*vx - ux*vz; nz = ux*vy - uy*vx;
+      const l = Math.hypot(nx, ny, nz) || 1; nx/=l; ny/=l; nz/=l;
+    }
+    for (const p of [p1, p2, p3]) {
+      this.verts.push(p[0], p[1], p[2], nx, ny, nz, col[0], col[1], col[2]);
+    }
+  }
+  quad(p1, p2, p3, p4, col, nOverride) {
+    this.tri(p1, p2, p3, col, nOverride);
+    this.tri(p1, p3, p4, col, nOverride);
+  }
+  box(cx, cy, cz, wx, wy, wz, col) {
+    const x0=cx-wx/2, x1=cx+wx/2, y0=cy-wy/2, y1=cy+wy/2, z0=cz-wz/2, z1=cz+wz/2;
+    this.quad([x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1], col, [0,0,1]);
+    this.quad([x1,y0,z0],[x0,y0,z0],[x0,y1,z0],[x1,y1,z0], col, [0,0,-1]);
+    this.quad([x0,y1,z1],[x1,y1,z1],[x1,y1,z0],[x0,y1,z0], col, [0,1,0]);
+    this.quad([x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1], col, [0,-1,0]);
+    this.quad([x1,y0,z1],[x1,y0,z0],[x1,y1,z0],[x1,y1,z1], col, [1,0,0]);
+    this.quad([x0,y0,z0],[x0,y0,z1],[x0,y1,z1],[x0,y1,z0], col, [-1,0,0]);
+  }
+  sphere(cx, cy, cz, rx, ry, rz, col, segU=12, segV=8) {
+    for (let iv=0; iv<segV; iv++) {
+      const v0 = (iv/segV)*Math.PI, v1 = ((iv+1)/segV)*Math.PI;
+      for (let iu=0; iu<segU; iu++) {
+        const u0 = (iu/segU)*Math.PI*2, u1 = ((iu+1)/segU)*Math.PI*2;
+        const pt = (u, v) => [
+          cx + rx*Math.sin(v)*Math.cos(u),
+          cy + ry*Math.cos(v),
+          cz + rz*Math.sin(v)*Math.sin(u)
+        ];
+        this.quad(pt(u0,v0), pt(u1,v0), pt(u1,v1), pt(u0,v1), col);
+      }
+    }
+  }
+  cone(cx, cy, cz, rBase, rTop, h, col, seg=10, rotX=0) {
+    const y0 = -h/2, y1 = h/2;
+    const rot = (p) => {
+      const c=Math.cos(rotX), s=Math.sin(rotX);
+      return [cx + p[0], cy + p[1]*c - p[2]*s, cz + p[1]*s + p[2]*c];
+    };
+    for (let i=0; i<seg; i++) {
+      const a0 = (i/seg)*Math.PI*2, a1 = ((i+1)/seg)*Math.PI*2;
+      const p1 = rot([rBase*Math.cos(a0), y0, rBase*Math.sin(a0)]);
+      const p2 = rot([rBase*Math.cos(a1), y0, rBase*Math.sin(a1)]);
+      const p3 = rot([rTop*Math.cos(a1), y1, rTop*Math.sin(a1)]);
+      const p4 = rot([rTop*Math.cos(a0), y1, rTop*Math.sin(a0)]);
+      this.quad(p1, p2, p3, p4, col);
+      if (rBase > 0.01) this.tri(rot([0,y0,0]), p2, p1, col);
+      if (rTop > 0.01) this.tri(rot([0,y1,0]), p4, p3, col);
+    }
+  }
+  build() {
+    const buf = gl.createBuffer();
+    const arr = new Float32Array(this.verts);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+    return { buf, count: arr.length / 9 };
+  }
+}
+
+function drawMesh(mesh, modelMat, spec=0.25, tint=[0,0,0,0]) {
+  if (!mesh || !mesh.count) return;
+  gl.bindBuffer(gl.ARRAY_BUFFER, mesh.buf);
+  gl.vertexAttribPointer(loc.aPos, 3, gl.FLOAT, false, 36, 0);
+  gl.vertexAttribPointer(loc.aNorm, 3, gl.FLOAT, false, 36, 12);
+  gl.vertexAttribPointer(loc.aCol, 3, gl.FLOAT, false, 36, 24);
+  gl.uniformMatrix4fv(loc.uModel, false, modelMat);
+  gl.uniform1f(loc.uSpecularity, spec);
+  gl.uniform4fv(loc.uTint, tint);
+  gl.drawArrays(gl.TRIANGLES, 0, mesh.count);
+}
+// === PART 1B: PROCEDURAL 3D MODELS ===
+const MODELS = {};
+function initModels() {
+  // 1. Mother Penguin Body
+  let b = new MeshBuilder();
+  b.sphere(0, 0.92, 0, 0.56, 0.84, 0.52, [0.11, 0.15, 0.24], 14, 10); // Dark navy-black back
+  b.sphere(0, 0.88, -0.14, 0.44, 0.72, 0.42, [0.96, 0.98, 1.0], 12, 9); // Crisp white belly (facing -Z forward)
+  b.sphere(0, 1.42, -0.10, 0.42, 0.18, 0.40, [0.95, 0.42, 0.18], 10, 6); // Warm mother's scarf/collar accent
+  b.cone(0, 0.30, 0.45, 0.22, 0.02, 0.38, [0.11, 0.15, 0.24], 8, 1.1); // Tail
+  MODELS.penguinBody = b.build();
+
+  // 2. Mother Penguin Head
+  b = new MeshBuilder();
+  b.sphere(0, 0, 0, 0.42, 0.40, 0.42, [0.12, 0.16, 0.25], 12, 8);
+  b.sphere(-0.14, 0.03, -0.22, 0.20, 0.22, 0.22, [0.96, 0.98, 1.0], 8, 6);
+  b.sphere(0.14, 0.03, -0.22, 0.20, 0.22, 0.22, [0.96, 0.98, 1.0], 8, 6);
+  b.sphere(-0.16, 0.07, -0.37, 0.065, 0.075, 0.065, [0.05, 0.06, 0.08], 6, 6);
+  b.sphere(0.16, 0.07, -0.37, 0.065, 0.075, 0.065, [0.05, 0.06, 0.08], 6, 6);
+  b.cone(0, -0.02, -0.52, 0.13, 0.01, 0.36, [1.0, 0.58, 0.12], 8, -Math.PI/2); // Beak pointing -Z
+  MODELS.penguinHead = b.build();
+
+  // 3. Flipper & Webbed Foot
+  b = new MeshBuilder();
+  b.sphere(0, -0.32, 0, 0.11, 0.46, 0.20, [0.12, 0.17, 0.27], 8, 6);
+  MODELS.flipper = b.build();
+
+  b = new MeshBuilder();
+  b.box(0, 0.06, -0.10, 0.24, 0.10, 0.38, [1.0, 0.56, 0.10]);
+  MODELS.foot = b.build();
+
+  // 4. Baby Chick
+  b = new MeshBuilder();
+  b.sphere(0, 0.44, 0, 0.34, 0.42, 0.32, [0.58, 0.65, 0.74], 10, 8); // Fluffy silver-grey down
+  b.sphere(0, 0.42, -0.09, 0.26, 0.34, 0.25, [0.95, 0.97, 1.0], 10, 7);
+  b.sphere(0, 0.88, 0, 0.27, 0.26, 0.27, [0.48, 0.54, 0.64], 10, 7);
+  b.sphere(-0.10, 0.91, -0.22, 0.05, 0.055, 0.05, [0.05, 0.05, 0.08], 6, 5);
+  b.sphere(0.10, 0.91, -0.22, 0.05, 0.055, 0.05, [0.05, 0.05, 0.08], 6, 5);
+  b.cone(0, 0.86, -0.32, 0.08, 0.01, 0.20, [1.0, 0.65, 0.16], 7, -Math.PI/2);
+  b.box(-0.12, 0.05, -0.06, 0.13, 0.08, 0.22, [1.0, 0.60, 0.14]);
+  b.box(0.12, 0.05, -0.06, 0.13, 0.08, 0.22, [1.0, 0.60, 0.14]);
+  MODELS.chick = b.build();
+
+  // 5. Ice Cage around trapped chick
+  b = new MeshBuilder();
+  for (let i=0; i<6; i++) {
+    const a = (i/6)*Math.PI*2;
+    b.cone(Math.cos(a)*1.05, 1.0, Math.sin(a)*1.05, 0.16, 0.04, 2.1, [0.55, 0.88, 1.0], 6);
+  }
+  b.cone(0, 2.1, 0, 1.25, 0.1, 0.7, [0.68, 0.92, 1.0], 8);
+  MODELS.iceCage = b.build();
+
+  // 6. Predator Skua-Eagle Body & Wings
+  b = new MeshBuilder();
+  b.sphere(0, 0, 0, 0.65, 0.48, 1.35, [0.26, 0.18, 0.14], 10, 8);
+  b.sphere(0, 0.18, -1.25, 0.42, 0.38, 0.48, [0.90, 0.86, 0.78], 8, 7); // Pale raptor head
+  b.cone(0, 0.08, -1.85, 0.20, 0.02, 0.55, [0.98, 0.74, 0.15], 7, -Math.PI/2); // Hooked beak
+  b.sphere(-0.22, 0.26, -1.48, 0.08, 0.08, 0.08, [1.0, 0.22, 0.10], 6, 5); // Fierce red-gold eyes
+  b.sphere(0.22, 0.26, -1.48, 0.08, 0.08, 0.08, [1.0, 0.22, 0.10], 6, 5);
+  b.cone(0, -0.05, 1.55, 0.55, 0.10, 0.95, [0.20, 0.13, 0.10], 6, Math.PI/2); // Tail feathers
+  b.cone(-0.30, -0.55, -0.25, 0.10, 0.02, 0.55, [0.95, 0.72, 0.14], 6); // Talons
+  b.cone(0.30, -0.55, -0.25, 0.10, 0.02, 0.55, [0.95, 0.72, 0.14], 6);
+  MODELS.birdBody = b.build();
+
+  b = new MeshBuilder();
+  b.box(-1.55, 0, 0.05, 3.1, 0.12, 1.05, [0.32, 0.22, 0.17]);
+  b.box(-2.85, 0.02, 0.15, 1.2, 0.09, 0.75, [0.18, 0.12, 0.09]);
+  MODELS.birdWingL = b.build();
+
+  b = new MeshBuilder();
+  b.box(1.55, 0, 0.05, 3.1, 0.12, 1.05, [0.32, 0.22, 0.17]);
+  b.box(2.85, 0.02, 0.15, 1.2, 0.09, 0.75, [0.18, 0.12, 0.09]);
+  MODELS.birdWingR = b.build();
+
+  // 7. Hazards: Ice Spur, Crevasse, Falling Snow Slab, Rolling Boulder
+  b = new MeshBuilder();
+  b.cone(0, 1.25, 0, 0.85, 0.04, 2.6, [0.48, 0.84, 1.0], 7);
+  b.cone(-0.65, 0.8, 0.25, 0.55, 0.04, 1.7, [0.62, 0.90, 1.0], 6);
+  b.cone(0.65, 0.85, -0.2, 0.55, 0.04, 1.8, [0.58, 0.88, 1.0], 6);
+  MODELS.iceSpur = b.build();
+
+  b = new MeshBuilder();
+  b.box(0, 0.04, 0, 7.2, 0.14, 2.6, [0.04, 0.11, 0.25]); // Deep dark chasm
+  b.box(0, 0.10, -1.35, 7.4, 0.24, 0.35, [0.55, 0.85, 1.0]); // Front ice lip
+  b.box(0, 0.10, 1.35, 7.4, 0.24, 0.35, [0.55, 0.85, 1.0]); // Back ice lip
+  MODELS.crevasse = b.build();
+
+  b = new MeshBuilder();
+  b.box(0, 0.65, 0, 3.6, 1.3, 2.2, [0.86, 0.93, 1.0]);
+  b.box(0, 1.25, 0, 3.7, 0.28, 2.3, [0.96, 0.99, 1.0]);
+  MODELS.snowSlab = b.build();
+
+  b = new MeshBuilder();
+  b.sphere(0, 1.2, 0, 1.25, 1.25, 1.25, [0.88, 0.95, 1.0], 10, 8);
+  MODELS.boulder = b.build();
+
+  // 8. Ice Cave Arch & Boss Resonant Crystal
+  b = new MeshBuilder();
+  b.box(-4.8, 2.6, 0, 1.4, 5.4, 4.5, [0.42, 0.76, 0.96]);
+  b.box(4.8, 2.6, 0, 1.4, 5.4, 4.5, [0.42, 0.76, 0.96]);
+  b.box(0, 5.2, 0, 10.8, 1.3, 4.5, [0.52, 0.84, 1.0]);
+  b.cone(-2.6, 4.1, 0, 0.35, 0.03, 1.4, [0.70, 0.94, 1.0], 6, Math.PI);
+  b.cone(2.6, 4.1, 0, 0.35, 0.03, 1.4, [0.70, 0.94, 1.0], 6, Math.PI);
+  MODELS.caveArch = b.build();
+
+  b = new MeshBuilder();
+  b.cone(0, 1.6, 0, 0.95, 0.15, 3.2, [1.0, 0.78, 0.25], 8);
+  b.cone(0, 0.4, 0, 1.35, 0.95, 0.8, [0.55, 0.86, 1.0], 8);
+  MODELS.bossCrystal = b.build();
+
+  // 9. Collectibles: Fish, Speed-Burst, Shield, Tree, Peak, Shadow, Particle
+  b = new MeshBuilder();
+  b.sphere(0, 0.5, 0, 0.52, 0.24, 0.16, [1.0, 0.76, 0.20], 8, 6);
+  b.cone(0.58, 0.5, 0, 0.26, 0.02, 0.32, [1.0, 0.58, 0.12], 6, Math.PI/2);
+  MODELS.fish = b.build();
+
+  b = new MeshBuilder();
+  b.sphere(0, 0.65, 0, 0.52, 0.52, 0.52, [1.0, 0.48, 0.12], 10, 8);
+  b.cone(0, 1.25, 0, 0.32, 0.02, 0.45, [1.0, 0.88, 0.30], 8);
+  MODELS.speedOrb = b.build();
+
+  b = new MeshBuilder();
+  b.sphere(0, 0.65, 0, 0.54, 0.54, 0.54, [0.25, 0.94, 1.0], 10, 8);
+  MODELS.shieldOrb = b.build();
+
+  b = new MeshBuilder();
+  b.cone(0, 0.8, 0, 0.42, 0.35, 1.6, [0.35, 0.22, 0.14], 6);
+  b.cone(0, 2.4, 0, 1.85, 0.20, 2.6, [0.14, 0.38, 0.28], 7);
+  b.cone(0, 3.9, 0, 1.40, 0.12, 2.2, [0.18, 0.46, 0.34], 7);
+  b.cone(0, 4.9, 0, 0.95, 0.04, 1.5, [0.88, 0.95, 1.0], 7);
+  MODELS.pineTree = b.build();
+
+  b = new MeshBuilder();
+  b.cone(0, 45, 0, 68, 2, 90, [0.58, 0.74, 0.92], 7);
+  b.cone(0, 72, 0, 28, 1, 38, [0.93, 0.97, 1.0], 7);
+  MODELS.distantPeak = b.build();
+
+  b = new MeshBuilder();
+  b.cone(0, 0.05, 0, 1.0, 1.0, 0.04, [0.06, 0.14, 0.26], 14);
+  MODELS.shadowDisk = b.build();
+
+  b = new MeshBuilder();
+  b.cone(0, 0.07, 0, 1.0, 1.0, 0.05, [0.95, 0.22, 0.18], 16);
+  MODELS.dangerRing = b.build();
+
+  b = new MeshBuilder();
+  b.box(0, 0, 0, 0.28, 0.28, 0.28, [0.96, 0.99, 1.0]);
+  MODELS.particle = b.build();
+}
+initModels();
+
+function drawMotherPenguin(x, y, z, yaw, pitch, roll, stance, animT, shieldActive, boostActive) {
+  // Shadow
+  drawMesh(MODELS.shadowDisk, M4.trs(x, y + 0.04, z, 0, 0, 0, 0.75, 1, 0.75), 0.0);
+
+  let bodyPitch = pitch, bodyY = y, headPitch = 0, flipAngle = 0.25, footWalk = 0;
+  if (stance === 'SLIDING') {
+    bodyPitch -= 1.32; // Drop to belly!
+    bodyY += 0.34;
+    headPitch = 1.05; // Look forward while on belly
+    flipAngle = 0.65 + Math.sin(animT * 14) * 0.12;
+  } else if (stance === 'KNOCKDOWN') {
+    bodyPitch += Math.sin(animT * 10) * 0.9;
+    roll += animT * 8.0;
+    bodyY += 0.45;
+    flipAngle = 1.2 + Math.sin(animT * 20) * 0.5;
+  } else if (stance === 'AIRBORNE') {
+    bodyY += 0.1;
+    flipAngle = 0.95 + Math.sin(animT * 18) * 0.35;
+  } else {
+    // Running waddle
+    roll += Math.sin(animT * 11) * 0.11;
+    footWalk = Math.sin(animT * 11) * 0.35;
+    flipAngle = 0.32 + Math.abs(Math.sin(animT * 11)) * 0.25;
+  }
+
+  const root = M4.trs(x, bodyY, z, bodyPitch, yaw, roll, 1, 1, 1);
+  const tint = boostActive ? [1.0, 0.55, 0.1, 0.32] : (stance === 'KNOCKDOWN' ? [1.0, 0.25, 0.25, 0.4] : [0,0,0,0]);
+  drawMesh(MODELS.penguinBody, root, 0.35, tint);
+
+  const headMat = M4.mul(root, M4.trs(0, 1.72, -0.04, headPitch, 0, 0, 1, 1, 1));
+  drawMesh(MODELS.penguinHead, headMat, 0.35, tint);
+
+  const flipL = M4.mul(root, M4.trs(-0.54, 1.18, 0, 0, 0, flipAngle, 1, 1, 1));
+  const flipR = M4.mul(root, M4.trs(0.54, 1.18, 0, 0, 0, -flipAngle, 1, 1, 1));
+  drawMesh(MODELS.flipper, flipL, 0.3, tint);
+  drawMesh(MODELS.flipper, flipR, 0.3, tint);
+
+  const footL = M4.mul(root, M4.trs(-0.22, 0.08, footWalk * 0.35, footWalk * 0.5, 0, 0, 1, 1, 1));
+  const footR = M4.mul(root, M4.trs(0.22, 0.08, -footWalk * 0.35, -footWalk * 0.5, 0, 0, 1, 1, 1));
+  drawMesh(MODELS.foot, footL, 0.2);
+  drawMesh(MODELS.foot, footR, 0.2);
+
+  if (shieldActive) {
+    const sScale = 1.65 + Math.sin(animT * 8) * 0.08;
+    drawMesh(MODELS.shieldOrb, M4.trs(x, y + 0.95, z, 0, animT * 2, 0, sScale, sScale, sScale), 0.9, [0.3, 0.95, 1.0, 0.55]);
+  }
+}
+
+function drawChickModel(x, y, z, yaw, animT, scale=1.0) {
+  const hop = Math.abs(Math.sin(animT * 9)) * 0.14;
+  const waddle = Math.sin(animT * 9) * 0.14;
+  drawMesh(MODELS.shadowDisk, M4.trs(x, y + 0.03, z, 0, 0, 0, 0.42*scale, 1, 0.42*scale), 0.0);
+  drawMesh(MODELS.chick, M4.trs(x, y + hop, z, 0, yaw, waddle, scale, scale, scale), 0.3);
+}
+
+function drawPredatorBird(x, y, z, yaw, pitch, roll, animT, scale=1.0, hurtFlash=0) {
+  const root = M4.trs(x, y, z, pitch, yaw, roll, scale, scale, scale);
+  const tint = hurtFlash > 0 ? [1.0, 0.2, 0.1, 0.65] : [0,0,0,0];
+  drawMesh(MODELS.birdBody, root, 0.35, tint);
+  const flap = Math.sin(animT * 11) * 0.52;
+  drawMesh(MODELS.birdWingL, M4.mul(root, M4.trs(-0.4, 0.1, 0, 0, 0, flap, 1, 1, 1)), 0.3, tint);
+  drawMesh(MODELS.birdWingR, M4.mul(root, M4.trs(0.4, 0.1, 0, 0, 0, -flap, 1, 1, 1)), 0.3, tint);
+}
+
+// === PART 2: WEB AUDIO API SYNTHESIZER, MUSIC & SFX ===
+const AudioSys = {
+  ctx: null,
+  enabled: true,
+  paused: false,
+  musicTimer: 0,
+  stepIdx: 0,
+  ensure() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) this.ctx = new AC();
+    }
+    if (this.ctx && this.ctx.state === 'suspended' && this.enabled && !this.paused) {
+      this.ctx.resume().catch(() => {});
+    }
+  },
+  setEnabled(on) {
+    this.enabled = !!on;
+    try { localStorage.setItem('tlsh_sound', this.enabled ? '1' : '0'); } catch(e) {}
+    const txt = 'Sound: ' + (this.enabled ? 'ON' : 'OFF');
+    const b1 = document.getElementById('btnToggleSound');
+    const b2 = document.getElementById('btnPauseSound');
+    if (b1) b1.textContent = txt;
+    if (b2) b2.textContent = txt;
+    if (this.ctx) {
+      if (!this.enabled || this.paused) this.ctx.suspend().catch(() => {});
+      else this.ctx.resume().catch(() => {});
+    }
+  },
+  setPaused(p) {
+    this.paused = !!p;
+    if (this.ctx) {
+      if (this.paused || !this.enabled) this.ctx.suspend().catch(() => {});
+      else this.ctx.resume().catch(() => {});
+    }
+  },
+  tone(freq, dur, type='sine', vol=0.14, slideTo=null, delay=0) {
+    if (!this.enabled || this.paused) return;
+    this.ensure();
+    if (!this.ctx) return;
+    const t0 = this.ctx.currentTime + delay;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    if (slideTo) osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g);
+    g.connect(this.ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  },
+  noise(dur, vol=0.1, bandpass=900) {
+    if (!this.enabled || this.paused) return;
+    this.ensure();
+    if (!this.ctx) return;
+    const sr = this.ctx.sampleRate;
+    const len = Math.max(1, Math.floor(sr * dur));
+    const buf = this.ctx.createBuffer(1, len, sr);
+    const data = buf.getChannelData(0);
+    for (let i=0; i<len; i++) data[i] = Math.random() * 2 - 1;
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    const filt = this.ctx.createBiquadFilter();
+    filt.type = 'bandpass';
+    filt.frequency.value = bandpass;
+    const g = this.ctx.createGain();
+    const t0 = this.ctx.currentTime;
+    g.gain.setValueAtTime(vol, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(filt);
+    filt.connect(g);
+    g.connect(this.ctx.destination);
+    src.start(t0);
+  },
+  sfx(name) {
+    if (!this.enabled || this.paused) return;
+    switch(name) {
+      case 'click':
+        this.tone(580, 0.07, 'triangle', 0.10, 760);
+        break;
+      case 'jump':
+        this.tone(310, 0.16, 'sine', 0.16, 640);
+        break;
+      case 'slide':
+        this.noise(0.18, 0.09, 1400);
+        this.tone(240, 0.12, 'triangle', 0.09, 360);
+        break;
+      case 'fish':
+        this.tone(660, 0.09, 'sine', 0.15, 880, 0);
+        this.tone(880, 0.13, 'sine', 0.15, 1175, 0.06);
+        break;
+      case 'powerup':
+        this.tone(523, 0.10, 'triangle', 0.16, 659, 0);
+        this.tone(659, 0.10, 'triangle', 0.16, 784, 0.08);
+        this.tone(784, 0.22, 'triangle', 0.18, 1046, 0.16);
+        break;
+      case 'knockdown':
+        this.noise(0.28, 0.22, 350);
+        this.tone(190, 0.28, 'sawtooth', 0.16, 75);
+        break;
+      case 'shieldBreak':
+        this.tone(920, 0.18, 'sine', 0.16, 320);
+        this.noise(0.16, 0.12, 2200);
+        break;
+      case 'screech':
+        this.tone(1350, 0.24, 'sawtooth', 0.11, 720, 0);
+        this.tone(1180, 0.28, 'sawtooth', 0.10, 540, 0.12);
+        break;
+      case 'bossHit':
+        this.tone(440, 0.14, 'square', 0.16, 880, 0);
+        this.tone(880, 0.28, 'sine', 0.18, 1320, 0.09);
+        this.noise(0.22, 0.15, 1600);
+        break;
+      case 'chirp':
+        this.tone(980, 0.09, 'sine', 0.15, 1380, 0);
+        this.tone(1120, 0.11, 'sine', 0.15, 1520, 0.11);
+        break;
+      case 'victory':
+        [523, 659, 784, 1046].forEach((n, i) => this.tone(n, 0.22, 'triangle', 0.16, n*1.02, i*0.11));
+        break;
+      case 'fail':
+        [392, 349, 311, 261].forEach((n, i) => this.tone(n, 0.28, 'sawtooth', 0.12, n*0.94, i*0.15));
+        break;
+    }
+  },
+  updateMusic(dt, state, speedRatio=0, urgent=false) {
+    if (!this.enabled || this.paused) return;
+    this.musicTimer -= dt;
+    if (this.musicTimer <= 0) {
+      const tempo = state === 'PLAY' ? (urgent ? 0.16 : 0.21) : 0.34;
+      this.musicTimer = tempo;
+      const scalePlay = [261.6, 293.7, 329.6, 392.0, 440.0, 523.3, 587.3, 659.3];
+      const scaleCalm = [261.6, 329.6, 392.0, 493.9, 523.3, 392.0, 329.6, 293.7];
+      const seq = (state === 'PLAY' || state === 'INTRO') ? scalePlay : scaleCalm;
+      const note = seq[this.stepIdx % seq.length];
+      const bass = (this.stepIdx % 4 === 0) ? note * 0.5 : null;
+      this.tone(note, tempo * 0.85, state === 'PLAY' ? 'triangle' : 'sine', 0.045);
+      if (bass) this.tone(bass, tempo * 1.6, 'sine', 0.04);
+      if (state === 'PLAY' && speedRatio > 0.55 && this.stepIdx % 2 === 0) {
+        this.noise(0.08, 0.025 * speedRatio, 1800);
+      }
+      this.stepIdx++;
+    }
+  }
+};
+try {
+  const savedSnd = localStorage.getItem('tlsh_sound');
+  if (savedSnd === '0') AudioSys.setEnabled(false);
+} catch(e) {}
+
+// === PART 3: 8 MOUNTAINS, SPLINE TRACK, SHORTCUTS & HAZARDS ===
+const MOUNTAINS = [
+  {
+    id: 0, name: 'Mt 1: Gentle Crest', chick: 'Pip', length: 920, clock: 110, slope: 0.19, width: 17.5,
+    curveAmp: 22, curveFreq: 0.0085, hasBoss: false, bossHp: 0, swoopInterval: 13.5,
+    sky: [0.52, 0.78, 0.98], fog: [0.68, 0.86, 1.0], sun: [1.0, 0.97, 0.90],
+    bonusDesc: 'Pip cheers you on! +8% Running & Sliding Top Speed on all future mountains.',
+    storyText: 'Little Pip chirps happily and tucks in behind you. Seven chicks remain scattered down the freezing range.'
+  },
+  {
+    id: 1, name: 'Mt 2: Whispering Pines', chick: 'Pebble', length: 1040, clock: 104, slope: 0.22, width: 16.0,
+    curveAmp: 34, curveFreq: 0.0105, hasBoss: false, bossHp: 0, swoopInterval: 11.5,
+    sky: [0.46, 0.74, 0.96], fog: [0.64, 0.83, 0.98], sun: [1.0, 0.95, 0.86],
+    bonusDesc: 'Pebble spots firm ice! Loose snow slows you 25% less.',
+    storyText: 'Pebble waddles alongside Pip! Ahead, the canyon narrows into Talon Gorge where the giant Skua roosts.'
+  },
+  {
+    id: 2, name: 'Mt 3: Talon Gorge (Boss)', chick: 'Flurry', length: 1140, clock: 118, slope: 0.24, width: 15.2,
+    curveAmp: 42, curveFreq: 0.0115, hasBoss: true, bossName: 'FROST SKUA GUARDIAN', bossHp: 3, swoopInterval: 10.2,
+    sky: [0.40, 0.66, 0.92], fog: [0.58, 0.78, 0.95], sun: [1.0, 0.91, 0.80],
+    bonusDesc: 'Flurry brings warm down! Knockdown recovery is 25% faster.',
+    storyText: 'You drove off the Frost Skua Guardian and freed Flurry! Three chicks now march in your growing flock.'
+  },
+  {
+    id: 3, name: 'Mt 4: Glacial Fissure', chick: 'Frosty', length: 1220, clock: 105, slope: 0.26, width: 14.8,
+    curveAmp: 48, curveFreq: 0.0125, hasBoss: false, bossHp: 0, swoopInterval: 9.4,
+    sky: [0.35, 0.62, 0.90], fog: [0.54, 0.76, 0.94], sun: [1.0, 0.88, 0.76],
+    bonusDesc: 'Frosty shares an Ice Pearl! You start every mountain with a free Ice Shield.',
+    storyText: 'Frosty joins the line! Rolling frost boulders now thunder across the steeper lower glaciers.'
+  },
+  {
+    id: 4, name: 'Mt 5: Sunfall Ridge', chick: 'Tumble', length: 1300, clock: 102, slope: 0.28, width: 14.2,
+    curveAmp: 54, curveFreq: 0.0132, hasBoss: false, bossHp: 0, swoopInterval: 8.6,
+    sky: [0.48, 0.56, 0.84], fog: [0.76, 0.68, 0.82], sun: [1.0, 0.78, 0.58],
+    bonusDesc: 'Tumble sharpens your edge! +20% steering grip on sheer blue ice.',
+    storyText: 'Five chicks strong! The winter sun dips low, painting the snow amber as the cold deepens.'
+  },
+  {
+    id: 5, name: 'Mt 6: Thunder Slab Peak (Boss)', chick: 'Icicle', length: 1380, clock: 118, slope: 0.30, width: 13.8,
+    curveAmp: 60, curveFreq: 0.014, hasBoss: true, bossName: 'ELDER SKUA MATRIARCH', bossHp: 4, swoopInterval: 8.0,
+    sky: [0.38, 0.44, 0.74], fog: [0.66, 0.58, 0.78], sun: [1.0, 0.70, 0.52],
+    bonusDesc: 'Icicle boosts Speed-Burst orbs! Speed-Bursts last 35% longer.',
+    storyText: 'The Elder Matriarch fled before your belly-slide! Six chicks waddle behind you toward the dusk spires.'
+  },
+  {
+    id: 6, name: 'Mt 7: Twilight Spire', chick: 'Nimbus', length: 1460, clock: 105, slope: 0.32, width: 13.4,
+    curveAmp: 66, curveFreq: 0.0148, hasBoss: false, bossHp: 0, swoopInterval: 7.4,
+    sky: [0.24, 0.30, 0.58], fog: [0.46, 0.44, 0.68], sun: [0.98, 0.60, 0.48],
+    bonusDesc: 'Nimbus blesses your jump! +15% Jump Height over wide crevasses.',
+    storyText: 'Seven chicks rescued! Only baby Aurora remains at the foot of the steepest peak as night falls.'
+  },
+  {
+    id: 7, name: 'Mt 8: The Long Slide Home (Final Boss)', chick: 'Aurora', length: 1580, clock: 126, slope: 0.35, width: 13.2,
+    curveAmp: 72, curveFreq: 0.0155, hasBoss: true, bossName: 'APEX STORM RAPTOR', bossHp: 5, swoopInterval: 6.8,
+    sky: [0.16, 0.20, 0.44], fog: [0.38, 0.30, 0.54], sun: [0.96, 0.50, 0.46],
+    bonusDesc: 'The whole family is reunited under the golden polar aurora!',
+    storyText: 'Every chick is safe at last!'
+  }
+];
+
+let levelData = null;
+
+function getTrackPoint(mt, s, inShortcut=false) {
+  const prog = Math.max(0, Math.min(1, s / mt.length));
+  // Onboarding gentle curve on Mt 1 top, winding alpine S-curves below
+  const env = Math.sin(prog * Math.PI);
+  let x = Math.sin(s * mt.curveFreq) * mt.curveAmp * env + Math.cos(s * mt.curveFreq * 0.47) * (mt.curveAmp * 0.35) * env;
+  if (mt.id === 0 && prog < 0.42) x *= 0.28; // Extra straight for onboarding
+  // Steepness profile: steeper on sheer ice zones
+  let y = 420 - s * mt.slope;
+  const steepWave = Math.sin(s * 0.018 + mt.id) * 3.2 * env;
+  y += steepWave;
+  if (inShortcut) {
+    x += (mt.width * 0.72);
+    y -= 1.8;
+  }
+  return { x, y, z: -s, prog };
+}
+
+function getTrackFrame(mt, s, inShortcut=false) {
+  const p0 = getTrackPoint(mt, s, inShortcut);
+  const p1 = getTrackPoint(mt, s + 2.0, inShortcut);
+  let dx = p1.x - p0.x, dy = p1.y - p0.y, dz = p1.z - p0.z;
+  const len = Math.hypot(dx, dy, dz) || 1;
+  dx /= len; dy /= len; dz /= len;
+  // Right vector in XZ plane
+  let rx = -dz, rz = dx;
+  const rl = Math.hypot(rx, rz) || 1;
+  rx /= rl; rz /= rl;
+  const slopeAngle = Math.atan2(-dy, Math.hypot(dx, dz));
+  const yaw = Math.atan2(-dx, -dz);
+  return { x: p0.x, y: p0.y, z: p0.z, fx: dx, fy: dy, fz: dz, rx, rz, slopeAngle, yaw, prog: p0.prog };
+}
+// === PART 3B: LEVEL GENERATOR ===
+function getSurfaceType(mt, s, latOffset, inShortcut, shortcuts) {
+  if (inShortcut) return 'SHEER_ICE';
+  const prog = s / mt.length;
+  // On Mt 1, 0.16..0.42 is the dedicated long, safe steep sheer-ice slope teaching The Slide
+  if (mt.id === 0) {
+    if (prog >= 0.16 && prog <= 0.42) return 'SHEER_ICE';
+    if (prog < 0.16) return Math.abs(latOffset) > mt.width * 0.42 ? 'LOOSE_SNOW' : 'PACKED_SNOW';
+  }
+  // Outer drifts are loose snow; periodic patches of loose snow & sheer ice chutes
+  if (Math.abs(latOffset) > mt.width * 0.36) return 'LOOSE_SNOW';
+  const zone = Math.floor(s / 85);
+  if (zone % 3 === 1) return 'SHEER_ICE';
+  if (zone % 4 === 2 && Math.sin(s * 0.09 + latOffset * 0.4) > 0.35) return 'LOOSE_SNOW';
+  return 'PACKED_SNOW';
+}
+
+function buildMountainLevel(mtIdx) {
+  const mt = MOUNTAINS[mtIdx];
+  const shortcuts = [
+    { sStart: Math.floor(mt.length * 0.46), sEnd: Math.floor(mt.length * 0.62) },
+    { sStart: Math.floor(mt.length * 0.70), sEnd: Math.floor(mt.length * 0.83) }
+  ];
+
+  // Build continuous 3D trail mesh + outer snow banks
+  const tb = new MeshBuilder();
+  const step = 6;
+  const cols = 6; // Across main track + snow banks
+  for (let s = 0; s < mt.length + 60; s += step) {
+    const f0 = getTrackFrame(mt, s, false);
+    const f1 = getTrackFrame(mt, s + step, false);
+    const w = (s > mt.length - 110 && mt.hasBoss) ? mt.width * 1.45 : mt.width;
+    const offsets = [-w*1.35, -w*0.5, -w*0.28, 0, w*0.28, w*0.5, w*1.35];
+    const heights = [4.2, 0.25, 0.0, -0.12, 0.0, 0.25, 4.2];
+
+    for (let c = 0; c < cols; c++) {
+      const oA = offsets[c], oB = offsets[c+1];
+      const hA = heights[c], hB = heights[c+1];
+      const midO = (oA + oB) * 0.5;
+      const band = (Math.floor(s / 12) % 2 === 0) ? 0.0 : -0.045;
+      let col = [0.89 + band, 0.94 + band, 0.99]; // Packed snow with contour bands
+      if (c === 0 || c === cols - 1) {
+        col = [0.64 + band, 0.78 + band, 0.92]; // Steep canyon walls
+      } else {
+        const surf = getSurfaceType(mt, s, midO, false, shortcuts);
+        if (surf === 'SHEER_ICE') col = [0.36 + band, 0.78 + band, 0.98];
+        else if (surf === 'LOOSE_SNOW') col = [0.68 + band, 0.78 + band, 0.90];
+      }
+      const p1 = [f0.x + f0.rx*oA, f0.y + hA, f0.z + f0.rz*oA];
+      const p2 = [f0.x + f0.rx*oB, f0.y + hB, f0.z + f0.rz*oB];
+      const p3 = [f1.x + f1.rx*oB, f1.y + hB, f1.z + f1.rz*oB];
+      const p4 = [f1.x + f1.rx*oA, f1.y + hA, f1.z + f1.rz*oA];
+      tb.quad(p1, p2, p3, p4, col);
+    }
+  }
+
+  // Add shortcut chute meshes & arches
+  const caveArches = [];
+  for (const sc of shortcuts) {
+    for (let s = sc.sStart; s < sc.sEnd; s += step) {
+      const f0 = getTrackFrame(mt, s, true);
+      const f1 = getTrackFrame(mt, s + step, true);
+      const sw = 5.2;
+      const p1 = [f0.x - f0.rx*sw, f0.y, f0.z - f0.rz*sw];
+      const p2 = [f0.x + f0.rx*sw, f0.y, f0.z + f0.rz*sw];
+      const p3 = [f1.x + f1.rx*sw, f1.y, f1.z + f1.rz*sw];
+      const p4 = [f1.x - f1.rx*sw, f1.y, f1.z - f1.rz*sw];
+      tb.quad(p1, p2, p3, p4, [0.36, 0.82, 1.0]);
+      if ((s - sc.sStart) % 24 === 0) {
+        caveArches.push({ x: f0.x, y: f0.y, z: f0.z, yaw: f0.yaw });
+      }
+    }
+  }
+  const trackMesh = tb.build();
+
+  // Populate Hazards, Fish, Power-ups, Trees & Peaks
+  const hazards = [];
+  const items = [];
+  const trees = [];
+  const peaks = [];
+
+  // Deterministic pseudo-random helper per mountain
+  let seed = (mtIdx + 1) * 9173;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+  // Onboarding safe zones on Mountain 1:
+  // s=0..150: Running + jumping practice bump at s=110
+  // s=150..385: Long, safe steep sheer-ice slope teaching The Slide (NO hazards, lots of fish!)
+  // s=395..840: Introduces Ice Spur, Crevasse, Falling Snow Slab, Shortcuts
+  if (mtIdx === 0) {
+    hazards.push({ type: 'CREVASSE', s: 112, lat: 0, inShortcut: false, w: 5.8, r: 1.5, triggered: false, fallY: 0 });
+  }
+
+  const hazardStartS = (mtIdx === 0) ? 405 : 115;
+  const hazardEndS = mt.hasBoss ? (mt.length - 145) : (mt.length - 65);
+  const hazardStep = Math.max(24, 44 - mtIdx * 2.5);
+
+  for (let s = hazardStartS; s < hazardEndS; s += hazardStep) {
+    const lat = (rnd() - 0.5) * (mt.width * 0.62);
+    const roll = rnd();
+    let hType = 'ICE_SPUR';
+    if (mtIdx === 0 && s < 450) hType = 'ICE_SPUR';
+    else if (mtIdx === 0 && s < 510) hType = 'CREVASSE';
+    else if (mtIdx === 0 && s < 570) hType = 'SNOW_SLAB';
+    else if (roll < 0.34) hType = 'ICE_SPUR';
+    else if (roll < 0.62) hType = 'CREVASSE';
+    else if (roll < 0.86 || mtIdx < 2) hType = 'SNOW_SLAB';
+    else hType = 'BOULDER';
+
+    hazards.push({
+      type: hType, s, lat, inShortcut: false,
+      w: hType === 'CREVASSE' ? 6.8 : 2.1,
+      r: hType === 'CREVASSE' ? 1.5 : 1.45,
+      fallY: hType === 'SNOW_SLAB' ? 14.0 : 0,
+      triggered: false, phase: rnd() * 6.28
+    });
+
+    // Extra tighter hazards inside shortcuts!
+    for (const sc of shortcuts) {
+      if (s > sc.sStart + 15 && s < sc.sEnd - 15) {
+        hazards.push({
+          type: (s % 2 === 0) ? 'ICE_SPUR' : 'SNOW_SLAB',
+          s: s + 8, lat: (rnd() - 0.5) * 4.2, inShortcut: true,
+          w: 1.9, r: 1.35, fallY: (s % 2 === 0) ? 0 : 9.0, triggered: false, phase: 0
+        });
+      }
+    }
+  }
+
+  // Fish lines & Power-ups (Speed-Burst & Shield)
+  for (let s = 55; s < mt.length - 55; s += 26) {
+    const inSc = shortcuts.some(sc => s > sc.sStart + 10 && s < sc.sEnd - 10) && (s % 52 === 0);
+    const latBase = inSc ? 0 : Math.sin(s * 0.03) * (mt.width * 0.25);
+    items.push({ type: 'FISH', s, lat: latBase, inShortcut: inSc, taken: false });
+    if (s % 130 === 0) {
+      items.push({
+        type: (Math.floor(s / 130) % 2 === 0) ? 'SPEED' : 'SHIELD',
+        s: s + 12, lat: -latBase * 0.8, inShortcut: false, taken: false
+      });
+    }
+  }
+
+  // Pine trees & distant mountain peaks
+  for (let s = 20; s < mt.length + 40; s += 22) {
+    const f = getTrackFrame(mt, s, false);
+    const dL = -mt.width * (0.78 + rnd() * 0.8);
+    const dR = mt.width * (0.78 + rnd() * 0.8);
+    trees.push({ x: f.x + f.rx*dL, y: f.y + 0.6, z: f.z + f.rz*dL, scale: 0.85 + rnd()*0.55 });
+    trees.push({ x: f.x + f.rx*dR, y: f.y + 0.6, z: f.z + f.rz*dR, scale: 0.85 + rnd()*0.55 });
+  }
+  for (let i = 0; i < 16; i++) {
+    const s = (i / 15) * (mt.length + 300);
+    const side = (i % 2 === 0) ? -1 : 1;
+    peaks.push({ x: side * (120 + (i%3)*45), y: 360 - s * mt.slope - 40, z: -s - 80, scale: 1.0 + (i%4)*0.3 });
+  }
+
+  // Boss resonant crystals near the bottom arena (s = mt.length - 65)
+  const bossCrystals = [];
+  if (mt.hasBoss) {
+    const arenaS = mt.length - 62;
+    [-6.5, 0, 6.5].forEach((lat, idx) => {
+      bossCrystals.push({ s: arenaS - idx * 14, lat, cooldown: 0 });
+    });
+  }
+
+  return { mt, trackMesh, shortcuts, caveArches, hazards, items, trees, peaks, bossCrystals };
+}
+
+// === PART 4: PLAYER PHYSICS, SLIDING, SURFACES, KNOCKDOWNS & POWERUPS ===
+const keys = {};
+let mouseSensitivity = 1.0;
+let camYawOffset = 0;
+let camPitchOffset = 0.25;
+
+const player = {
+  s: 8,
+  lat: 0,
+  vLat: 0,
+  speed: 0,
+  jumpY: 0,
+  vy: 0,
+  inShortcut: false,
+  stance: 'STANDING', // STANDING, SLIDING, AIRBORNE, KNOCKDOWN
+  surface: 'PACKED_SNOW',
+  knockdownTimer: 0,
+  invulnTimer: 0,
+  shieldActive: false,
+  boostTimer: 0,
+  fishCount: 0,
+  animT: 0,
+  wasSliding: false,
+  camShake: 0,
+  reset(mtIdx, rescuedCount) {
+    this.s = 8;
+    this.lat = 0;
+    this.vLat = 0;
+    this.speed = 6.0;
+    this.jumpY = 0;
+    this.vy = 0;
+    this.inShortcut = false;
+    this.stance = 'STANDING';
+    this.surface = 'PACKED_SNOW';
+    this.knockdownTimer = 0;
+    this.invulnTimer = 0;
+    // Flock bonus #4 (Frosty): start every mountain with a free Ice Shield!
+    this.shieldActive = (rescuedCount >= 4);
+    this.boostTimer = 0;
+    this.fishCount = 0;
+    this.animT = 0;
+    this.wasSliding = false;
+    this.camShake = 0;
+    camYawOffset = 0;
+    camPitchOffset = 0.24;
+  }
+};
+
+const particles = [];
+function spawnParticles(x, y, z, count, col=[0.95, 0.98, 1.0], spread=3.5, upVel=4.0) {
+  for (let i=0; i<count; i++) {
+    particles.push({
+      x: x + (Math.random()-0.5)*0.6,
+      y: y + Math.random()*0.5,
+      z: z + (Math.random()-0.5)*0.6,
+      vx: (Math.random()-0.5)*spread,
+      vy: Math.random()*upVel + 1.0,
+      vz: (Math.random()-0.5)*spread,
+      life: 0.45 + Math.random()*0.45,
+      maxLife: 0.9,
+      col,
+      size: 0.55 + Math.random()*0.75
+    });
+  }
+}
+
+function updateParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.z += p.vz * dt;
+    p.vy -= 9.8 * dt;
+    p.life -= dt;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+}
+
+function triggerKnockdown(reason) {
+  if (player.invulnTimer > 0 || player.knockdownTimer > 0) return false;
+  const f = getTrackFrame(levelData.mt, player.s, player.inShortcut);
+  const wx = f.x + f.rx * player.lat;
+  const wy = f.y + player.jumpY;
+  const wz = f.z + f.rz * player.lat;
+
+  if (player.shieldActive) {
+    player.shieldActive = false;
+    player.invulnTimer = 1.25;
+    AudioSys.sfx('shieldBreak');
+    spawnParticles(wx, wy + 0.9, wz, 22, [0.3, 0.95, 1.0], 6.5, 5.5);
+    return false;
+  }
+  // Flock bonus #3 (Flurry): 25% faster knockdown recovery
+  const baseRecover = (gameState.rescuedCount >= 3) ? 0.85 : 1.15;
+  player.knockdownTimer = baseRecover;
+  player.invulnTimer = baseRecover + 0.95;
+  player.speed = Math.max(3.5, player.speed * 0.32);
+  player.vLat *= 0.25;
+  player.camShake = 0.45;
+  AudioSys.sfx('knockdown');
+  spawnParticles(wx, wy + 0.6, wz, 26, [0.96, 0.99, 1.0], 7.0, 6.5);
+  return true;
+}
+
+function updatePlayerPhysics(dt) {
+  const mt = levelData.mt;
+  player.animT += dt * (0.6 + player.speed * 0.06);
+  if (player.invulnTimer > 0) player.invulnTimer -= dt;
+  if (player.boostTimer > 0) player.boostTimer -= dt;
+  if (player.camShake > 0) player.camShake = Math.max(0, player.camShake - dt * 1.4);
+
+  // Check shortcut entry/exit
+  const activeSc = levelData.shortcuts.find(sc => player.s >= sc.sStart && player.s <= sc.sEnd);
+  if (!activeSc) {
+    if (player.inShortcut) {
+      player.inShortcut = false;
+      player.lat = mt.width * 0.34;
+    }
+  } else if (!player.inShortcut && player.s < activeSc.sStart + 24 && player.lat > mt.width * 0.24) {
+    player.inShortcut = true;
+    player.lat = 0;
+  }
+
+  // Surface detection
+  player.surface = getSurfaceType(mt, player.s, player.lat, player.inShortcut, levelData.shortcuts);
+
+  // Flock speed & grip bonuses
+  const flockSpeedMult = (gameState.rescuedCount >= 1) ? 1.08 : 1.0;
+  const looseSnowRelief = (gameState.rescuedCount >= 2) ? 0.78 : 0.60;
+  const iceGripBonus = (gameState.rescuedCount >= 5) ? 1.22 : 1.0;
+  const jumpBonus = (gameState.rescuedCount >= 7) ? 1.15 : 1.0;
+
+  const forwardInput = (keys['KeyW'] || keys['ArrowUp'] ? 1 : 0) - (keys['KeyS'] || keys['ArrowDown'] ? 0.65 : 0);
+  const steerInput = (keys['KeyD'] || keys['ArrowRight'] ? 1 : 0) - (keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0);
+  const slideHeld = !!(keys['ShiftLeft'] || keys['ShiftRight']);
+  const jumpPressed = !!(keys['Space']);
+
+  if (player.knockdownTimer > 0) {
+    player.knockdownTimer -= dt;
+    player.stance = 'KNOCKDOWN';
+    player.speed = Math.max(2.0, player.speed - 9.0 * dt);
+  } else {
+    // Jump logic
+    if (jumpPressed && player.jumpY <= 0.01) {
+      player.vy = 9.6 * jumpBonus;
+      player.jumpY = 0.05;
+      AudioSys.sfx('jump');
+    }
+
+    const isSliding = slideHeld && player.jumpY <= 0.15;
+    if (isSliding && !player.wasSliding) AudioSys.sfx('slide');
+    player.wasSliding = isSliding;
+
+    if (player.jumpY > 0.01) player.stance = 'AIRBORNE';
+    else if (isSliding) player.stance = 'SLIDING';
+    else player.stance = 'STANDING';
+
+    // Target speed & acceleration based on stance + surface + slope
+    let maxSpd = 19.5 * flockSpeedMult;
+    let accel = 14.0;
+    if (isSliding) {
+      // Belly sliding on steep slopes builds far more speed than running!
+      const slopeBoost = 1.0 + mt.slope * 1.45;
+      maxSpd = 35.5 * flockSpeedMult * (player.surface === 'SHEER_ICE' ? 1.18 : 1.0) * (slopeBoost * 0.78);
+      accel = player.surface === 'SHEER_ICE' ? 22.0 : 16.5;
+    } else {
+      if (forwardInput > 0) maxSpd = 21.0 * flockSpeedMult;
+      else if (forwardInput < 0) maxSpd = 9.5;
+      else maxSpd = 15.0 * flockSpeedMult;
+    }
+
+    if (player.surface === 'LOOSE_SNOW' && player.boostTimer <= 0) {
+      maxSpd *= looseSnowRelief;
+    }
+    if (player.boostTimer > 0) {
+      maxSpd = Math.max(maxSpd, 41.0 * flockSpeedMult);
+      accel = 32.0;
+    }
+
+    // Sheer ice keeps momentum even when not pressing forward!
+    const drag = (player.surface === 'SHEER_ICE') ? 2.2 : (player.surface === 'LOOSE_SNOW' ? 11.5 : 6.5);
+    if (player.speed < maxSpd) {
+      player.speed = Math.min(maxSpd, player.speed + accel * dt);
+    } else {
+      player.speed = Math.max(maxSpd, player.speed - drag * dt);
+    }
+
+    // Core mechanic: The faster she goes (especially while belly-sliding), the harder she is to steer!
+    const speedFactor = 1.0 + (player.speed / 15.5) * (isSliding ? 1.55 : 0.38);
+    let grip = (player.surface === 'SHEER_ICE') ? (0.58 * iceGripBonus) : (player.surface === 'LOOSE_SNOW' ? 0.82 : 1.0);
+    const steerAccel = (36.0 * grip) / speedFactor;
+    const lateralDamp = (player.surface === 'SHEER_ICE') ? 2.4 : 6.2;
+
+    player.vLat += steerInput * steerAccel * dt;
+    player.vLat -= player.vLat * lateralDamp * dt;
+  }
+
+  // Vertical jump physics
+  if (player.jumpY > 0 || player.vy > 0) {
+    player.jumpY += player.vy * dt;
+    player.vy -= 21.5 * dt;
+    if (player.jumpY <= 0) {
+      player.jumpY = 0;
+      player.vy = 0;
+    }
+  }
+
+  // Advance down the mountain (shortcuts cut distance by 28%!)
+  const shortcutGain = player.inShortcut ? 1.28 : 1.0;
+  // If boss is active near the bottom, clamp s inside the boss arena until boss is driven off!
+  const bossArenaStopS = mt.length - 44;
+  player.s += player.speed * shortcutGain * dt;
+  if (mt.hasBoss && bossState.hp > 0 && player.s > bossArenaStopS) {
+    // Loop smoothly through the boss basin so the player can dodge swoops and strike crystals
+    player.s = mt.length - 92;
+  }
+
+  player.lat += player.vLat * dt;
+  const maxLat = player.inShortcut ? 4.3 : ((mt.hasBoss && player.s > mt.length - 105) ? mt.width * 0.65 : mt.width * 0.48);
+  if (player.lat < -maxLat) { player.lat = -maxLat; player.vLat = Math.max(0, player.vLat); }
+  if (player.lat > maxLat) { player.lat = maxLat; player.vLat = Math.min(0, player.vLat); }
+
+  // Snow spray particles when sliding or boosting
+  if ((player.stance === 'SLIDING' || player.boostTimer > 0) && Math.random() < 0.65) {
+    const f = getTrackFrame(mt, player.s, player.inShortcut);
+    spawnParticles(
+      f.x + f.rx * player.lat, f.y + 0.15, f.z + f.rz * player.lat,
+      1, player.boostTimer > 0 ? [1.0, 0.72, 0.25] : [0.85, 0.96, 1.0], 2.2, 2.0
+    );
+  }
+}
+
+// === PART 5: PREDATOR AI, SWOOPING & BOSS ENCOUNTERS ===
+const predator = {
+  state: 'CIRCLING', // CIRCLING, WARN, SWOOP
+  timer: 8.0,
+  targetLat: 0,
+  targetS: 0,
+  x: 0, y: 0, z: 0,
+  yaw: 0, pitch: 0, roll: 0,
+  animT: 0,
+  reset(mt) {
+    this.state = 'CIRCLING';
+    this.timer = (mt.id === 0) ? 24.0 : mt.swoopInterval;
+    this.targetLat = 0;
+    this.targetS = 0;
+    this.animT = 0;
+  }
+};
+
+const bossState = {
+  active: false,
+  engaged: false,
+  hp: 0,
+  maxHp: 0,
+  phase: 'HOVER', // HOVER, SWOOP, STUNNED, DRIVEN_OFF
+  timer: 0,
+  lat: 0,
+  s: 0,
+  yOffset: 9.0,
+  hurtFlash: 0,
+  reset(mt) {
+    this.active = !!mt.hasBoss;
+    this.engaged = false;
+    this.hp = mt.bossHp || 0;
+    this.maxHp = mt.bossHp || 0;
+    this.phase = 'HOVER';
+    this.timer = 2.5;
+    this.lat = 0;
+    this.s = mt.length - 56;
+    this.yOffset = 8.5;
+    this.hurtFlash = 0;
+  }
+};
+
+function updateHazardsAndItems(dt, gameTime) {
+  const mt = levelData.mt;
+  const fP = getTrackFrame(mt, player.s, player.inShortcut);
+  const px = fP.x + fP.rx * player.lat;
+  const py = fP.y + player.jumpY;
+  const pz = fP.z + fP.rz * player.lat;
+
+  // Update & collide with Hazards
+  for (const h of levelData.hazards) {
+    if (h.type === 'SNOW_SLAB') {
+      if (!h.triggered && player.s > h.s - 68) h.triggered = true;
+      if (h.triggered && h.fallY > 0) {
+        h.fallY = Math.max(0, h.fallY - 19.5 * dt);
+      }
+    } else if (h.type === 'BOULDER') {
+      h.lat = Math.sin(gameTime * 2.1 + h.phase) * (mt.width * 0.36);
+    }
+
+    if (h.inShortcut !== player.inShortcut) continue;
+    const ds = Math.abs(player.s - h.s);
+    const dLat = Math.abs(player.lat - h.lat);
+    if (ds < h.r && dLat < h.w * 0.52) {
+      if (h.type === 'CREVASSE') {
+        if (player.jumpY < 0.42) triggerKnockdown('CREVASSE');
+      } else if (h.type === 'SNOW_SLAB') {
+        if (h.fallY < 1.8 && player.jumpY < 1.35) triggerKnockdown('SNOW_SLAB');
+      } else {
+        if (player.jumpY < 1.25) triggerKnockdown(h.type);
+      }
+    }
+  }
+
+  // Collectibles (Fish, Speed-Burst, Shield)
+  for (const it of levelData.items) {
+    if (it.taken || it.inShortcut !== player.inShortcut) continue;
+    if (Math.abs(player.s - it.s) < 2.3 && Math.abs(player.lat - it.lat) < 2.1) {
+      it.taken = true;
+      if (it.type === 'FISH') {
+        player.fishCount++;
+        gameState.totalScore += 100;
+        AudioSys.sfx('fish');
+        spawnParticles(px, py + 0.7, pz, 10, [1.0, 0.85, 0.25], 4.0, 4.0);
+      } else if (it.type === 'SPEED') {
+        const dur = (gameState.rescuedCount >= 6) ? 5.4 : 4.0;
+        player.boostTimer = Math.max(player.boostTimer, dur);
+        gameState.totalScore += 250;
+        AudioSys.sfx('powerup');
+        spawnParticles(px, py + 0.8, pz, 18, [1.0, 0.55, 0.15], 5.5, 5.0);
+      } else if (it.type === 'SHIELD') {
+        player.shieldActive = true;
+        gameState.totalScore += 250;
+        AudioSys.sfx('powerup');
+        spawnParticles(px, py + 0.8, pz, 18, [0.25, 0.95, 1.0], 5.5, 5.0);
+      }
+    }
+  }
+
+  // Boss resonant crystals in the lower arena
+  if (bossState.active && bossState.hp > 0) {
+    for (const c of levelData.bossCrystals) {
+      if (c.cooldown > 0) c.cooldown = Math.max(0, c.cooldown - dt);
+      if (c.cooldown <= 0 && Math.abs(player.s - c.s) < 2.8 && Math.abs(player.lat - c.lat) < 2.4) {
+        c.cooldown = 4.5;
+        damageBoss(1, c.s, c.lat);
+      }
+    }
+  }
+}
+
+function damageBoss(dmg, hitS, hitLat) {
+  if (bossState.hp <= 0) return;
+  bossState.hp = Math.max(0, bossState.hp - dmg);
+  bossState.hurtFlash = 0.65;
+  bossState.phase = 'HOVER';
+  bossState.timer = 2.0;
+  AudioSys.sfx('bossHit');
+  const f = getTrackFrame(levelData.mt, hitS, false);
+  spawnParticles(f.x + f.rx * hitLat, f.y + 1.5, f.z + f.rz * hitLat, 28, [1.0, 0.82, 0.25], 8.0, 7.5);
+  if (bossState.hp <= 0) {
+    bossState.phase = 'DRIVEN_OFF';
+    AudioSys.sfx('screech');
+    gameState.totalScore += 1000;
+  }
+}
+
+function updatePredatorAndBoss(dt) {
+  const mt = levelData.mt;
+  predator.animT += dt;
+  if (bossState.hurtFlash > 0) bossState.hurtFlash = Math.max(0, bossState.hurtFlash - dt);
+
+  // Check if entering Boss Arena near bottom
+  if (bossState.active && bossState.hp > 0 && player.s >= mt.length - 120) {
+    bossState.engaged = true;
+    predator.state = 'CIRCLING';
+    bossState.timer -= dt;
+    if (bossState.phase === 'HOVER') {
+      bossState.lat = Math.sin(predator.animT * 1.8) * (mt.width * 0.35);
+      bossState.yOffset = 7.0 + Math.sin(predator.animT * 3.0) * 1.2;
+      if (bossState.timer <= 0) {
+        bossState.phase = 'SWOOP';
+        bossState.timer = 1.6;
+        bossState.lat = player.lat;
+        bossState.s = player.s + 14;
+        AudioSys.sfx('screech');
+      }
+    } else if (bossState.phase === 'SWOOP') {
+      bossState.yOffset = Math.max(1.1, bossState.yOffset - 11.0 * dt);
+      if (Math.abs(player.s - bossState.s) < 3.4 && Math.abs(player.lat - bossState.lat) < 2.8) {
+        // If player is belly-sliding fast or boosting, ramming the swooping boss damages it!
+        if (player.stance === 'SLIDING' || player.boostTimer > 0) {
+          damageBoss(1, bossState.s, bossState.lat);
+        } else {
+          triggerKnockdown('BOSS_SWOOP');
+        }
+      }
+      if (bossState.timer <= 0) {
+        bossState.phase = 'HOVER';
+        bossState.timer = 2.4;
+      }
+    }
+    const fb = getTrackFrame(mt, bossState.s, false);
+    predator.x = fb.x + fb.rx * bossState.lat;
+    predator.y = fb.y + bossState.yOffset;
+    predator.z = fb.z + fb.rz * bossState.lat;
+    predator.yaw = fb.yaw + Math.PI;
+    predator.pitch = (bossState.phase === 'SWOOP') ? -0.35 : 0.1;
+    predator.roll = Math.sin(predator.animT * 2.5) * 0.22;
+    return;
+  }
+
+  // Standard Predator Circling & Swooping during descent
+  predator.timer -= dt;
+  const fp = getTrackFrame(mt, player.s + 18, false);
+  if (predator.state === 'CIRCLING') {
+    const cAngle = predator.animT * 1.4;
+    predator.x = fp.x + Math.cos(cAngle) * 14;
+    predator.y = fp.y + 15.5 + Math.sin(cAngle * 2) * 2.0;
+    predator.z = fp.z + Math.sin(cAngle) * 14;
+    predator.yaw = -cAngle;
+    predator.pitch = 0.12;
+    predator.roll = -0.28;
+    // Do not swoop in Mt 1's safe onboarding zones (s < 560) or inside covered ice caves
+    if (predator.timer <= 0 && !player.inShortcut && (mt.id > 0 || player.s > 560)) {
+      predator.state = 'WARN';
+      predator.timer = 1.65;
+      predator.targetLat = player.lat;
+      predator.targetS = player.s + player.speed * 1.55;
+      AudioSys.sfx('screech');
+    }
+  } else if (predator.state === 'WARN') {
+    predator.targetS = player.s + player.speed * Math.max(0.25, predator.timer);
+    const ft = getTrackFrame(mt, predator.targetS, false);
+    predator.x = ft.x + ft.rx * predator.targetLat;
+    predator.y = ft.y + 3.0 + predator.timer * 7.5;
+    predator.z = ft.z + ft.rz * predator.targetLat;
+    predator.yaw = ft.yaw + Math.PI;
+    predator.pitch = -0.55;
+    predator.roll = 0;
+    if (predator.timer <= 0) {
+      predator.state = 'SWOOP';
+      predator.timer = 0.65;
+    }
+  } else if (predator.state === 'SWOOP') {
+    const ft = getTrackFrame(mt, predator.targetS, false);
+    predator.x = ft.x + ft.rx * predator.targetLat;
+    predator.y = ft.y + 1.15;
+    predator.z = ft.z + ft.rz * predator.targetLat;
+    if (Math.abs(player.s - predator.targetS) < 3.6 && Math.abs(player.lat - predator.targetLat) < 2.6 && player.jumpY < 1.3) {
+      player.vLat += (player.lat >= predator.targetLat ? 1 : -1) * 14.0;
+      triggerKnockdown('PREDATOR_SWOOP');
+    }
+    if (predator.timer <= 0) {
+      predator.state = 'CIRCLING';
+      predator.timer = mt.swoopInterval;
+    }
+  }
+}
+
+function updateOnboardingOverlay() {
+  const tut = document.getElementById('tutorialOverlay');
+  const h = document.getElementById('tutHeader');
+  const b = document.getElementById('tutBody');
+  const mt = levelData.mt;
+  if (bossState.engaged && bossState.hp > 0) {
+    tut.style.display = 'block';
+    h.textContent = 'Boss Guardian Blocking the Chick!';
+    b.textContent = 'Dodge its swoops and slide into the Golden Ice Crystals (or belly-slide into the Boss) to drive it off!';
+    return;
+  }
+  if (mt.id !== 0) {
+    tut.style.display = 'none';
+    return;
+  }
+  tut.style.display = 'block';
+  if (player.s < 78) {
+    h.textContent = 'Controls: Run & Look';
+    b.textContent = 'Use [W A S D] or [Arrow Keys] to run down the packed snow, and move the [Mouse] to look around.';
+  } else if (player.s < 148) {
+    h.textContent = 'Controls: Jump';
+    b.textContent = 'Press [Space] to leap cleanly over the glacial crevasse ahead!';
+  } else if (player.s < 390) {
+    h.textContent = 'New Move: The Belly Slide!';
+    b.textContent = 'Steep Sheer Blue Ice! Hold [Shift] to drop to your belly and build massive speed! Release [Shift] to stand up and steer sharply.';
+  } else if (player.s < 540) {
+    h.textContent = 'Hazards & Power-Ups';
+    b.textContent = 'Dodge Ice Spurs & Falling Snow Slabs! Grab Fish for score, Orange Speed-Bursts, and Cyan Ice Shields.';
+  } else if (player.s < 750) {
+    h.textContent = 'Shortcuts & Predator Swoops';
+    b.textContent = 'Steer right into the glowing Ice Cave Arch to cut distance! Dodge the red ring when the Predator swoops!';
+  } else {
+    h.textContent = 'Almost There!';
+    b.textContent = 'Race to the Ice Cradle at the bottom before the clock hits zero to free Pip!';
+  }
+}
+
+// === PART 6: SCENES, MENUS, HUD, RENDERING & MAIN LOOP ===
+const gameState = {
+  state: 'INTRO', // INTRO, MENU, HOWTO, SETTINGS, PLAY, PAUSE, WIN_SCENE, FAIL_SCENE, FAIL, STORY, ENDING
+  prevMenuState: 'MENU',
+  currentMt: 0,
+  unlockedMt: 0,
+  rescuedCount: 0,
+  clock: 100,
+  totalScore: 0,
+  sceneTimer: 0,
+  gameTime: 0
+};
+
+try {
+  const savedUnl = parseInt(localStorage.getItem('tlsh_unlocked') || '0', 10);
+  const savedResc = parseInt(localStorage.getItem('tlsh_rescued') || '0', 10);
+  if (!isNaN(savedUnl)) gameState.unlockedMt = Math.min(7, Math.max(0, savedUnl));
+  if (!isNaN(savedResc)) gameState.rescuedCount = Math.min(8, Math.max(0, savedResc));
+} catch(e) {}
+
+const screenMap = {
+  INTRO: 'introScreen',
+  MENU: 'mainMenuScreen',
+  HOWTO: 'howToPlayScreen',
+  SETTINGS: 'settingsScreen',
+  PAUSE: 'pauseScreen',
+  FAIL: 'failScreen',
+  STORY: 'storyScreen',
+  WIN_SCENE: 'cutsceneScreen',
+  FAIL_SCENE: 'cutsceneScreen',
+  ENDING: 'endingScreen'
+};
+
+function setState(newState) {
+  gameState.state = newState;
+  gameState.sceneTimer = 0;
+  Object.values(screenMap).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  const activeId = screenMap[newState];
+  if (activeId) {
+    const el = document.getElementById(activeId);
+    if (el) el.classList.add('active');
+  }
+  const hud = document.getElementById('hud');
+  if (hud) hud.classList.toggle('active', newState === 'PLAY' || newState === 'PAUSE');
+  const tut = document.getElementById('tutorialOverlay');
+  if (tut && newState === 'PAUSE') tut.style.display = 'none';
+  AudioSys.setPaused(newState === 'PAUSE');
+  if (newState === 'MENU') refreshMainMenuUI();
+}
+
+function refreshMainMenuUI() {
+  const fl = document.getElementById('menuFlockStatus');
+  if (fl) fl.textContent = `Rescued Flock: ${gameState.rescuedCount} / 8 Chicks (${MOUNTAINS.slice(0, gameState.rescuedCount).map(m=>m.chick).join(', ') || 'None yet'})`;
+  const grid = document.getElementById('menuLevelGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  MOUNTAINS.forEach((m, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'lvl-chip' + (idx === gameState.currentMt ? ' active' : '');
+    const rescuedMark = idx < gameState.rescuedCount ? '🐧 ' : '';
+    btn.textContent = `${rescuedMark}Mt ${idx+1}: ${m.chick}`;
+    btn.onclick = () => {
+      AudioSys.sfx('click');
+      gameState.currentMt = idx;
+      refreshMainMenuUI();
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function startMountain(mtIdx) {
+  gameState.currentMt = Math.max(0, Math.min(MOUNTAINS.length - 1, mtIdx));
+  levelData = buildMountainLevel(gameState.currentMt);
+  const mt = levelData.mt;
+  gameState.clock = mt.clock;
+  player.reset(gameState.currentMt, gameState.rescuedCount);
+  predator.reset(mt);
+  bossState.reset(mt);
+  particles.length = 0;
+  setState('PLAY');
+  updateHUD();
+}
+
+function onLevelWon() {
+  AudioSys.sfx('victory');
+  AudioSys.sfx('chirp');
+  if (gameState.rescuedCount <= gameState.currentMt) {
+    gameState.rescuedCount = gameState.currentMt + 1;
+  }
+  if (gameState.unlockedMt < Math.min(7, gameState.currentMt + 1)) {
+    gameState.unlockedMt = Math.min(7, gameState.currentMt + 1);
+  }
+  try {
+    localStorage.setItem('tlsh_unlocked', String(gameState.unlockedMt));
+    localStorage.setItem('tlsh_rescued', String(gameState.rescuedCount));
+  } catch(e) {}
+
+  gameState.totalScore += Math.floor(gameState.clock * 25) + 500;
+  const mt = levelData.mt;
+  document.getElementById('cutsceneTitle').textContent = `${mt.chick} Freed!`;
+  document.getElementById('cutsceneText').textContent = `The ice cage shatters! Little ${mt.chick} chirps and waddles happily into your warm flippers!`;
+  setState('WIN_SCENE');
+}
+
+function onLevelFailed() {
+  AudioSys.sfx('fail');
+  AudioSys.sfx('screech');
+  const mt = levelData.mt;
+  document.getElementById('cutsceneTitle').textContent = `Time Ran Out on ${mt.name}!`;
+  document.getElementById('cutsceneText').textContent = `The circling Skua swoops down and snatches ${mt.chick}'s ice cradle before you can reach the bottom!`;
+  setState('FAIL_SCENE');
+}
+
+function openStoryScreen() {
+  const mt = MOUNTAINS[gameState.currentMt];
+  const nextMt = MOUNTAINS[Math.min(7, gameState.currentMt + 1)];
+  document.getElementById('storyHeader').textContent = `Mountain ${mt.id + 1} Complete — ${mt.chick} Rescued!`;
+  document.getElementById('storyTitle').textContent = `The Growing Flock (${gameState.rescuedCount} / 8 Chicks)`;
+  document.getElementById('storyBody').textContent = mt.storyText;
+  document.getElementById('storyBonusText').textContent = mt.bonusDesc;
+  document.getElementById('storyNextText').textContent = `${nextMt.name} — Clock: ${nextMt.clock}s | Steepness: ${Math.round(nextMt.slope*100)}% ${nextMt.hasBoss ? '| ⚠️ BOSS GUARDIAN' : ''}`;
+  setState('STORY');
+}
+
+function updateHUD() {
+  if (!levelData) return;
+  const mt = levelData.mt;
+  document.getElementById('hudMountainName').textContent = mt.name;
+  document.getElementById('hudFish').textContent = player.fishCount;
+  document.getElementById('hudScore').textContent = gameState.totalScore;
+  document.getElementById('hudFlockCount').textContent = `Flock Rescued: ${gameState.rescuedCount} / 8`;
+
+  const c = Math.max(0, gameState.clock);
+  const mins = Math.floor(c / 60);
+  const secs = (c % 60).toFixed(1).padStart(4, '0');
+  document.getElementById('hudClock').textContent = `${String(mins).padStart(2,'0')}:${secs}`;
+  document.getElementById('hudClockBox').classList.toggle('urgent', c <= 18.0);
+
+  const distLeft = Math.max(0, Math.round(mt.length - 36 - player.s));
+  const fP = getTrackFrame(mt, player.s, player.inShortcut);
+  const fGoal = getTrackFrame(mt, Math.min(mt.length - 36, player.s + 45), false);
+  const dx = fGoal.x - (fP.x + fP.rx * player.lat);
+  const dz = fGoal.z - (fP.z + fP.rz * player.lat);
+  const worldAngle = Math.atan2(-dx, -dz);
+  const relAngle = (worldAngle - (fP.yaw + camYawOffset)) * (180 / Math.PI);
+  document.getElementById('goalArrow').style.transform = `rotate(${relAngle.toFixed(1)}deg)`;
+  document.getElementById('hudGoalText').textContent = (bossState.engaged && bossState.hp > 0)
+    ? `DRIVE OFF BOSS TO FREE ${mt.chick.toUpperCase()}!`
+    : `CHICK (${mt.chick.toUpperCase()}): ${distLeft}m`;
+
+  // Boss & Predator HUD Bar
+  const bossTitle = document.getElementById('hudBossTitle');
+  const bossFill = document.getElementById('hudBossFill');
+  if (mt.hasBoss) {
+    if (bossState.hp > 0) {
+      bossTitle.textContent = `${mt.bossName}: ${bossState.hp} / ${bossState.maxHp} INTEGRITY`;
+      bossFill.style.width = `${(bossState.hp / bossState.maxHp) * 100}%`;
+    } else {
+      bossTitle.textContent = `${mt.bossName}: DRIVEN OFF!`;
+      bossFill.style.width = '0%';
+    }
+  } else {
+    const pTxt = predator.state === 'WARN' ? '⚠️ PREDATOR SWOOPING!' : (predator.state === 'SWOOP' ? '⚠️ DODGE TALONS!' : 'PREDATOR: CIRCLING OVERHEAD');
+    bossTitle.textContent = pTxt;
+    const swoopPct = predator.state === 'CIRCLING' ? Math.max(0, 100 - (predator.timer / mt.swoopInterval)*100) : 100;
+    bossFill.style.width = `${ Math.min(100, swoopPct).toFixed(0) }%`;
+  }
+
+  const kmh = Math.round(player.speed * 3.6);
+  document.getElementById('hudSpeed').textContent = kmh;
+  document.getElementById('hudStance').textContent = player.stance === 'SLIDING' ? 'BELLY SLIDING' : player.stance;
+  document.getElementById('hudSurface').textContent = player.surface.replace('_', ' ');
+  document.getElementById('hudPowerups').textContent = `Shield: ${player.shieldActive ? 'ACTIVE 🛡️' : 'None'} | Boost: ${player.boostTimer > 0 ? player.boostTimer.toFixed(1)+'s 🔥' : 'Ready'}`;
+  const progPct = Math.min(100, Math.max(0, (player.s / (mt.length - 36)) * 100));
+  document.getElementById('hudProgressFill').style.width = `${progPct.toFixed(1)}%`;
+  document.getElementById('hudShortcutHint').textContent = player.inShortcut ? 'Path: ⚡ ICE CAVE SHORTCUT (+28% Speed)' : 'Path: Main Alpine Trail';
+  updateOnboardingOverlay();
+}
+// === PART 6B: INPUTS, 3D SCENE RENDERER & MAIN LOOP ===
+function bindButtons() {
+  const on = (id, fn) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', () => { AudioSys.sfx('click'); fn(); });
+  };
+  on('btnSkipIntro', () => setState('MENU'));
+  on('btnStartGame', () => startMountain(gameState.currentMt));
+  on('btnHowToPlay', () => { gameState.prevMenuState = 'MENU'; setState('HOWTO'); });
+  on('btnHowToBack', () => setState('MENU'));
+  on('btnSettings', () => { gameState.prevMenuState = 'MENU'; setState('SETTINGS'); });
+  on('btnSettingsBack', () => setState('MENU'));
+  on('btnToggleSound', () => AudioSys.setEnabled(!AudioSys.enabled));
+  on('btnPauseSound', () => AudioSys.setEnabled(!AudioSys.enabled));
+  on('btnSensitivity', () => {
+    mouseSensitivity = mouseSensitivity === 1.0 ? 1.5 : (mouseSensitivity === 1.5 ? 0.65 : 1.0);
+    const lbl = mouseSensitivity === 1.0 ? 'Normal' : (mouseSensitivity > 1.0 ? 'High' : 'Low');
+    document.getElementById('btnSensitivity').textContent = 'Mouse Sensitivity: ' + lbl;
+  });
+  on('btnPlayEnding', () => {
+    AudioSys.sfx('victory');
+    setState('ENDING');
+  });
+  on('btnResume', () => setState('PLAY'));
+  on('btnRestartLevel', () => startMountain(gameState.currentMt));
+  on('btnPauseMainMenu', () => setState('MENU'));
+  on('btnRetryLevel', () => startMountain(gameState.currentMt));
+  on('btnFailMainMenu', () => setState('MENU'));
+  on('btnNextMountain', () => {
+    const nextIdx = Math.min(MOUNTAINS.length - 1, gameState.currentMt + 1);
+    startMountain(nextIdx);
+  });
+  on('btnStoryMainMenu', () => setState('MENU'));
+  on('btnEndingMainMenu', () => setState('MENU'));
+}
+bindButtons();
+AudioSys.setEnabled(AudioSys.enabled);
+
+window.addEventListener('keydown', (e) => {
+  keys[e.code] = true;
+  if (e.code === 'Escape') {
+    e.preventDefault();
+    AudioSys.sfx('click');
+    if (gameState.state === 'INTRO') setState('MENU');
+    else if (gameState.state === 'PLAY') setState('PAUSE');
+    else if (gameState.state === 'PAUSE') setState('PLAY');
+    else if (gameState.state === 'HOWTO' || gameState.state === 'SETTINGS' || gameState.state === 'STORY' || gameState.state === 'ENDING' || gameState.state === 'FAIL') {
+      setState('MENU');
+    }
+  } else if (e.code === 'Space' && gameState.state === 'INTRO' && gameState.sceneTimer > 0.6) {
+    setState('MENU');
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  keys[e.code] = false;
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (gameState.state !== 'PLAY') return;
+  const dx = e.movementX || 0;
+  const dy = e.movementY || 0;
+  if (dx !== 0 || dy !== 0) {
+    camYawOffset = Math.max(-0.85, Math.min(0.85, camYawOffset - dx * 0.0022 * mouseSensitivity));
+    camPitchOffset = Math.max(0.08, Math.min(0.58, camPitchOffset + dy * 0.0016 * mouseSensitivity));
+  } else {
+    // Also support smooth gaze offset from cursor position when pointer lock is not active
+    const nx = (e.clientX / Math.max(1, window.innerWidth)) * 2 - 1;
+    const ny = (e.clientY / Math.max(1, window.innerHeight)) * 2 - 1;
+    camYawOffset = -nx * 0.38 * mouseSensitivity;
+    camPitchOffset = 0.24 + ny * 0.14 * mouseSensitivity;
+  }
+});
+
+// Build default Mountain 1 immediately so background scenes always have a rich 3D terrain mesh
+levelData = buildMountainLevel(0);
+
+function render3DWorld() {
+  const mt = levelData ? levelData.mt : MOUNTAINS[0];
+  gl.clearColor(mt.fog[0], mt.fog[1], mt.fog[2], 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  const aspect = canvas.width / Math.max(1, canvas.height);
+  const proj = M4.persp(58 * Math.PI / 180, aspect, 0.5, 950.0);
+  gl.uniformMatrix4fv(loc.uProj, false, proj);
+  gl.uniform3fv(loc.uSunDir, [0.42, 0.78, 0.46]);
+  gl.uniform3fv(loc.uSunCol, mt.sun);
+  gl.uniform3fv(loc.uSkyCol, mt.sky);
+  gl.uniform3fv(loc.uFogCol, mt.fog);
+  gl.uniform1f(loc.uFogDensity, (gameState.state === 'INTRO') ? 1.55 : 0.85);
+
+  const t = gameState.gameTime;
+  const st = gameState.sceneTimer;
+
+  // SCENE 1: INTRO (Storm & Predator scattering the 8 chicks down the mountain)
+  if (gameState.state === 'INTRO') {
+    const f0 = getTrackFrame(mt, 22, false);
+    const camX = f0.x + Math.sin(st * 0.4) * 5.2;
+    const camY = f0.y + 3.2;
+    const camZ = f0.z + 6.8;
+    const view = M4.lookAt(camX, camY, camZ, f0.x, f0.y + 0.9, f0.z - 5.0);
+    gl.uniformMatrix4fv(loc.uView, false, view);
+    gl.uniform3fv(loc.uCamPos, [camX, camY, camZ]);
+
+    drawMesh(levelData.trackMesh, M4.ident(), 0.35);
+    levelData.trees.slice(0, 30).forEach(tr => drawMesh(MODELS.pineTree, M4.trs(tr.x, tr.y, tr.z, 0, 0, 0, tr.scale, tr.scale, tr.scale), 0.15));
+    drawMotherPenguin(f0.x, f0.y, f0.z, Math.sin(st * 3) * 0.4, 0, 0, st > 2.2 ? 'KNOCKDOWN' : 'STANDING', t * 2, false, false);
+
+    // 8 chicks scattering down the slope as the Giant Skua swoops in
+    for (let i = 0; i < 8; i++) {
+      const scatterDist = Math.max(0, (st - 0.5) * (5.2 + i * 1.2));
+      const fc = getTrackFrame(mt, 24 + scatterDist, false);
+      const lat = Math.sin(i * 1.7 + st * 2) * (1.2 + scatterDist * 0.12);
+      drawChickModel(fc.x + fc.rx * lat, fc.y, fc.z + fc.rz * lat, fc.yaw, t * 3 + i, 0.95);
+    }
+    // Giant Skua swooping through the blizzard
+    const bx = f0.x + Math.sin(st * 1.8) * 3.8;
+    const by = f0.y + 2.6 + Math.cos(st * 2.2) * 0.7;
+    const bz = f0.z - 3.5 - st * 1.8;
+    drawPredatorBird(bx, by, bz, Math.PI, -0.2, 0.22, t * 2.2, 1.45, 0);
+    return;
+  }
+
+  // SCENE 2: STORY SCREEN (Mother marching across the ridge followed by her growing flock of rescued chicks)
+  if (gameState.state === 'STORY') {
+    const f0 = getTrackFrame(mt, 40, false);
+    const camX = f0.x + 6.2, camY = f0.y + 1.8, camZ = f0.z + 5.2;
+    const view = M4.lookAt(camX, camY, camZ, f0.x, f0.y - 0.65, f0.z - 1.2);
+    gl.uniformMatrix4fv(loc.uView, false, view);
+    gl.uniform3fv(loc.uCamPos, [camX, camY, camZ]);
+    drawMesh(levelData.trackMesh, M4.ident(), 0.35);
+    drawMotherPenguin(f0.x, f0.y, f0.z - 2.2, 0, 0, 0, 'STANDING', t * 1.6, false, false);
+    for (let i = 0; i < gameState.rescuedCount; i++) {
+      const row = Math.floor(i / 2), side = (i % 2 === 0 ? -1 : 1) * (0.95 + row * 0.18);
+      drawChickModel(f0.x + side, f0.y, f0.z - 0.4 + row * 1.45, 0, t * 2.2 + i * 0.7, 0.95);
+    }
+    return;
+  }
+
+  // SCENE 3: ENDING SCENE (Whole family of 8 chicks reunited around Mother under golden light)
+  if (gameState.state === 'ENDING') {
+    gl.uniform3fv(loc.uSunCol, [1.0, 0.92, 0.68]);
+    gl.uniform3fv(loc.uSkyCol, [0.35, 0.75, 0.95]);
+    const f0 = getTrackFrame(mt, 35, false);
+    const orbit = st * 0.45;
+    const camX = f0.x + Math.sin(orbit) * 9.5;
+    const camY = f0.y + 3.8;
+    const camZ = f0.z + Math.cos(orbit) * 9.5;
+    const view = M4.lookAt(camX, camY, camZ, f0.x, f0.y + 1.1, f0.z);
+    gl.uniformMatrix4fv(loc.uView, false, view);
+    gl.uniform3fv(loc.uCamPos, [camX, camY, camZ]);
+    drawMesh(levelData.trackMesh, M4.ident(), 0.4);
+    drawMotherPenguin(f0.x, f0.y + Math.abs(Math.sin(t*4))*0.2, f0.z, orbit, 0, 0, 'STANDING', t * 1.6, false, false);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + t * 0.85;
+      const r = 2.6 + Math.sin(t * 3 + i) * 0.35;
+      drawChickModel(f0.x + Math.cos(a) * r, f0.y + Math.abs(Math.sin(t*6+i))*0.25, f0.z + Math.sin(a) * r, -a + Math.PI/2, t * 2.5 + i, 1.0);
+    }
+    return;
+  }
+
+  // SCENE 4: PLAY, PAUSE, MENU, WIN_SCENE, FAIL_SCENE
+  const fP = getTrackFrame(mt, player.s, player.inShortcut);
+  const px = fP.x + fP.rx * player.lat;
+  const py = fP.y + player.jumpY;
+  const pz = fP.z + fP.rz * player.lat;
+
+  let camX, camY, camZ, lookX, lookY, lookZ;
+  if (gameState.state === 'WIN_SCENE' || gameState.state === 'FAIL_SCENE' || gameState.state === 'FAIL') {
+    const fg = getTrackFrame(mt, mt.length - 32, false);
+    camX = fg.x + Math.sin(st * 0.8) * 7.5;
+    camY = fg.y + 3.6;
+    camZ = fg.z + 8.5;
+    lookX = fg.x; lookY = fg.y + 1.2; lookZ = fg.z;
+  } else {
+    const totalYaw = fP.yaw + camYawOffset;
+    const shakeX = (Math.random() - 0.5) * player.camShake;
+    const shakeY = (Math.random() - 0.5) * player.camShake;
+    const distBack = (player.stance === 'SLIDING') ? 6.8 : 7.6;
+    camX = px + Math.sin(totalYaw) * distBack + shakeX;
+    camY = py + 3.4 + camPitchOffset * 4.2 + shakeY;
+    camZ = pz + Math.cos(totalYaw) * distBack;
+    lookX = px - Math.sin(totalYaw) * 8.0;
+    lookY = py + 1.0 - Math.sin(fP.slopeAngle) * 3.5;
+    lookZ = pz - Math.cos(totalYaw) * 8.0;
+  }
+
+  const view = M4.lookAt(camX, camY, camZ, lookX, lookY, lookZ);
+  gl.uniformMatrix4fv(loc.uView, false, view);
+  gl.uniform3fv(loc.uCamPos, [camX, camY, camZ]);
+
+  // Draw Track, Cave Arches, Peaks, and Pine Trees
+  drawMesh(levelData.trackMesh, M4.ident(), 0.45);
+  for (const ca of levelData.caveArches) {
+    if (Math.abs(ca.z - pz) < 280) drawMesh(MODELS.caveArch, M4.trs(ca.x, ca.y, ca.z, 0, ca.yaw, 0, 1, 1, 1), 0.7);
+  }
+  for (const pk of levelData.peaks) {
+    drawMesh(MODELS.distantPeak, M4.trs(pk.x, pk.y, pk.z, 0, 0, 0, pk.scale, pk.scale, pk.scale), 0.15);
+  }
+  for (const tr of levelData.trees) {
+    if (Math.abs(tr.z - pz) < 260) drawMesh(MODELS.pineTree, M4.trs(tr.x, tr.y, tr.z, 0, 0, 0, tr.scale, tr.scale, tr.scale), 0.15);
+  }
+
+  // Draw Hazards
+  for (const h of levelData.hazards) {
+    if (Math.abs(h.s - player.s) > 220) continue;
+    const fh = getTrackFrame(mt, h.s, h.inShortcut);
+    const hx = fh.x + fh.rx * h.lat, hy = fh.y, hz = fh.z + fh.rz * h.lat;
+    if (h.type === 'ICE_SPUR') {
+      drawMesh(MODELS.iceSpur, M4.trs(hx, hy, hz, 0, fh.yaw, 0, 1, 1, 1), 0.8);
+    } else if (h.type === 'CREVASSE') {
+      drawMesh(MODELS.crevasse, M4.trs(hx, hy, hz, -fh.slopeAngle, fh.yaw, 0, 1, 1, 1), 0.5);
+    } else if (h.type === 'SNOW_SLAB') {
+      drawMesh(MODELS.shadowDisk, M4.trs(hx, hy + 0.06, hz, 0, 0, 0, 1.9, 1, 1.4), 0.0);
+      drawMesh(MODELS.snowSlab, M4.trs(hx, hy + h.fallY, hz, 0, fh.yaw, 0, 1, 1, 1), 0.3);
+    } else if (h.type === 'BOULDER') {
+      drawMesh(MODELS.boulder, M4.trs(hx, hy, hz, t * 4, fh.yaw, t * 3, 1, 1, 1), 0.4);
+    }
+  }
+
+  // Draw Collectibles & Boss Crystals
+  for (const it of levelData.items) {
+    if (it.taken || Math.abs(it.s - player.s) > 200) continue;
+    const fi = getTrackFrame(mt, it.s, it.inShortcut);
+    const ix = fi.x + fi.rx * it.lat, iy = fi.y + Math.sin(t * 4 + it.s) * 0.22, iz = fi.z + fi.rz * it.lat;
+    const m = it.type === 'FISH' ? MODELS.fish : (it.type === 'SPEED' ? MODELS.speedOrb : MODELS.shieldOrb);
+    drawMesh(m, M4.trs(ix, iy, iz, 0, t * 2.6 + it.s, 0, 1, 1, 1), 0.75);
+  }
+  for (const c of levelData.bossCrystals) {
+    const fc = getTrackFrame(mt, c.s, false);
+    const tint = c.cooldown > 0 ? [0.3, 0.3, 0.4, 0.6] : [1.0, 0.85, 0.2, 0.25];
+    drawMesh(MODELS.bossCrystal, M4.trs(fc.x + fc.rx * c.lat, fc.y, fc.z + fc.rz * c.lat, 0, t * 1.5, 0, 1, 1, 1), 0.85, tint);
+  }
+
+  // Draw Goal Chick & Ice Cage at bottom of mountain
+  const fg = getTrackFrame(mt, mt.length - 32, false);
+  if (gameState.state === 'WIN_SCENE') {
+    const fMom = getTrackFrame(mt, mt.length - 36, false);
+    const fChick = getTrackFrame(mt, mt.length - 32 - Math.min(3.2, st * 1.6), false);
+    drawMotherPenguin(fMom.x, fMom.y, fMom.z, Math.PI, 0, 0, 'STANDING', t * 2, false, false);
+    drawChickModel(fChick.x, fChick.y, fChick.z, 0, t * 3, 1.05);
+  } else if (gameState.state === 'FAIL_SCENE' || gameState.state === 'FAIL') {
+    const liftY = Math.min(18, st * 5.5);
+    drawChickModel(fg.x, fg.y + liftY, fg.z, 0, t * 4, 1.0);
+    drawMesh(MODELS.iceCage, M4.trs(fg.x, fg.y + liftY, fg.z, 0, t, 0, 1, 1, 1), 0.8);
+    drawPredatorBird(fg.x, fg.y + liftY + 2.6, fg.z, 0, 0.2, 0, t * 2.2, 1.5, 0);
+  } else {
+    drawChickModel(fg.x, fg.y, fg.z, 0, t * 2, 1.0);
+    if (!bossState.active || bossState.hp > 0 || player.s < mt.length - 36) {
+      drawMesh(MODELS.iceCage, M4.trs(fg.x, fg.y, fg.z, 0, 0, 0, 1, 1, 1), 0.85);
+    }
+    // Draw Mother Penguin
+    const steerRoll = -player.vLat * 0.035;
+    drawMotherPenguin(px, py, pz, fP.yaw, -fP.slopeAngle, steerRoll, player.stance, player.animT, player.shieldActive, player.boostTimer > 0);
+
+    // Draw Predator Warning Ring & Predator / Boss Bird
+    if (predator.state === 'WARN' || predator.state === 'SWOOP') {
+      const fw = getTrackFrame(mt, predator.targetS, false);
+      const rScale = 2.4 + Math.sin(t * 18) * 0.35;
+      drawMesh(MODELS.dangerRing, M4.trs(fw.x + fw.rx * predator.targetLat, fw.y + 0.08, fw.z + fw.rz * predator.targetLat, 0, 0, 0, rScale, 1, rScale), 0.2);
+    }
+    const birdScale = (bossState.engaged && bossState.hp > 0) ? 1.85 : 1.25;
+    drawPredatorBird(predator.x, predator.y, predator.z, predator.yaw, predator.pitch, predator.roll, predator.animT, birdScale, bossState.hurtFlash);
+  }
+
+  // Draw Particles
+  for (const p of particles) {
+    drawMesh(MODELS.particle, M4.trs(p.x, p.y, p.z, p.life*4, p.life*3, 0, p.size, p.size, p.size), 0.4, [p.col[0], p.col[1], p.col[2], 0.8]);
+  }
+}
+
+// Expose read-only + test helpers on window.__game for automated playtest verification
+window.__game = {
+  get state() { return gameState.state; },
+  get mountain() { return gameState.currentMt + 1; },
+  get mountainName() { return levelData ? levelData.mt.name : ''; },
+  get clock() { return Number(gameState.clock.toFixed(2)); },
+  get speedKmh() { return Math.round(player.speed * 3.6); },
+  get stance() { return player.stance; },
+  get surface() { return player.surface; },
+  get progress() { return levelData ? Number((player.s / (levelData.mt.length - 36)).toFixed(3)) : 0; },
+  get fish() { return player.fishCount; },
+  get score() { return gameState.totalScore; },
+  get rescuedCount() { return gameState.rescuedCount; },
+  get soundEnabled() { return AudioSys.enabled; },
+  get bossHp() { return bossState.hp; },
+  get inShortcut() { return player.inShortcut; },
+  player,
+  gameState,
+  bossState,
+  startMountain,
+  onLevelWon,
+  onLevelFailed
+};
+
+let lastTs = performance.now();
+function mainLoop(ts) {
+  const dt = Math.min(0.05, Math.max(0.001, (ts - lastTs) / 1000));
+  lastTs = ts;
+
+  if (gameState.state !== 'PAUSE') {
+    gameState.gameTime += dt;
+    gameState.sceneTimer += dt;
+  }
+
+  if (gameState.state === 'INTRO') {
+    const capT = document.getElementById('introCaptionTitle');
+    const capB = document.getElementById('introCaptionText');
+    if (gameState.sceneTimer > 3.2 && capT) {
+      capT.textContent = 'Race Against the Failing Light!';
+      capB.textContent = 'Run, jump, and belly-slide down 8 icy peaks before the clock runs out and the Skua carries each chick off!';
+    }
+    if (gameState.sceneTimer > 7.0) setState('MENU');
+  } else if (gameState.state === 'PLAY') {
+    gameState.clock -= dt;
+    updatePlayerPhysics(dt);
+    updateHazardsAndItems(dt, gameState.gameTime);
+    updatePredatorAndBoss(dt);
+    updateParticles(dt);
+    updateHUD();
+
+    const mt = levelData.mt;
+    if (player.s >= mt.length - 36 && (!mt.hasBoss || bossState.hp <= 0)) {
+      onLevelWon();
+    } else if (gameState.clock <= 0) {
+      gameState.clock = 0;
+      onLevelFailed();
+    }
+  } else if (gameState.state === 'WIN_SCENE') {
+    updateParticles(dt);
+    if (gameState.sceneTimer > 3.1) {
+      if (gameState.currentMt >= MOUNTAINS.length - 1) setState('ENDING');
+      else openStoryScreen();
+    }
+  } else if (gameState.state === 'FAIL_SCENE') {
+    if (gameState.sceneTimer > 2.6) {
+      setState('FAIL');
+    }
+  } else if (gameState.state === 'ENDING') {
+    const et = document.getElementById('endingCaptionTitle');
+    const eb = document.getElementById('endingCaptionText');
+    if (et && eb) {
+      if (gameState.sceneTimer < 4.5) {
+        et.textContent = 'The Long Slide Home is Complete!';
+        eb.textContent = 'As the golden aurora warms the glacier, all eight chicks — Pip, Pebble, Flurry, Frosty, Tumble, Icicle, Nimbus, and Aurora — huddle safely around their mother.';
+      } else {
+        et.textContent = `Whole Family Reunited — Final Score: ${gameState.totalScore}`;
+        eb.textContent = 'The fierce storm has passed and the bird of prey is gone for good. Thank you for playing!';
+      }
+    }
+    if (gameState.sceneTimer > 11.0) {
+      setState('MENU');
+    }
+  }
+
+  AudioSys.updateMusic(dt, gameState.state, player.speed / 36.0, gameState.clock < 18.0);
+  render3DWorld();
+  requestAnimationFrame(mainLoop);
+}
+requestAnimationFrame(mainLoop);
+
+</script>
+</body>
+</html>

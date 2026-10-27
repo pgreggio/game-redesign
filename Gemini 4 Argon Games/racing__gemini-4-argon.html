@@ -1,0 +1,2764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Courier Chaos — 3D Motorcycle Delivery Racing</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #141829;
+    font-family: 'Trebuchet MS', 'Segoe UI', Tahoma, sans-serif;
+    color: #fff;
+  }
+  #gameCanvas {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: block; z-index: 1;
+  }
+  #hudCanvas {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 2;
+  }
+  .overlay-layer {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 10; pointer-events: none;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+  }
+  .screen {
+    display: none;
+    pointer-events: auto;
+    background: rgba(18, 22, 42, 0.92);
+    border: 4px solid #ffcc00;
+    border-radius: 16px;
+    box-shadow: 0 14px 0 #0a0d1a, 0 20px 50px rgba(0,0,0,0.75);
+    padding: 28px 36px;
+    max-width: 760px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+  }
+  .screen.active { display: block; }
+  .screen-banner {
+    background: linear-gradient(135deg, #ff5500, #ffaa00);
+    color: #141829;
+    font-weight: 900;
+    font-size: 36px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: 3px solid #fff;
+    box-shadow: 0 6px 0 #141829;
+    margin-bottom: 18px;
+    display: inline-block;
+    transform: rotate(-1.5deg);
+  }
+  .subtitle {
+    color: #ffd966;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    line-height: 1.45;
+  }
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    margin-top: 14px;
+  }
+  .btn-row {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  button.game-btn {
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 20px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #141829;
+    background: #ffcc00;
+    border: 3px solid #ffffff;
+    border-radius: 10px;
+    padding: 12px 28px;
+    min-width: 250px;
+    box-shadow: 0 6px 0 #996600;
+    transition: transform 0.08s, background 0.12s, box-shadow 0.08s;
+  }
+  button.game-btn:hover {
+    background: #ffe047;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 0 #996600;
+  }
+  button.game-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 3px 0 #996600;
+  }
+  button.game-btn.secondary {
+    background: #38d9a9;
+    box-shadow: 0 6px 0 #167c5c;
+  }
+  button.game-btn.secondary:hover { background: #63e6be; }
+  button.game-btn.danger {
+    background: #ff6b6b;
+    color: #fff;
+    box-shadow: 0 6px 0 #9e2a2b;
+  }
+  button.game-btn.danger:hover { background: #ff8787; }
+  .tuning-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin: 18px 0;
+    text-align: left;
+  }
+  .tuning-card {
+    background: #1f2747;
+    border: 3px solid #4d5e9c;
+    border-radius: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: transform 0.1s, border-color 0.1s, background 0.1s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .tuning-card:hover {
+    background: #2b3663;
+    border-color: #ffcc00;
+    transform: translateY(-3px);
+  }
+  .tuning-title {
+    font-size: 19px;
+    font-weight: 900;
+    color: #ffcc00;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tuning-tier {
+    background: #ff5500;
+    color: #fff;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .tuning-desc {
+    font-size: 14px;
+    color: #dbe4ff;
+    line-height: 1.35;
+    margin-bottom: 8px;
+  }
+  .tuning-perk {
+    font-size: 13px;
+    font-weight: 800;
+    color: #38d9a9;
+  }
+  .cutscene-bar {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(820px, 92%);
+    background: rgba(16, 20, 38, 0.92);
+    border: 3px solid #ffcc00;
+    border-radius: 14px;
+    padding: 18px 24px;
+    pointer-events: auto;
+    display: none;
+    box-shadow: 0 10px 0 #090b14;
+  }
+  .cutscene-bar.active { display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+  .cutscene-text { text-align: left; flex: 1; }
+  .cutscene-speaker {
+    color: #ff922b;
+    font-weight: 900;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .cutscene-line {
+    color: #ffffff;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+  .practice-hud {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(16, 20, 38, 0.92);
+    border: 3px solid #38d9a9;
+    border-radius: 12px;
+    padding: 14px 22px;
+    width: min(780px, 94%);
+    pointer-events: auto;
+    display: none;
+    box-shadow: 0 8px 0 #090b14;
+  }
+  .practice-hud.active { display: block; }
+  .practice-checklist {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin: 10px 0;
+  }
+  .chk-pill {
+    background: #232c4d;
+    border: 2px solid #5c6f9e;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #bac8ff;
+  }
+  .chk-pill.done {
+    background: #184f3d;
+    border-color: #38d9a9;
+    color: #63e6be;
+  }
+  .stats-box {
+    background: #1b223d;
+    border: 2px solid #42538c;
+    border-radius: 10px;
+    padding: 14px;
+    margin: 12px 0;
+    font-size: 15px;
+    color: #e9ecef;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<canvas id="hudCanvas"></canvas>
+
+<div class="overlay-layer">
+  <!-- INTRO & ENDING CUTSCENE BAR -->
+  <div id="cutsceneBar" class="cutscene-bar">
+    <div class="cutscene-text">
+      <div id="cutsceneSpeaker" class="cutscene-speaker">DISPATCH CHIEF MARA</div>
+      <div id="cutsceneLine" class="cutscene-line">Welcome to RapidBolt Couriers!</div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button id="btnCutsceneNext" class="game-btn secondary" style="min-width:130px; padding:10px 16px; font-size:16px;">Next</button>
+      <button id="btnCutsceneSkip" class="game-btn" style="min-width:130px; padding:10px 16px; font-size:16px;">Skip (Esc)</button>
+    </div>
+  </div>
+
+  <!-- PRACTICE STREET (HOW TO PLAY) HUD -->
+  <div id="practiceHud" class="practice-hud">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-size:20px; font-weight:900; color:#38d9a9;">PRACTICE YARD &amp; QUIET STREET</div>
+      <button id="btnPracticeBack" class="game-btn" style="min-width:160px; padding:6px 14px; font-size:15px;">Back to Menu (Esc)</button>
+    </div>
+    <div style="font-size:14px; color:#ffd966; margin-top:4px;">
+      Try out your motorcycle on this safe closed street! Complete any drills or press Esc when ready.
+    </div>
+    <div id="practiceChecklist" class="practice-checklist"></div>
+  </div>
+
+  <!-- MAIN MENU -->
+  <div id="screenMenu" class="screen">
+    <div class="screen-banner">COURIER CHAOS</div>
+    <div class="subtitle">
+      Race your tuned courier motorcycle across New Cascadia!<br>
+      Beat the delivery clock, dodge bizarre street chaos, and survive all 12 shift deliveries!
+    </div>
+    <div id="menuSavedInfo" class="stats-box" style="display:none;"></div>
+    <div class="btn-group">
+      <button id="btnStartShift" class="game-btn">Start Shift</button>
+      <button id="btnContinueShift" class="game-btn secondary" style="display:none;">Continue Shift</button>
+      <button id="btnHowToPlay" class="game-btn secondary">How to Play (Practice Street)</button>
+      <button id="btnSettings" class="game-btn">Settings</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS SCREEN -->
+  <div id="screenSettings" class="screen">
+    <div class="screen-banner" style="font-size:28px;">SETTINGS</div>
+    <div class="subtitle">Configure audio, camera sensitivity, and shift options.</div>
+    <div class="btn-group">
+      <button id="btnToggleSoundSettings" class="game-btn">Sound: ON</button>
+      <button id="btnCamSens" class="game-btn secondary">Mouse Look Sensitivity: Normal</button>
+      <button id="btnPlayEndingSettings" class="game-btn danger">Play Ending Scene</button>
+      <button id="btnSettingsBack" class="game-btn">Back (Esc)</button>
+    </div>
+  </div>
+
+  <!-- PAUSE SCREEN -->
+  <div id="screenPause" class="screen">
+    <div class="screen-banner" style="font-size:28px;">SHIFT PAUSED</div>
+    <div id="pauseJobSummary" class="subtitle">Delivery in progress</div>
+    <div class="btn-group">
+      <button id="btnResume" class="game-btn">Resume (Esc)</button>
+      <button id="btnToggleSoundPause" class="game-btn secondary">Sound: ON</button>
+      <button id="btnRestartDelivery" class="game-btn">Restart Delivery</button>
+      <button id="btnPauseToMenu" class="game-btn danger">Back to Main Menu</button>
+    </div>
+  </div>
+
+  <!-- TUNING / DELIVERY COMPLETE SCREEN -->
+  <div id="screenTuning" class="screen">
+    <div class="screen-banner" style="font-size:28px;">DELIVERY BANKED!</div>
+    <div id="tuningSummary" class="subtitle">Package delivered with time to spare!</div>
+    <div style="font-size:17px; font-weight:900; color:#38d9a9; margin-bottom:6px;">
+      PICK ONE MOTORCYCLE TUNING FOR THE REST OF YOUR SHIFT:
+    </div>
+    <div id="tuningGrid" class="tuning-grid"></div>
+  </div>
+
+  <!-- LEVEL FAIL SCREEN -->
+  <div id="screenFail" class="screen">
+    <div class="screen-banner" style="background:linear-gradient(135deg,#ff2a2a,#ff6b6b); color:#fff;">CLOCK EMPTIED — SHIFT FAILED!</div>
+    <div id="failReason" class="subtitle">The customer canceled the order when the delivery clock hit 0.0s!</div>
+    <div class="btn-row">
+      <button id="btnFailRetry" class="game-btn">Retry Delivery</button>
+      <button id="btnFailMenu" class="game-btn danger">Back to Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+// === PART 1: STATE & CONFIG ===
+const STATE = {
+  INTRO: 'INTRO',
+  MENU: 'MENU',
+  SETTINGS: 'SETTINGS',
+  HOW_TO_PLAY: 'HOW_TO_PLAY',
+  PLAY: 'PLAY',
+  PAUSE: 'PAUSE',
+  TUNING: 'TUNING',
+  FAIL: 'FAIL',
+  ENDING: 'ENDING'
+};
+
+const game = {
+  state: STATE.INTRO,
+  prevMenuState: STATE.MENU,
+  soundOn: true,
+  camSensIndex: 1, // 0: Low, 1: Normal, 2: High
+  camSensValues: [0.0022, 0.0042, 0.007],
+  shiftIndex: 0, // 0..11 (12 deliveries total)
+  totalDeliveries: 12,
+  score: 0,
+  bankedTimeTotal: 0,
+  nearMissCount: 0,
+  driftSecondsTotal: 0,
+  // Phase inside a delivery: 'PICKUP' -> waiting to touch pickup ring, 'DELIVER' -> racing to drop-off, 'WIN_ANIM' -> delivery celebration
+  phase: 'PICKUP',
+  clock: 45.0,
+  maxClock: 45.0,
+  clockPausedTimer: 0, // pauses countdown during mid-route address change reveal
+  winAnimTimer: 0,
+  addressChangedThisJob: false,
+  addressChangeBannerTimer: 0,
+  addressChangeText: '',
+  chaosCalloutText: '',
+  chaosCalloutTimer: 0,
+  // Tunings carried through the shift
+  tunings: {
+    topSpeed: 0,
+    grip: 0,
+    boostCap: 0,
+    handling: 0
+  },
+  // Player motorcycle state
+  bike: {
+    x: 0, y: 0, z: 0,
+    vx: 0, vy: 0, vz: 0,
+    yaw: 0,
+    speed: 0,
+    steerAngle: 0,
+    leanAngle: 0,
+    pitchAngle: 0,
+    drifting: false,
+    driftDir: 0,
+    driftCharge: 0,
+    boost: 45,
+    maxBoost: 100,
+    boosting: false,
+    stallTimer: 0,
+    invulnTimer: 0,
+    inWater: false,
+    onShortcut: false,
+    hasPackage: false,
+    wheelSpin: 0
+  },
+  // Camera
+  cam: {
+    x: 0, y: 8, z: -15,
+    lookX: 0, lookY: 2, lookZ: 0,
+    mouseYawOffset: 0,
+    mousePitchOffset: 0,
+    mouseIdleTimer: 0,
+    shake: 0,
+    fov: 60
+  },
+  // Active markers & entities
+  pickupPos: { x: 0, z: 0, name: 'Harbor Depot' },
+  dropoffPos: { x: 0, z: 120, name: 'Uptown Bakery' },
+  altDropoffPos: null,
+  activeHazards: [],
+  particles: [],
+  floatingTexts: [],
+  boostOrbs: [], // visual energy sparks flying into the boost bar on near-miss or drift
+  cutsceneStep: 0,
+  cutsceneTimer: 0,
+  practiceFlags: {
+    accelerate: false,
+    steer: false,
+    drift: false,
+    nearMiss: false,
+    boost: false,
+    sampleDelivery: false
+  }
+};
+
+// Expose debug hook for automated playtesting and inspection
+window.__game = game;
+
+// Input handling
+const keys = {};
+const mouse = { dx: 0, dy: 0, down: false, movedRecently: false };
+
+window.addEventListener('keydown', (e) => {
+  keys[e.code] = true;
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+    if (game.state === STATE.PLAY || game.state === STATE.HOW_TO_PLAY) {
+      e.preventDefault();
+    }
+  }
+  if (e.code === 'Escape') {
+    handleEscapeKey();
+  }
+  if (e.code === 'Enter' || e.code === 'Space') {
+    if (game.state === STATE.INTRO || game.state === STATE.ENDING) {
+      advanceCutscene();
+    }
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  keys[e.code] = false;
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (game.state === STATE.PLAY || game.state === STATE.HOW_TO_PLAY) {
+    const sens = game.camSensValues[game.camSensIndex];
+    const movX = e.movementX !== undefined ? e.movementX : 0;
+    const movY = e.movementY !== undefined ? e.movementY : 0;
+    if (Math.abs(movX) > 0 || Math.abs(movY) > 0) {
+      game.cam.mouseYawOffset = clamp(game.cam.mouseYawOffset - movX * sens, -1.35, 1.35);
+      game.cam.mousePitchOffset = clamp(game.cam.mousePitchOffset + movY * sens * 0.6, -0.25, 0.45);
+      game.cam.mouseIdleTimer = 2.2;
+    }
+  }
+});
+
+function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function dist2D(x1, z1, x2, z2) {
+  const dx = x2 - x1, dz = z2 - z1;
+  return Math.sqrt(dx * dx + dz * dz);
+}
+function angleDiff(a, b) {
+  let d = (b - a) % (Math.PI * 2);
+  if (d > Math.PI) d -= Math.PI * 2;
+  if (d < -Math.PI) d += Math.PI * 2;
+  return d;
+}
+
+// Safe localStorage persistence for session stopping/resuming
+function saveShiftProgress() {
+  try {
+    const data = {
+      shiftIndex: game.shiftIndex,
+      score: game.score,
+      bankedTimeTotal: game.bankedTimeTotal,
+      tunings: { ...game.tunings }
+    };
+    localStorage.setItem('courier_chaos_save_v1', JSON.stringify(data));
+  } catch (err) {}
+}
+
+function loadShiftProgress() {
+  try {
+    const raw = localStorage.getItem('courier_chaos_save_v1');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.shiftIndex === 'number' && parsed.shiftIndex > 0 && parsed.shiftIndex < game.totalDeliveries) {
+      return parsed;
+    }
+  } catch (err) {}
+  return null;
+}
+
+function clearShiftProgress() {
+  try { localStorage.removeItem('courier_chaos_save_v1'); } catch (err) {}
+}
+
+// === PART 2: WEB AUDIO SYNTHESIZER ===
+const AudioSys = {
+  ctx: null,
+  masterGain: null,
+  engineOsc: null,
+  engineGain: null,
+  musicTimer: 0,
+  musicStep: 0,
+
+  init() {
+    if (this.ctx) return;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AC();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.value = game.soundOn ? 0.35 : 0;
+      this.masterGain.connect(this.ctx.destination);
+
+      // Continuous motorcycle engine oscillator
+      this.engineOsc = this.ctx.createOscillator();
+      this.engineOsc.type = 'sawtooth';
+      this.engineOsc.frequency.value = 55;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 260;
+      this.engineGain = this.ctx.createGain();
+      this.engineGain.gain.value = 0.0;
+      this.engineOsc.connect(filter);
+      filter.connect(this.engineGain);
+      this.engineGain.connect(this.masterGain);
+      this.engineOsc.start();
+    } catch (e) {}
+  },
+
+  resume() {
+    if (!this.ctx) this.init();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+    this.syncMute();
+  },
+
+  syncMute() {
+    if (!this.masterGain || !this.ctx) return;
+    const active = game.soundOn && game.state !== STATE.PAUSE;
+    this.masterGain.gain.setTargetAtTime(active ? 0.35 : 0.0, this.ctx.currentTime, 0.02);
+    if (!active && this.engineGain) {
+      this.engineGain.gain.setTargetAtTime(0.0, this.ctx.currentTime, 0.02);
+    }
+  },
+
+  update(dt) {
+    if (!this.ctx || !game.soundOn || game.state === STATE.PAUSE) {
+      if (this.engineGain && this.ctx) {
+        this.engineGain.gain.setTargetAtTime(0.0, this.ctx.currentTime, 0.03);
+      }
+      return;
+    }
+    const inRide = (game.state === STATE.PLAY || game.state === STATE.HOW_TO_PLAY);
+    if (this.engineOsc && this.engineGain) {
+      if (inRide) {
+        const spdRatio = Math.abs(game.bike.speed) / 65;
+        const baseFreq = 52 + spdRatio * 135 + (game.bike.boosting ? 45 : 0) + (game.bike.drifting ? 18 : 0);
+        this.engineOsc.frequency.setTargetAtTime(baseFreq, this.ctx.currentTime, 0.04);
+        this.engineGain.gain.setTargetAtTime(0.14 + spdRatio * 0.12, this.ctx.currentTime, 0.04);
+      } else {
+        this.engineGain.gain.setTargetAtTime(0.0, this.ctx.currentTime, 0.05);
+      }
+    }
+
+    // Procedural funk-rock courier bassline & synth groove
+    this.musicTimer -= dt;
+    if (this.musicTimer <= 0) {
+      const tempo = (inRide && game.clock < 12 && game.phase === 'DELIVER') ? 0.14 : 0.18;
+      this.musicTimer = tempo;
+      this.playMusicStep(inRide);
+    }
+  },
+
+  playMusicStep(inRide) {
+    if (!this.ctx || !game.soundOn || game.state === STATE.PAUSE) return;
+    const bassNotes = [110, 110, 130.8, 146.8, 164.8, 146.8, 130.8, 98.0];
+    const leadNotes = [440, 0, 523.25, 587.33, 659.25, 0, 587.33, 523.25];
+    const step = this.musicStep % 8;
+    this.musicStep++;
+
+    const now = this.ctx.currentTime;
+    const bFreq = bassNotes[step];
+    if (bFreq > 0) {
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(bFreq, now);
+      g.gain.setValueAtTime(inRide ? 0.12 : 0.07, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      osc.connect(g);
+      g.connect(this.masterGain);
+      osc.start(now);
+      osc.stop(now + 0.16);
+    }
+    if (inRide && leadNotes[step] > 0 && (this.musicStep % 16 < 8)) {
+      const osc2 = this.ctx.createOscillator();
+      const g2 = this.ctx.createGain();
+      osc2.type = 'square';
+      osc2.frequency.setValueAtTime(leadNotes[step], now);
+      g2.gain.setValueAtTime(0.04, now);
+      g2.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc2.connect(g2);
+      g2.connect(this.masterGain);
+      osc2.start(now);
+      osc2.stop(now + 0.13);
+    }
+  },
+
+  sfxTone(freqStart, freqEnd, dur, type = 'sine', vol = 0.25) {
+    if (!game.soundOn || game.state === STATE.PAUSE) return;
+    this.resume();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freqStart, now);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqEnd), now + dur);
+    g.gain.setValueAtTime(vol, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    osc.connect(g);
+    g.connect(this.masterGain);
+    osc.start(now);
+    osc.stop(now + dur + 0.01);
+  },
+
+  sfxPickup() {
+    this.sfxTone(330, 660, 0.14, 'triangle', 0.3);
+    setTimeout(() => this.sfxTone(523, 880, 0.22, 'triangle', 0.3), 90);
+  },
+  sfxDropoff() {
+    this.sfxTone(440, 587, 0.14, 'square', 0.28);
+    setTimeout(() => this.sfxTone(587, 880, 0.18, 'square', 0.3), 110);
+    setTimeout(() => this.sfxTone(880, 1174, 0.32, 'triangle', 0.35), 220);
+  },
+  sfxNearMiss() {
+    this.sfxTone(580, 980, 0.12, 'sine', 0.22);
+  },
+  sfxBoost() {
+    this.sfxTone(180, 520, 0.28, 'sawtooth', 0.26);
+  },
+  sfxCrash() {
+    this.sfxTone(140, 38, 0.32, 'sawtooth', 0.38);
+  },
+  sfxAddressChange() {
+    this.sfxTone(740, 440, 0.16, 'square', 0.3);
+    setTimeout(() => this.sfxTone(440, 880, 0.24, 'square', 0.3), 160);
+  },
+  sfxFail() {
+    this.sfxTone(300, 110, 0.45, 'sawtooth', 0.35);
+  }
+};
+// === PART 3: WEBGL 3D RENDERER & MESH BUILDER ===
+const glCanvas = document.getElementById('gameCanvas');
+const hudCanvas = document.getElementById('hudCanvas');
+const gl = glCanvas.getContext('webgl', { antialias: true, alpha: false });
+const ctx2d = hudCanvas.getContext('2d');
+
+function resizeCanvases() {
+  const w = window.innerWidth || 1280;
+  const h = window.innerHeight || 720;
+  glCanvas.width = w;
+  glCanvas.height = h;
+  hudCanvas.width = w;
+  hudCanvas.height = h;
+  if (gl) gl.viewport(0, 0, w, h);
+}
+window.addEventListener('resize', resizeCanvases);
+resizeCanvases();
+
+// Matrix4 utilities (column-major)
+const Mat4 = {
+  create() {
+    return new Float32Array([
+      1,0,0,0,
+      0,1,0,0,
+      0,0,1,0,
+      0,0,0,1
+    ]);
+  },
+  perspective(out, fovyRad, aspect, near, far) {
+    const f = 1.0 / Math.tan(fovyRad / 2);
+    const nf = 1 / (near - far);
+    out.fill(0);
+    out[0] = f / aspect;
+    out[5] = f;
+    out[10] = (far + near) * nf;
+    out[11] = -1;
+    out[14] = (2 * far * near) * nf;
+    return out;
+  },
+  lookAt(out, eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
+    let z0 = eyeX - centerX, z1 = eyeY - centerY, z2 = eyeZ - centerZ;
+    let len = Math.hypot(z0, z1, z2);
+    if (len === 0) { z2 = 1; } else { len = 1 / len; z0 *= len; z1 *= len; z2 *= len; }
+    let x0 = upY * z2 - upZ * z1;
+    let x1 = upZ * z0 - upX * z2;
+    let x2 = upX * z1 - upY * z0;
+    len = Math.hypot(x0, x1, x2);
+    if (len === 0) { x0 = 0; x1 = 0; x2 = 0; } else { len = 1 / len; x0 *= len; x1 *= len; x2 *= len; }
+    let y0 = z1 * x2 - z2 * x1, y1 = z2 * x0 - z0 * x2, y2 = z0 * x1 - z1 * x0;
+    out[0] = x0; out[1] = y0; out[2] = z0; out[3] = 0;
+    out[4] = x1; out[5] = y1; out[6] = z1; out[7] = 0;
+    out[8] = x2; out[9] = y2; out[10] = z2; out[11] = 0;
+    out[12] = -(x0 * eyeX + x1 * eyeY + x2 * eyeZ);
+    out[13] = -(y0 * eyeX + y1 * eyeY + y2 * eyeZ);
+    out[14] = -(z0 * eyeX + z1 * eyeY + z2 * eyeZ);
+    out[15] = 1;
+    return out;
+  },
+  multiply(out, a, b) {
+    const a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+    const a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+    const a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+    const a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+    for (let i = 0; i < 4; i++) {
+      const b0 = b[i*4], b1 = b[i*4+1], b2 = b[i*4+2], b3 = b[i*4+3];
+      out[i*4]   = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+      out[i*4+1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+      out[i*4+2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+      out[i*4+3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    }
+    return out;
+  },
+  fromTranslationRotationScale(out, tx, ty, tz, yaw, pitch, roll, sx, sy, sz) {
+    const cy = Math.cos(yaw), syaw = Math.sin(yaw);
+    const cp = Math.cos(pitch), sp = Math.sin(pitch);
+    const cr = Math.cos(roll), sr = Math.sin(roll);
+    // R = Ry(yaw) * Rx(pitch) * Rz(roll)
+    const r00 = cy * cr + syaw * sp * sr;
+    const r01 = cp * sr;
+    const r02 = -syaw * cr + cy * sp * sr;
+    const r10 = -cy * sr + syaw * sp * cr;
+    const r11 = cp * cr;
+    const r12 = syaw * sr + cy * sp * cr;
+    const r20 = syaw * cp;
+    const r21 = -sp;
+    const r22 = cy * cp;
+
+    out[0] = r00 * sx; out[1] = r01 * sx; out[2] = r02 * sx; out[3] = 0;
+    out[4] = r10 * sy; out[5] = r11 * sy; out[6] = r12 * sy; out[7] = 0;
+    out[8] = r20 * sz; out[9] = r21 * sz; out[10] = r22 * sz; out[11] = 0;
+    out[12] = tx;      out[13] = ty;      out[14] = tz;      out[15] = 1;
+    return out;
+  }
+};
+
+// Stylized Cartoon Cel-Shaded WebGL Shader
+const VS_SRC = `
+  attribute vec3 aPos;
+  attribute vec3 aNorm;
+  attribute vec3 aCol;
+  uniform mat4 uProjView;
+  uniform mat4 uModel;
+  varying vec3 vNorm;
+  varying vec3 vCol;
+  varying vec3 vWorldPos;
+  void main() {
+    vec4 wp = uModel * vec4(aPos, 1.0);
+    vWorldPos = wp.xyz;
+    vNorm = normalize(mat3(uModel[0].xyz, uModel[1].xyz, uModel[2].xyz) * aNorm);
+    vCol = aCol;
+    gl_Position = uProjView * wp;
+  }
+`;
+
+const FS_SRC = `
+  precision mediump float;
+  varying vec3 vNorm;
+  varying vec3 vCol;
+  varying vec3 vWorldPos;
+  uniform vec3 uTint;
+  uniform float uEmissive;
+  uniform vec3 uCamPos;
+  void main() {
+    vec3 N = normalize(vNorm);
+    vec3 L = normalize(vec3(0.48, 0.82, -0.32));
+    float ndl = dot(N, L);
+    // Stylized 3-band cel shading for bright cartoon urban aesthetic
+    float toon = ndl > 0.55 ? 1.08 : (ndl > 0.05 ? 0.86 : 0.58);
+    vec3 skyCol = vec3(0.98, 0.94, 0.85);
+    vec3 gndCol = vec3(0.28, 0.32, 0.52);
+    vec3 hemi = mix(gndCol, skyCol, N.y * 0.5 + 0.5);
+    vec3 base = vCol * uTint;
+    vec3 lit = base * (toon * 0.78 + hemi * 0.34);
+    lit = mix(lit, base, uEmissive);
+    // Distance atmospheric warm haze
+    float dist = length(vWorldPos - uCamPos);
+    float fog = clamp((dist - 150.0) / 260.0, 0.0, 0.65);
+    vec3 fogCol = vec3(0.32, 0.55, 0.88);
+    gl_FragColor = vec4(mix(lit, fogCol, fog), 1.0);
+  }
+`;
+
+function compileShader(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  return s;
+}
+
+const prog = gl.createProgram();
+gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, VS_SRC));
+gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, FS_SRC));
+gl.linkProgram(prog);
+gl.useProgram(prog);
+
+const loc = {
+  aPos: gl.getAttribLocation(prog, 'aPos'),
+  aNorm: gl.getAttribLocation(prog, 'aNorm'),
+  aCol: gl.getAttribLocation(prog, 'aCol'),
+  uProjView: gl.getUniformLocation(prog, 'uProjView'),
+  uModel: gl.getUniformLocation(prog, 'uModel'),
+  uTint: gl.getUniformLocation(prog, 'uTint'),
+  uEmissive: gl.getUniformLocation(prog, 'uEmissive'),
+  uCamPos: gl.getUniformLocation(prog, 'uCamPos')
+};
+
+gl.enableVertexAttribArray(loc.aPos);
+gl.enableVertexAttribArray(loc.aNorm);
+gl.enableVertexAttribArray(loc.aCol);
+gl.enable(gl.DEPTH_TEST);
+gl.enable(gl.CULL_FACE);
+
+class MeshBuilder {
+  constructor() {
+    this.verts = []; // x,y,z, nx,ny,nz, r,g,b (9 floats per vertex)
+  }
+  pushTri(p1, p2, p3, n, col) {
+    const [r, g, b] = col;
+    const [nx, ny, nz] = n;
+    this.verts.push(
+      p1[0], p1[1], p1[2], nx, ny, nz, r, g, b,
+      p2[0], p2[1], p2[2], nx, ny, nz, r, g, b,
+      p3[0], p3[1], p3[2], nx, ny, nz, r, g, b
+    );
+  }
+  pushQuad(p1, p2, p3, p4, n, col) {
+    this.pushTri(p1, p2, p3, n, col);
+    this.pushTri(p1, p3, p4, n, col);
+  }
+  addBox(cx, cy, cz, sx, sy, sz, col, topCol = null) {
+    const hx = sx * 0.5, hy = sy * 0.5, hz = sz * 0.5;
+    const x0 = cx - hx, x1 = cx + hx;
+    const y0 = cy - hy, y1 = cy + hy;
+    const z0 = cz - hz, z1 = cz + hz;
+    const tc = topCol || col;
+    // Top (+Y)
+    this.pushQuad([x0,y1,z1], [x1,y1,z1], [x1,y1,z0], [x0,y1,z0], [0,1,0], tc);
+    // Bottom (-Y)
+    this.pushQuad([x0,y0,z0], [x1,y0,z0], [x1,y0,z1], [x0,y0,z1], [0,-1,0], col);
+    // Front (+Z)
+    this.pushQuad([x0,y0,z1], [x1,y0,z1], [x1,y1,z1], [x0,y1,z1], [0,0,1], col);
+    // Back (-Z)
+    this.pushQuad([x1,y0,z0], [x0,y0,z0], [x0,y1,z0], [x1,y1,z0], [0,0,-1], col);
+    // Right (+X)
+    this.pushQuad([x1,y0,z1], [x1,y0,z0], [x1,y1,z0], [x1,y1,z1], [1,0,0], col);
+    // Left (-X)
+    this.pushQuad([x0,y0,z0], [x0,y0,z1], [x0,y1,z1], [x0,y1,z0], [-1,0,0], col);
+  }
+  addCylinder(cx, cy, cz, radius, height, segs, col, axis = 'Y') {
+    const hh = height * 0.5;
+    for (let i = 0; i < segs; i++) {
+      const a0 = (i / segs) * Math.PI * 2;
+      const a1 = ((i + 1) / segs) * Math.PI * 2;
+      const c0 = Math.cos(a0) * radius, s0 = Math.sin(a0) * radius;
+      const c1 = Math.cos(a1) * radius, s1 = Math.sin(a1) * radius;
+      const nx = Math.cos((a0 + a1) * 0.5), nz = Math.sin((a0 + a1) * 0.5);
+      if (axis === 'Y') {
+        this.pushQuad(
+          [cx + c1, cy - hh, cz + s1],
+          [cx + c0, cy - hh, cz + s0],
+          [cx + c0, cy + hh, cz + s0],
+          [cx + c1, cy + hh, cz + s1],
+          [nx, 0, nz], col
+        );
+        this.pushTri([cx, cy + hh, cz], [cx + c1, cy + hh, cz + s1], [cx + c0, cy + hh, cz + s0], [0, 1, 0], col);
+      } else {
+        // X-axis wheel cylinder
+        this.pushQuad(
+          [cx - hh, cy + c0, cz + s0],
+          [cx + hh, cy + c0, cz + s0],
+          [cx + hh, cy + c1, cz + s1],
+          [cx - hh, cy + c1, cz + s1],
+          [0, nx, nz], col
+        );
+        this.pushTri([cx + hh, cy, cz], [cx + hh, cy + c0, cz + s0], [cx + hh, cy + c1, cz + s1], [1, 0, 0], col);
+        this.pushTri([cx - hh, cy, cz], [cx - hh, cy + c1, cz + s1], [cx - hh, cy + c0, cz + s0], [-1, 0, 0], col);
+      }
+    }
+  }
+  build() {
+    const data = new Float32Array(this.verts);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    return { buf, count: data.length / 9 };
+  }
+}
+
+const Meshes = {};
+function buildDynamicMeshes() {
+  // 1. Unit Cube
+  const bCube = new MeshBuilder();
+  bCube.addBox(0, 0, 0, 1, 1, 1, [1, 1, 1]);
+  Meshes.cube = bCube.build();
+
+  // 2. Player Courier Motorcycle (chassis + rider + handlebars + headlight + twin exhaust)
+  const bBike = new MeshBuilder();
+  // Frame & engine block
+  bBike.addBox(0, 0.75, 0, 0.55, 0.55, 2.2, [0.95, 0.25, 0.15], [1.0, 0.45, 0.15]);
+  bBike.addBox(0, 0.55, 0.1, 0.65, 0.45, 0.9, [0.25, 0.28, 0.35]); // engine
+  // Front fork & fairing
+  bBike.addBox(0, 1.15, 0.95, 0.52, 0.65, 0.55, [1.0, 0.78, 0.1]);
+  bBike.addBox(0, 1.32, 1.24, 0.36, 0.26, 0.12, [0.95, 0.98, 1.0]); // headlight
+  // Handlebars
+  bBike.addBox(0, 1.48, 0.78, 1.35, 0.12, 0.14, [0.2, 0.22, 0.26]);
+  bBike.addBox(-0.62, 1.48, 0.78, 0.24, 0.16, 0.18, [0.1, 0.1, 0.12]);
+  bBike.addBox(0.62, 1.48, 0.78, 0.24, 0.16, 0.18, [0.1, 0.1, 0.12]);
+  // Twin rear exhaust pipes
+  bBike.addBox(-0.34, 0.68, -0.95, 0.16, 0.16, 0.95, [0.7, 0.74, 0.8]);
+  bBike.addBox(0.34, 0.68, -0.95, 0.16, 0.16, 0.95, [0.7, 0.74, 0.8]);
+  // Courier Rear Cargo Rack
+  bBike.addBox(0, 1.05, -0.98, 0.82, 0.14, 0.78, [0.22, 0.26, 0.32]);
+  // Courier Rider (jacket, torso, helmet, visor)
+  bBike.addBox(0, 1.45, -0.12, 0.68, 0.78, 0.46, [0.15, 0.65, 0.95]); // cyan jacket
+  bBike.addBox(0, 1.46, -0.36, 0.52, 0.55, 0.12, [1.0, 0.8, 0.1]); // logo on back
+  bBike.addBox(0, 2.08, 0.02, 0.54, 0.54, 0.56, [1.0, 0.82, 0.12]); // yellow helmet
+  bBike.addBox(0, 2.08, 0.26, 0.46, 0.24, 0.12, [0.12, 0.16, 0.28]); // dark visor
+  Meshes.bikeBody = bBike.build();
+
+  // 3. Wheel Mesh
+  const bWheel = new MeshBuilder();
+  bWheel.addCylinder(0, 0, 0, 0.52, 0.32, 12, [0.14, 0.15, 0.18], 'X');
+  bWheel.addCylinder(0, 0, 0, 0.28, 0.36, 8, [0.85, 0.88, 0.92], 'X');
+  Meshes.wheel = bWheel.build();
+
+  // 4. Courier Package Box (strapped to rear rack when picked up, or floating at pickup)
+  const bPkg = new MeshBuilder();
+  bPkg.addBox(0, 0, 0, 0.82, 0.68, 0.76, [0.92, 0.68, 0.36], [0.96, 0.76, 0.44]);
+  bPkg.addBox(0, 0.02, 0, 0.86, 0.72, 0.16, [0.95, 0.25, 0.2]); // red ribbon
+  bPkg.addBox(0, 0.02, 0, 0.16, 0.72, 0.80, [0.95, 0.25, 0.2]);
+  Meshes.pkg = bPkg.build();
+
+  // 5. 3D Overhead Route Arrow
+  const bArr = new MeshBuilder();
+  bArr.addBox(0, 0, -0.35, 0.45, 0.22, 1.1, [1, 1, 1]);
+  bArr.pushTri([-0.95, 0.11, 0.15], [0.95, 0.11, 0.15], [0, 0.11, 1.35], [0, 1, 0], [1, 1, 1]);
+  bArr.pushTri([0.95, -0.11, 0.15], [-0.95, -0.11, 0.15], [0, -0.11, 1.35], [0, -1, 0], [1, 1, 1]);
+  Meshes.arrow = bArr.build();
+
+  // 6. Beacon Ring / Pillar
+  const bRing = new MeshBuilder();
+  bRing.addCylinder(0, 0.2, 0, 4.2, 0.35, 16, [1, 1, 1], 'Y');
+  bRing.addCylinder(0, 6.0, 0, 0.55, 12.0, 10, [1, 1, 1], 'Y');
+  Meshes.beacon = bRing.build();
+
+  // 7. Chaos Meshes:
+  // 7a. Parade Float (Stationary Blocker)
+  const bParade = new MeshBuilder();
+  bParade.addBox(0, 1.2, 0, 12.5, 2.0, 4.4, [0.95, 0.22, 0.55], [1.0, 0.82, 0.15]);
+  bParade.addBox(0, 3.2, 0, 8.5, 2.2, 3.2, [0.25, 0.82, 0.95], [1.0, 0.45, 0.75]);
+  bParade.addCylinder(-3.2, 4.8, 0, 1.2, 1.8, 10, [1.0, 0.85, 0.1], 'Y');
+  bParade.addCylinder(3.2, 4.8, 0, 1.2, 1.8, 10, [1.0, 0.85, 0.1], 'Y');
+  Meshes.parade = bParade.build();
+
+  // 7b. Runaway Cow (Moving Hazard)
+  const bCow = new MeshBuilder();
+  bCow.addBox(0, 1.35, 0, 1.5, 1.3, 2.6, [0.96, 0.96, 0.98], [0.2, 0.2, 0.24]); // body with spots
+  bCow.addBox(0, 1.95, 1.35, 1.1, 1.0, 1.0, [0.95, 0.95, 0.95]); // head
+  bCow.addBox(0, 1.65, 1.85, 0.85, 0.48, 0.35, [1.0, 0.68, 0.75]); // pink snout
+  bCow.addBox(-0.48, 0.45, 0.85, 0.35, 0.9, 0.35, [0.2, 0.2, 0.22]); // legs
+  bCow.addBox(0.48, 0.45, 0.85, 0.35, 0.9, 0.35, [0.95, 0.95, 0.95]);
+  bCow.addBox(-0.48, 0.45, -0.85, 0.35, 0.9, 0.35, [0.95, 0.95, 0.95]);
+  bCow.addBox(0.48, 0.45, -0.85, 0.35, 0.9, 0.35, [0.2, 0.2, 0.22]);
+  Meshes.cow = bCow.build();
+
+  // 7c. Giant Loose Inflatable Mascot (Bouncing Hazard)
+  const bMascot = new MeshBuilder();
+  bMascot.addCylinder(0, 2.6, 0, 2.9, 4.2, 12, [1.0, 0.42, 0.12], 'Y');
+  bMascot.addCylinder(0, 5.2, 0, 1.9, 1.8, 12, [1.0, 0.85, 0.2], 'Y');
+  bMascot.addBox(-0.75, 5.3, 1.65, 0.55, 0.55, 0.35, [1, 1, 1]); // eyes
+  bMascot.addBox(0.75, 5.3, 1.65, 0.55, 0.55, 0.35, [1, 1, 1]);
+  Meshes.mascot = bMascot.build();
+
+  // 7d. Breakable Alley Crate / Traffic Cone
+  const bCrate = new MeshBuilder();
+  bCrate.addBox(0, 0.9, 0, 1.8, 1.8, 1.8, [0.85, 0.55, 0.22], [0.92, 0.65, 0.28]);
+  Meshes.crate = bCrate.build();
+}
+buildDynamicMeshes();
+
+const mProj = Mat4.create();
+const mView = Mat4.create();
+const mProjView = Mat4.create();
+const mModel = Mat4.create();
+
+function drawMesh(mesh, tx, ty, tz, yaw, pitch, roll, sx, sy, sz, tint = [1,1,1], emissive = 0.0) {
+  Mat4.fromTranslationRotationScale(mModel, tx, ty, tz, yaw, pitch, roll, sx, sy, sz);
+  gl.uniformMatrix4fv(loc.uModel, false, mModel);
+  gl.uniform3fv(loc.uTint, tint);
+  gl.uniform1f(loc.uEmissive, emissive);
+  gl.bindBuffer(gl.ARRAY_BUFFER, mesh.buf);
+  gl.vertexAttribPointer(loc.aPos, 3, gl.FLOAT, false, 36, 0);
+  gl.vertexAttribPointer(loc.aNorm, 3, gl.FLOAT, false, 36, 12);
+  gl.vertexAttribPointer(loc.aCol, 3, gl.FLOAT, false, 36, 24);
+  gl.drawArrays(gl.TRIANGLES, 0, mesh.count);
+}
+// === PART 4: CITY MAP, LANDMARKS, SHORTCUTS & CHAOS GENERATOR ===
+// The city spans X: [-280..280], Z: [-280..280]
+// Main avenues run along X = -240, -160, -80, 0, 80, 160, 240 (width 22)
+// and Z = -240, -160, -80, 0, 80, 160, 240 (width 22).
+// Between avenues are city blocks (centers at -200, -120, -40, 40, 120, 200).
+// Several blocks feature open CUT-THROUGH ALLEYS (width 11) and RAMP SHORTCUTS!
+
+const buildingAABBs = []; // { minX, maxX, minZ, maxZ, label }
+const nearMissProps = []; // { x, z, r } lampposts, hydrants, bollards along curbs
+const jumpRamps = [];     // { x, z, w, l, dirYaw, boostSpeed }
+const shortcutZones = []; // { minX, maxX, minZ, maxZ }
+
+const LANDMARKS = {
+  DEPOT:       { x: 0,    z: -240, name: 'Harbor Courier Depot' },
+  BAKERY:      { x: 0,    z: -80,  name: 'Sunny Crust Bakery' },
+  ARCADE:      { x: 80,   z: 0,    name: 'Neon Giga-Arcade' },
+  PIER:        { x: -160, z: -160, name: 'Bayside Pier 9' },
+  CITY_HALL:   { x: 0,    z: 80,   name: 'Grand Civic Rotunda' },
+  NOODLE_BAR:  { x: 160,  z: -80,  name: 'Turbo Noodle Corner' },
+  MUSEUM:      { x: -80,  z: 160,  name: 'Modern Chaos Museum' },
+  STADIUM:     { x: 240,  z: 160,  name: 'ThunderDome Arena' },
+  BOTANICAL:   { x: -240, z: 80,   name: 'Glasshouse Conservatory' },
+  FOUNDRY:     { x: 160,  z: -240, name: ' Brassworks Foundry' },
+  TV_TOWER:    { x: -160, z: 240,  name: 'SkyBeam Broadcast Tower' },
+  PENTHOUSE:   { x: 0,    z: 240,  name: 'Apex Spire Plaza' },
+  MARKET:      { x: -80,  z: -80,  name: 'Spice & Lantern Market' },
+  DOCKYARD:    { x: 240,  z: -80,  name: 'Eastside Crane Docks' }
+};
+
+function buildCityWorldMesh() {
+  const b = new MeshBuilder();
+  buildingAABBs.length = 0;
+  nearMissProps.length = 0;
+  jumpRamps.length = 0;
+  shortcutZones.length = 0;
+
+  // Base ground asphalt
+  b.addBox(0, -0.5, 0, 680, 1.0, 680, [0.19, 0.21, 0.27]);
+
+  // Road centerlines & intersection markings along main grid lines (-240..240 step 80)
+  const coords = [-240, -160, -80, 0, 80, 160, 240];
+  for (const c of coords) {
+    // Dashed yellow lines along Z avenues
+    for (let z = -265; z <= 265; z += 16) {
+      b.addBox(c, 0.03, z, 0.45, 0.04, 6.5, [0.98, 0.82, 0.18]);
+      b.addBox(z, 0.03, c, 6.5, 0.04, 0.45, [0.98, 0.82, 0.18]);
+    }
+  }
+
+  // Paint starter control chevrons on the ground right in front of Harbor Depot (0, -240)
+  for (let i = 1; i <= 3; i++) {
+    b.addBox(0, 0.05, -240 + i * 11, 4.2, 0.05, 1.8, [0.22, 0.95, 0.65]);
+  }
+
+  // City blocks centered at -200, -120, -40, 40, 120, 200
+  const blockCenters = [-200, -120, -40, 40, 120, 200];
+  const palette = [
+    [0.95, 0.42, 0.32], // coral red
+    [0.28, 0.68, 0.95], // sky blue
+    [0.98, 0.76, 0.22], // sunny gold
+    [0.58, 0.42, 0.92], // vivid purple
+    [0.24, 0.84, 0.62], // mint teal
+    [0.96, 0.54, 0.20]  // tangerine
+  ];
+
+  let blockIdx = 0;
+  for (let bx of blockCenters) {
+    for (let bz of blockCenters) {
+      blockIdx++;
+      // Sidewalk base (58x58 block leaving 22m wide avenues)
+      b.addBox(bx, 0.18, bz, 58, 0.36, 58, [0.55, 0.58, 0.65], [0.68, 0.71, 0.78]);
+
+      // Decide if this block has an open CUT-THROUGH ALLEY shortcut!
+      const hasNSAlley = ((Math.abs(bx) === 40 && Math.abs(bz) <= 120) || (bx === 120 && bz === -40) || (bx === -120 && bz === 120));
+      const hasEWAlley = ((Math.abs(bz) === 40 && Math.abs(bx) <= 120) || (bx === -40 && bz === 120));
+
+      if (hasNSAlley) {
+        // Paved neon-marked shortcut alley running North-South through the middle of the block
+        b.addBox(bx, 0.38, bz, 12, 0.06, 58, [0.24, 0.28, 0.36]);
+        b.addBox(bx - 5.2, 0.42, bz, 0.4, 0.08, 56, [0.2, 0.95, 0.75]);
+        b.addBox(bx + 5.2, 0.42, bz, 0.4, 0.08, 56, [0.2, 0.95, 0.75]);
+        shortcutZones.push({ minX: bx - 6, maxX: bx + 6, minZ: bz - 29, maxZ: bz + 29 });
+
+        // Left & Right buildings flanking the alley
+        const h1 = 16 + (blockIdx % 4) * 7;
+        const h2 = 20 + ((blockIdx + 2) % 4) * 6;
+        const c1 = palette[blockIdx % palette.length];
+        const c2 = palette[(blockIdx + 3) % palette.length];
+        b.addBox(bx - 16.5, h1 * 0.5, bz, 19, h1, 48, c1, [0.9, 0.92, 0.96]);
+        b.addBox(bx + 16.5, h2 * 0.5, bz, 19, h2, 48, c2, [0.9, 0.92, 0.96]);
+        buildingAABBs.push({ minX: bx - 26, maxX: bx - 7, minZ: bz - 24, maxZ: bz + 24 });
+        buildingAABBs.push({ minX: bx + 7, maxX: bx + 26, minZ: bz - 24, maxZ: bz + 24 });
+      } else if (hasEWAlley) {
+        // Paved shortcut alley running East-West
+        b.addBox(bx, 0.38, bz, 58, 0.06, 12, [0.24, 0.28, 0.36]);
+        b.addBox(bx, 0.42, bz - 5.2, 56, 0.08, 0.4, [0.2, 0.95, 0.75]);
+        b.addBox(bx, 0.42, bz + 5.2, 56, 0.08, 0.4, [0.2, 0.95, 0.75]);
+        shortcutZones.push({ minX: bx - 29, maxX: bx + 29, minZ: bz - 6, maxZ: bz + 6 });
+
+        const h1 = 18 + (blockIdx % 5) * 6;
+        const h2 = 15 + ((blockIdx + 1) % 4) * 7;
+        const c1 = palette[(blockIdx + 1) % palette.length];
+        const c2 = palette[(blockIdx + 4) % palette.length];
+        b.addBox(bx, h1 * 0.5, bz - 16.5, 48, h1, 19, c1, [0.9, 0.92, 0.96]);
+        b.addBox(bx, h2 * 0.5, bz + 16.5, 48, h2, 19, c2, [0.9, 0.92, 0.96]);
+        buildingAABBs.push({ minX: bx - 24, maxX: bx + 24, minZ: bz - 26, maxZ: bz - 7 });
+        buildingAABBs.push({ minX: bx - 24, maxX: bx + 24, minZ: bz + 7, maxZ: bz + 26 });
+      } else {
+        // Solid block with stepped cartoon skyscraper + bright window bands + storefront awning
+        const h = 18 + (blockIdx % 5) * 8;
+        const col = palette[blockIdx % palette.length];
+        b.addBox(bx, h * 0.5, bz, 46, h, 46, col, [0.92, 0.94, 0.98]);
+        // Glowing window bands
+        for (let wy = 6; wy < h - 3; wy += 6) {
+          b.addBox(bx, wy, bz, 46.6, 1.8, 38, [0.88, 0.96, 1.0]);
+          b.addBox(bx, wy, bz, 38, 1.8, 46.6, [0.88, 0.96, 1.0]);
+        }
+        // Storefront awning
+        b.addBox(bx, 3.6, bz, 48.2, 0.9, 48.2, palette[(blockIdx + 3) % palette.length]);
+        b.addBox(bx, h + 3, bz, 28, 6, 28, palette[(blockIdx + 2) % palette.length]);
+        buildingAABBs.push({ minX: bx - 23.5, maxX: bx + 23.5, minZ: bz - 23.5, maxZ: bz + 23.5 });
+      }
+
+      // Corner streetlamps & stylized sidewalk trees (great for near-miss boost charging!)
+      const corners = [[-27, -27], [27, -27], [-27, 27], [27, 27]];
+      for (let ci = 0; ci < corners.length; ci++) {
+        const [cx, cz] = corners[ci];
+        const px = bx + cx, pz = bz + cz;
+        b.addBox(px, 3.2, pz, 0.45, 6.4, 0.45, [0.22, 0.25, 0.32]);
+        b.addBox(px, 6.3, pz, 1.3, 0.45, 1.3, [1.0, 0.92, 0.55]);
+        nearMissProps.push({ x: px, z: pz, r: 0.7 });
+        // Sidewalk cartoon tree beside two corners of each block
+        if (ci % 2 === 0) {
+          const tx = bx + cx * 0.82, tz = bz + cz * 0.95;
+          b.addBox(tx, 1.5, tz, 0.6, 3.0, 0.6, [0.48, 0.32, 0.18]);
+          b.addBox(tx, 3.8, tz, 2.8, 2.6, 2.8, [0.22, 0.82, 0.42], [0.38, 0.94, 0.52]);
+        }
+      }
+    }
+  }
+
+  // Harbor Courier Depot Dispatch Archway at (0, -246) for Intro Scene
+  b.addBox(-9, 4.5, -246, 2.2, 9.0, 2.2, [1.0, 0.55, 0.1]);
+  b.addBox( 9, 4.5, -246, 2.2, 9.0, 2.2, [1.0, 0.55, 0.1]);
+  b.addBox( 0, 8.8, -246, 21.0, 2.4, 2.8, [1.0, 0.82, 0.15]);
+
+  // Apex Spire Plaza Golden Trophy Monument at (0, 250) for Ending Scene
+  b.addBox(0, 1.5, 250, 7.0, 3.0, 7.0, [0.28, 0.32, 0.45]);
+  b.addCylinder(0, 6.5, 250, 2.4, 7.5, 12, [1.0, 0.85, 0.18], 'Y');
+
+  // Outer perimeter boundary walls at +-278
+  const wallCol = [0.28, 0.34, 0.48];
+  b.addBox(0, 4, -278, 560, 8, 4, wallCol);
+  b.addBox(0, 4,  278, 560, 8, 4, wallCol);
+  b.addBox(-278, 4, 0, 4, 8, 560, wallCol);
+  b.addBox( 278, 4, 0, 4, 8, 560, wallCol);
+
+  // Add Street Launch Ramps along key avenues (lets player jump over roadblocks or get air boost!)
+  const rampSpots = [
+    { x: 0, z: -20, yaw: 0 },
+    { x: 0, z: 120, yaw: 0 },
+    { x: 80, z: -40, yaw: 0 },
+    { x: -80, z: 40, yaw: 0 },
+    { x: 40, z: 80, yaw: Math.PI * 0.5 },
+    { x: -120, z: -80, yaw: Math.PI * 0.5 }
+  ];
+  for (const r of rampSpots) {
+    b.addBox(r.x, 0.65, r.z, 5.5, 1.3, 7.5, [1.0, 0.55, 0.1], [1.0, 0.85, 0.2]);
+    jumpRamps.push({ x: r.x, z: r.z, r: 4.2 });
+  }
+
+  Meshes.city = b.build();
+}
+buildCityWorldMesh();
+// === PART 5: DELIVERIES, TUNINGS & ONBOARDING DATA ===
+const TUNING_CATALOG = [
+  {
+    key: 'topSpeed',
+    name: 'Top Speed Tuning',
+    subtitle: 'Twin-Spark Overdrive',
+    desc: 'Raises top speed (+12 km/h per tier) and forward acceleration.',
+    perk: 'UNLOCKS: High-velocity ramp launches & avenue overdrive!'
+  },
+  {
+    key: 'grip',
+    name: 'Grip Tuning',
+    subtitle: 'Hydro-Grip Treads',
+    desc: 'Increases cornering traction and eliminates sideways slip.',
+    perk: 'UNLOCKS: Skim across Flooded River streets at full speed!'
+  },
+  {
+    key: 'boostCap',
+    name: 'Boost Capacity Tuning',
+    subtitle: 'Ram-Air Turbo Tank',
+    desc: 'Expands boost meter (+35 max) and boosts burn power.',
+    perk: 'UNLOCKS: Boost smashes right through wooden alley barricades!'
+  },
+  {
+    key: 'handling',
+    name: 'Handling Tuning',
+    subtitle: 'Mag-Lean Gyro Frame',
+    desc: 'Sharpens turn responsiveness, drift control, and crash recovery.',
+    perk: 'UNLOCKS: Wide magnetic near-miss radius & instant drift snap!'
+  }
+];
+
+const DELIVERIES = [
+  {
+    id: 1,
+    title: 'Job #1: Morning Pastry Run',
+    pickup: LANDMARKS.DEPOT,
+    dropoff: LANDMARKS.BAKERY,
+    timeLimit: 70,
+    callout: 'Calm morning streets — follow the overhead arrow to Sunny Crust Bakery!',
+    addressChange: null,
+    hazards: [
+      // Gentle roadside crates to let player safely discover near-miss & boost on a calm route
+      { type: 'crate', x: -5.5, z: -195 },
+      { type: 'crate', x: 5.5, z: -150 },
+      { type: 'crate', x: -5.5, z: -115 }
+    ]
+  },
+  {
+    id: 2,
+    title: 'Job #2: Festival Permit Express',
+    pickup: LANDMARKS.BAKERY,
+    dropoff: LANDMARKS.CITY_HALL,
+    timeLimit: 68,
+    callout: 'CHAOS ALERT: A Carnival Parade is blocking Central Ave! Cut through the neon side-alley or jump the ramp!',
+    addressChange: null,
+    hazards: [
+      { type: 'parade', x: 0, z: 0, yaw: 0 },
+      { type: 'crate', x: 40, z: -20 },
+      { type: 'crate', x: -40, z: 20 }
+    ]
+  },
+  {
+    id: 3,
+    title: 'Job #3: Hot Broth Delivery',
+    pickup: LANDMARKS.CITY_HALL,
+    dropoff: LANDMARKS.NOODLE_BAR,
+    timeLimit: 68,
+    callout: 'CHAOS ALERT: Runaway Cows on the East Avenue! Time your pass around their crossing path!',
+    addressChange: null,
+    hazards: [
+      { type: 'cow', x: 80, z: 20, ax: 80, az: 20, bx: 80, bz: -45, speed: 15 },
+      { type: 'cow', x: 120, z: -80, ax: 95, az: -80, bx: 145, bz: -80, speed: 16 },
+      { type: 'crate', x: 40, z: 0 }
+    ]
+  },
+  {
+    id: 4,
+    title: 'Job #4: Saffron Crate Rush',
+    pickup: LANDMARKS.NOODLE_BAR,
+    dropoff: LANDMARKS.MARKET,
+    timeLimit: 66,
+    callout: 'CHAOS ALERT: Burst water main! South Cross-Street has turned into a Flooded River!',
+    addressChange: null,
+    hazards: [
+      { type: 'flood', x: 40, z: -80, w: 95, l: 22 },
+      { type: 'crate', x: 40, z: -40 }
+    ]
+  },
+  {
+    id: 5,
+    title: 'Job #5: Harbor Blueprint Drop',
+    pickup: LANDMARKS.MARKET,
+    dropoff: LANDMARKS.PIER,
+    timeLimit: 62,
+    callout: 'Head West toward Bayside Pier 9 — watch for customer dispatch updates!',
+    addressChange: {
+      triggerDist: 55,
+      newDropoff: LANDMARKS.BOTANICAL,
+      bonusTime: 34,
+      reason: 'CUSTOMER DETOUR! Client moved from Pier 9 to Glasshouse Conservatory (+34s added)!'
+    },
+    hazards: [
+      { type: 'crate', x: -120, z: -120 },
+      { type: 'cow', x: -200, z: -40, ax: -240, az: -40, bx: -160, bz: -40, speed: 15 }
+    ]
+  },
+  {
+    id: 6,
+    title: 'Job #6: Arcade Cabinet Circuit',
+    pickup: LANDMARKS.BOTANICAL,
+    dropoff: LANDMARKS.ARCADE,
+    timeLimit: 72,
+    callout: 'CHAOS ALERT: Giant Loose Inflatable Mascots are bouncing down Midtown!',
+    addressChange: null,
+    hazards: [
+      { type: 'mascot', x: -80, z: 40, ax: -110, az: 40, bx: -50, bz: 40, speed: 18 },
+      { type: 'mascot', x: 0, z: 20, ax: 0, az: -25, bx: 0, bz: 55, speed: 20 },
+      { type: 'crate', x: -40, z: 40 }
+    ]
+  },
+  {
+    id: 7,
+    title: 'Job #7: Modern Art Sculpture',
+    pickup: LANDMARKS.ARCADE,
+    dropoff: LANDMARKS.MUSEUM,
+    timeLimit: 68,
+    callout: 'Parade Floats & Runaway Cows in Uptown — thread the alleys to save time!',
+    addressChange: null,
+    hazards: [
+      { type: 'parade', x: 0, z: 80, yaw: Math.PI * 0.5 },
+      { type: 'parade', x: -80, z: 80, yaw: 0 },
+      { type: 'cow', x: -40, z: 160, ax: -70, az: 160, bx: 10, bz: 160, speed: 19 },
+      { type: 'mascot', x: 40, z: 80, ax: 15, az: 80, bx: 75, bz: 80, speed: 18 }
+    ]
+  },
+  {
+    id: 8,
+    title: 'Job #8: Heavy Alloy Valise',
+    pickup: LANDMARKS.MUSEUM,
+    dropoff: LANDMARKS.FOUNDRY,
+    timeLimit: 76,
+    callout: 'Cross-city haul to Brassworks Foundry! Watch for Flooded Streets & Parades!',
+    addressChange: {
+      triggerDist: 75,
+      newDropoff: LANDMARKS.DOCKYARD,
+      bonusTime: 28,
+      reason: 'ADDRESS CHANGE! Foreman relocated to Eastside Crane Docks (+28s added)!'
+    },
+    hazards: [
+      { type: 'flood', x: 0, z: 0, w: 24, l: 90 },
+      { type: 'parade', x: 80, z: -160, yaw: 0 },
+      { type: 'cow', x: 160, z: -140, ax: 160, az: -180, bx: 160, bz: -100, speed: 20 },
+      { type: 'crate', x: 120, z: -40 }
+    ]
+  },
+  {
+    id: 9,
+    title: 'Job #9: Championship Trophy',
+    pickup: LANDMARKS.DOCKYARD,
+    dropoff: LANDMARKS.STADIUM,
+    timeLimit: 64,
+    callout: 'Eastside Highway Stampede! Mascots, Cows, and Flooded Underpasses ahead!',
+    addressChange: null,
+    hazards: [
+      { type: 'flood', x: 240, z: 40, w: 22, l: 85 },
+      { type: 'mascot', x: 160, z: 80, ax: 120, az: 80, bx: 210, bz: 80, speed: 22 },
+      { type: 'cow', x: 200, z: 160, ax: 165, az: 160, bx: 235, bz: 160, speed: 21 },
+      { type: 'parade', x: 160, z: 0, yaw: 0 }
+    ]
+  },
+  {
+    id: 10,
+    title: 'Job #10: Live Broadcast Tape',
+    pickup: LANDMARKS.STADIUM,
+    dropoff: LANDMARKS.TV_TOWER,
+    timeLimit: 74,
+    callout: 'Northside Lockdown! Use every shortcut and ramp you know!',
+    addressChange: {
+      triggerDist: 70,
+      newDropoff: LANDMARKS.CITY_HALL,
+      bonusTime: 26,
+      reason: 'BREAKING NEWS DETOUR! Rush the tape to Grand Civic Rotunda (+26s added)!'
+    },
+    hazards: [
+      { type: 'parade', x: 40, z: 160, yaw: Math.PI * 0.5 },
+      { type: 'flood', x: -80, z: 240, w: 90, l: 22 },
+      { type: 'mascot', x: -80, z: 160, ax: -120, az: 160, bx: -40, bz: 160, speed: 23 },
+      { type: 'cow', x: 0, z: 140, ax: -20, az: 140, bx: 20, bz: 140, speed: 20 }
+    ]
+  },
+  {
+    id: 11,
+    title: 'Job #11: Storm Warning Generator',
+    pickup: LANDMARKS.CITY_HALL,
+    dropoff: LANDMARKS.PIER,
+    timeLimit: 66,
+    callout: 'King-Tide Surge! Multiple streets flooded and mascots loose across Westside!',
+    addressChange: {
+      triggerDist: 65,
+      newDropoff: LANDMARKS.TV_TOWER,
+      bonusTime: 32,
+      reason: 'EMERGENCY REROUTE! Pier evacuated — deliver to SkyBeam Broadcast Tower (+32s)!'
+    },
+    hazards: [
+      { type: 'flood', x: -80, z: -40, w: 22, l: 95 },
+      { type: 'flood', x: -160, z: 80, w: 22, l: 95 },
+      { type: 'parade', x: -80, z: 0, yaw: 0 },
+      { type: 'mascot', x: -160, z: -40, ax: -195, az: -40, bx: -125, bz: -40, speed: 24 },
+      { type: 'cow', x: -160, z: 160, ax: -200, az: 160, bx: -120, bz: 160, speed: 22 }
+    ]
+  },
+  {
+    id: 12,
+    title: 'Job #12: FINAL SHIFT — Golden Key',
+    pickup: LANDMARKS.TV_TOWER,
+    dropoff: LANDMARKS.DEPOT,
+    timeLimit: 72,
+    callout: 'FINAL DELIVERY OF THE SHIFT! Total City Chaos — give it everything you have!',
+    addressChange: {
+      triggerDist: 80,
+      newDropoff: LANDMARKS.PENTHOUSE,
+      bonusTime: 34,
+      reason: 'FINAL VIP OVERRIDE! Bring the Golden Key straight to Apex Spire Plaza (+34s)!'
+    },
+    hazards: [
+      { type: 'parade', x: -80, z: -80, yaw: 0 },
+      { type: 'parade', x: 0, z: 0, yaw: 0 },
+      { type: 'parade', x: 0, z: 160, yaw: 0 },
+      { type: 'flood', x: 0, z: -120, w: 22, l: 80 },
+      { type: 'flood', x: 80, z: 80, w: 22, l: 90 },
+      { type: 'mascot', x: 0, z: -180, ax: -35, az: -180, bx: 35, bz: -180, speed: 25 },
+      { type: 'mascot', x: 0, z: 200, ax: -35, az: 200, bx: 35, bz: 200, speed: 25 },
+      { type: 'cow', x: -80, z: 40, ax: -115, az: 40, bx: -45, bz: 40, speed: 23 },
+      { type: 'cow', x: 40, z: 120, ax: 10, az: 120, bx: 70, bz: 120, speed: 23 }
+    ]
+  }
+];
+
+function setupDelivery(index) {
+  game.shiftIndex = clamp(index, 0, DELIVERIES.length - 1);
+  const del = DELIVERIES[game.shiftIndex];
+  game.pickupPos = { ...del.pickup };
+  game.dropoffPos = { ...del.dropoff };
+  game.altDropoffPos = del.addressChange ? { ...del.addressChange } : null;
+  game.maxClock = del.timeLimit;
+  game.clock = del.timeLimit;
+  game.clockPausedTimer = 0;
+  game.winAnimTimer = 0;
+  game.addressChangedThisJob = false;
+  game.addressChangeBannerTimer = 0;
+  game.chaosCalloutText = del.callout;
+  game.chaosCalloutTimer = 7.5;
+  game.phase = 'PICKUP';
+
+  // Position motorcycle right behind the pickup beacon so the player drives through the pickup ring to start the clock!
+  const dx = game.dropoffPos.x - game.pickupPos.x;
+  const dz = game.dropoffPos.z - game.pickupPos.z;
+  const startYaw = Math.atan2(dx, dz);
+  game.bike.x = game.pickupPos.x - Math.sin(startYaw) * 10;
+  game.bike.y = 0;
+  game.bike.z = game.pickupPos.z - Math.cos(startYaw) * 10;
+  game.bike.vx = 0;
+  game.bike.vy = 0;
+  game.bike.vz = 0;
+  game.bike.yaw = startYaw;
+  game.bike.speed = 0;
+  game.bike.steerAngle = 0;
+  game.bike.leanAngle = 0;
+  game.bike.pitchAngle = 0;
+  game.bike.drifting = false;
+  game.bike.boosting = false;
+  game.bike.stallTimer = 0;
+  game.bike.invulnTimer = 0;
+  game.bike.hasPackage = false;
+  game.bike.maxBoost = 100 + game.tunings.boostCap * 35;
+  game.bike.boost = Math.max(game.bike.boost, 45);
+  game.cam.mouseYawOffset = 0;
+  game.cam.mousePitchOffset = 0;
+
+  // Spawn active hazards for this delivery
+  game.activeHazards = del.hazards.map((h, idx) => ({
+    ...h,
+    id: idx,
+    t: idx * 1.3,
+    broken: false,
+    nearMissed: false
+  }));
+  game.particles = [];
+  game.floatingTexts = [];
+  game.boostOrbs = [];
+}
+
+function setupPracticeStreet() {
+  game.pickupPos = { x: 0, z: -220, name: 'Practice Depot' };
+  game.dropoffPos = { x: 0, z: -80, name: 'Practice Drop-Off' };
+  game.altDropoffPos = null;
+  game.maxClock = 999;
+  game.clock = 999;
+  game.phase = 'PICKUP';
+  game.bike.x = 0;
+  game.bike.y = 0;
+  game.bike.z = -238;
+  game.bike.yaw = 0;
+  game.bike.speed = 0;
+  game.bike.vx = 0; game.bike.vy = 0; game.bike.vz = 0;
+  game.bike.hasPackage = false;
+  game.bike.maxBoost = 100;
+  game.bike.boost = 50;
+  game.chaosCalloutText = 'Practice Street: Test W/S/A/D, Space (Drift), Shift (Boost), and Mouse Look!';
+  game.chaosCalloutTimer = 12.0;
+  game.activeHazards = [
+    { type: 'crate', id: 101, x: -5, z: -185, t: 0, broken: false, nearMissed: false },
+    { type: 'crate', id: 102, x: 5, z: -155, t: 0, broken: false, nearMissed: false },
+    { type: 'parade', id: 103, x: 0, z: 0, yaw: 0, t: 0, broken: false, nearMissed: false },
+    { type: 'cow', id: 104, x: 0, z: -120, ax: -8, az: -120, bx: 8, bz: -120, speed: 8, t: 0, broken: false, nearMissed: false }
+  ];
+  game.practiceFlags = {
+    accelerate: false,
+    steer: false,
+    drift: false,
+    nearMiss: false,
+    boost: false,
+    sampleDelivery: false
+  };
+  updatePracticeChecklistUI();
+}
+// === PART 6: MOTORCYCLE PHYSICS, CONTROLS & CHAOS LOGIC ===
+function spawnParticles(x, y, z, col, count = 10, spd = 12) {
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const s = (0.3 + Math.random() * 0.7) * spd;
+    game.particles.push({
+      x, y, z,
+      vx: Math.cos(a) * s,
+      vy: 2 + Math.random() * s * 0.8,
+      vz: Math.sin(a) * s,
+      col,
+      life: 0.45 + Math.random() * 0.35,
+      maxLife: 0.75,
+      size: 0.35 + Math.random() * 0.35
+    });
+  }
+}
+
+function spawnBoostOrb(label = null) {
+  const w = hudCanvas.width, h = hudCanvas.height;
+  game.boostOrbs.push({
+    x: w * 0.5 + (Math.random() - 0.5) * 90,
+    y: h * 0.62 + (Math.random() - 0.5) * 40,
+    tx: w - 165,
+    ty: h - 56,
+    t: 0
+  });
+  if (label) {
+    game.floatingTexts.push({
+      text: label,
+      x: w * 0.5 + (Math.random() - 0.5) * 60,
+      y: h * 0.55,
+      col: '#38d9a9',
+      life: 1.0
+    });
+  }
+}
+
+function updatePhysicsAndWorld(dt) {
+  const b = game.bike;
+  const isPractice = (game.state === STATE.HOW_TO_PLAY);
+
+  // 1. Update delivery clock & address-change pause
+  if (game.addressChangeBannerTimer > 0) game.addressChangeBannerTimer -= dt;
+  if (game.chaosCalloutTimer > 0) game.chaosCalloutTimer -= dt;
+
+  if (game.phase === 'WIN_ANIM') {
+    game.winAnimTimer -= dt;
+    b.speed *= Math.pow(0.08, dt);
+    b.x += Math.sin(b.yaw) * b.speed * dt;
+    b.z += Math.cos(b.yaw) * b.speed * dt;
+    updateParticlesAndCamera(dt);
+    if (game.winAnimTimer <= 0) {
+      finishDeliveryStep();
+    }
+    return;
+  }
+
+  if (game.clockPausedTimer > 0) {
+    game.clockPausedTimer -= dt;
+  } else if (!isPractice && game.phase === 'DELIVER') {
+    game.clock -= dt;
+    if (game.clock <= 0) {
+      game.clock = 0;
+      triggerShiftFail();
+      return;
+    }
+  }
+
+  // 2. Read player controls
+  const accelPressed = Boolean(keys['KeyW'] || keys['ArrowUp']);
+  const brakePressed = Boolean(keys['KeyS'] || keys['ArrowDown']);
+  const leftPressed  = Boolean(keys['KeyA'] || keys['ArrowLeft']);
+  const rightPressed = Boolean(keys['KeyD'] || keys['ArrowRight']);
+  const boostPressed = Boolean(keys['ShiftLeft'] || keys['ShiftRight']);
+  const driftPressed = Boolean(keys['Space']);
+
+  if (isPractice) {
+    if (accelPressed) game.practiceFlags.accelerate = true;
+    if (leftPressed || rightPressed) game.practiceFlags.steer = true;
+  }
+
+  // 3. Handle crash stall recovery
+  if (b.invulnTimer > 0) b.invulnTimer -= dt;
+  if (b.stallTimer > 0) {
+    b.stallTimer -= dt;
+    b.speed *= Math.pow(0.04, dt);
+    b.pitchAngle = Math.sin(b.stallTimer * 24) * 0.16;
+  } else {
+    b.pitchAngle = lerp(b.pitchAngle, b.boosting ? -0.14 : 0, dt * 8);
+  }
+
+  // 4. Compute Tuned stats
+  const topSpeed = 52 + game.tunings.topSpeed * 8.5;
+  const accelRate = 38 + game.tunings.topSpeed * 5.0;
+  const turnRate = 2.15 + game.tunings.handling * 0.28;
+  const gripFactor = 6.5 + game.tunings.grip * 2.2;
+
+  // Check if in Flooded Street River
+  b.inWater = false;
+  for (const h of game.activeHazards) {
+    if (h.type === 'flood') {
+      if (Math.abs(b.x - h.x) < h.w * 0.5 && Math.abs(b.z - h.z) < h.l * 0.5 && b.y < 0.8) {
+        b.inWater = true;
+        break;
+      }
+    }
+  }
+
+  // Check if in Shortcut Alley
+  b.onShortcut = false;
+  for (const sc of shortcutZones) {
+    if (b.x >= sc.minX && b.x <= sc.maxX && b.z >= sc.minZ && b.z <= sc.maxZ) {
+      b.onShortcut = true;
+      break;
+    }
+  }
+
+  // 5. Boost activation & consumption
+  if (boostPressed && b.boost > 2 && b.stallTimer <= 0) {
+    if (!b.boosting) AudioSys.sfxBoost();
+    b.boosting = true;
+    b.boost = Math.max(0, b.boost - 26 * dt);
+    if (isPractice) game.practiceFlags.boost = true;
+    if (Math.random() < 0.65) {
+      spawnParticles(b.x - Math.sin(b.yaw) * 1.4, b.y + 0.6, b.z - Math.cos(b.yaw) * 1.4, [0.2, 0.95, 1.0], 2, 6);
+    }
+  } else {
+    b.boosting = false;
+  }
+
+  // 6. Acceleration, braking, water drag
+  let maxSpd = topSpeed * (b.boosting ? 1.42 : 1.0);
+  if (b.inWater && game.tunings.grip === 0 && !b.boosting) {
+    // Flooded street slows standard tires; Hydro-Grip Treads (grip >= 1) skim right over water!
+    maxSpd *= 0.46;
+    if (Math.abs(b.speed) > maxSpd) b.speed = lerp(b.speed, maxSpd, dt * 5);
+    if (Math.abs(b.speed) > 5 && Math.random() < 0.5) {
+      spawnParticles(b.x, 0.3, b.z, [0.35, 0.78, 1.0], 2, 7);
+    }
+  } else if (b.inWater && game.tunings.grip >= 1 && Math.abs(b.speed) > 10) {
+    if (Math.random() < 0.5) spawnParticles(b.x, 0.3, b.z, [0.55, 0.95, 1.0], 2, 9);
+  }
+
+  if (b.stallTimer <= 0) {
+    if (accelPressed || b.boosting) {
+      const rate = b.boosting ? accelRate * 1.75 : accelRate;
+      b.speed = Math.min(maxSpd, b.speed + rate * dt);
+    } else if (brakePressed) {
+      if (b.speed > 2) {
+        b.speed = Math.max(0, b.speed - 62 * dt);
+      } else {
+        b.speed = Math.max(-18, b.speed - 26 * dt);
+      }
+    } else {
+      b.speed *= Math.pow(0.32, dt);
+      if (Math.abs(b.speed) < 0.25) b.speed = 0;
+    }
+  }
+
+  // 7. Steering & Handbrake Drifting
+  let steerInput = (leftPressed ? 1 : 0) - (rightPressed ? 1 : 0);
+  b.steerAngle = lerp(b.steerAngle, steerInput, dt * 10);
+
+  if (driftPressed && Math.abs(b.speed) > 16 && Math.abs(steerInput) > 0.05 && b.y <= 0.1) {
+    b.drifting = true;
+    b.driftDir = steerInput;
+    // Drifting feeds the boost meter organically!
+    const gain = (14 + game.tunings.handling * 3) * dt;
+    b.boost = Math.min(b.maxBoost, b.boost + gain);
+    game.driftSecondsTotal += dt;
+    if (isPractice) game.practiceFlags.drift = true;
+    if (Math.random() < 0.38) {
+      spawnParticles(b.x - Math.sin(b.yaw) * 1.1, 0.2, b.z - Math.cos(b.yaw) * 1.1, [1.0, 0.85, 0.25], 2, 5);
+      spawnBoostOrb();
+    }
+  } else {
+    b.drifting = false;
+    b.driftDir = 0;
+  }
+
+  if (Math.abs(b.speed) > 0.4) {
+    const dirSign = b.speed >= 0 ? 1 : -1;
+    const driftMult = b.drifting ? 1.48 : 1.0;
+    b.yaw += b.steerAngle * turnRate * driftMult * dirSign * dt;
+  }
+
+  const targetLean = -b.steerAngle * (b.drifting ? 0.58 : 0.36) * clamp(Math.abs(b.speed) / 35, 0, 1.2);
+  b.leanAngle = lerp(b.leanAngle, targetLean, dt * 10);
+
+  // 8. Velocity vector & lateral grip
+  const forwardX = Math.sin(b.yaw);
+  const forwardZ = Math.cos(b.yaw);
+  const targetVx = forwardX * b.speed;
+  const targetVz = forwardZ * b.speed;
+  const currentGrip = b.drifting ? gripFactor * 0.35 : gripFactor;
+  b.vx = lerp(b.vx, targetVx, clamp(currentGrip * dt, 0, 1));
+  b.vz = lerp(b.vz, targetVz, clamp(currentGrip * dt, 0, 1));
+
+  b.x += b.vx * dt;
+  b.z += b.vz * dt;
+  b.wheelSpin += b.speed * dt * 1.6;
+
+  // 9. Jump Ramps & Vertical Gravity
+  if (b.y <= 0.05) {
+    for (const r of jumpRamps) {
+      if (dist2D(b.x, b.z, r.x, r.z) < r.r && b.speed > 20) {
+        b.vy = 11.5 + (b.speed / 65) * 7.5 + game.tunings.topSpeed * 1.2;
+        b.speed = Math.min(maxSpd * 1.15, b.speed + 8);
+        AudioSys.sfxBoost();
+        spawnParticles(b.x, 0.5, b.z, [1.0, 0.65, 0.15], 12, 10);
+        break;
+      }
+    }
+  }
+  if (b.y > 0 || b.vy > 0) {
+    b.y += b.vy * dt;
+    b.vy -= 28 * dt;
+    if (b.y <= 0) {
+      b.y = 0;
+      b.vy = 0;
+      spawnParticles(b.x, 0.2, b.z, [0.85, 0.85, 0.9], 6, 6);
+    }
+  }
+
+  // 10. Building & Outer Boundary Collisions
+  b.x = clamp(b.x, -272, 272);
+  b.z = clamp(b.z, -272, 272);
+
+  const bikeRadius = 1.15;
+  for (const box of buildingAABBs) {
+    const cx = clamp(b.x, box.minX, box.maxX);
+    const cz = clamp(b.z, box.minZ, box.maxZ);
+    const dx = b.x - cx;
+    const dz = b.z - cz;
+    const d2 = dx * dx + dz * dz;
+    if (d2 < bikeRadius * bikeRadius) {
+      const d = Math.sqrt(d2) || 0.001;
+      const nx = dx / d, nz = dz / d;
+      b.x = cx + nx * (bikeRadius + 0.05);
+      b.z = cz + nz * (bikeRadius + 0.05);
+      if (Math.abs(b.speed) > 22 && b.invulnTimer <= 0) {
+        triggerBikeStall(nx, nz, 0.45);
+      } else {
+        b.speed *= 0.65;
+      }
+    }
+  }
+
+  // 11. Near-miss detection against streetlamps/bollards
+  const nearRadius = 3.8 + game.tunings.handling * 0.9;
+  if (Math.abs(b.speed) > 18) {
+    for (const p of nearMissProps) {
+      const d = dist2D(b.x, b.z, p.x, p.z);
+      if (d < nearRadius && (!p.cooldown || p.cooldown <= 0)) {
+        p.cooldown = 2.5;
+        awardNearMiss(p.x, p.z);
+      }
+      if (p.cooldown > 0) p.cooldown -= dt;
+    }
+  }
+
+  // 12. Update & Collide Dynamic Chaos Hazards
+  updateChaosHazards(dt, nearRadius);
+
+  // 13. Check Pickup, Mid-Route Address Change, and Drop-Off Beacons
+  checkDeliveryObjectives();
+
+  // 14. Update Particles, Boost Orbs & Camera
+  updateParticlesAndCamera(dt);
+}
+
+function awardNearMiss(ox, oz) {
+  const b = game.bike;
+  b.boost = Math.min(b.maxBoost, b.boost + 14 + game.tunings.handling * 3);
+  game.nearMissCount++;
+  game.score += 50;
+  if (game.state === STATE.HOW_TO_PLAY) game.practiceFlags.nearMiss = true;
+  AudioSys.sfxNearMiss();
+  spawnParticles(ox, 1.2, oz, [0.25, 1.0, 0.75], 8, 9);
+  spawnBoostOrb();
+}
+
+function triggerBikeStall(nx, nz, duration = 0.65) {
+  const b = game.bike;
+  // Package survives any crash and is never lost!
+  b.speed = -8;
+  b.vx = nx * 12;
+  b.vz = nz * 12;
+  b.stallTimer = Math.max(0.25, duration - game.tunings.handling * 0.1);
+  b.invulnTimer = 1.1;
+  b.boosting = false;
+  b.drifting = false;
+  game.cam.shake = 0.55;
+  AudioSys.sfxCrash();
+  spawnParticles(b.x, b.y + 1.0, b.z, [1.0, 0.35, 0.15], 16, 14);
+  game.floatingTexts.push({
+    text: 'STALLED! PACKAGE INTACT!',
+    x: hudCanvas.width * 0.5,
+    y: hudCanvas.height * 0.42,
+    col: '#ff6b6b',
+    life: 1.15
+  });
+}
+
+function updateChaosHazards(dt, nearRadius) {
+  const b = game.bike;
+  for (const h of game.activeHazards) {
+    if (h.broken) continue;
+    h.t += dt;
+
+    if (h.type === 'cow' || h.type === 'mascot') {
+      const spanX = h.bx - h.ax, spanZ = h.bz - h.az;
+      const dist = Math.hypot(spanX, spanZ) || 1;
+      const phase = (Math.sin(h.t * (h.speed / dist) * 2.0) + 1) * 0.5;
+      const prevX = h.x, prevZ = h.z;
+      h.x = lerp(h.ax, h.bx, phase);
+      h.z = lerp(h.az, h.bz, phase);
+      h.yaw = Math.atan2(h.x - prevX, h.z - prevZ);
+    }
+
+    if (h.type === 'flood') continue; // handled in water drag
+
+    // Jump clearance: if bike is high in the air off a ramp, it clears road hazards!
+    if (b.y > 2.4) continue;
+
+    const hitRad = h.type === 'parade' ? 5.6 : (h.type === 'mascot' ? 3.1 : (h.type === 'cow' ? 2.1 : 1.5));
+    const d = dist2D(b.x, b.z, h.x, h.z);
+
+    if (d < hitRad + 0.9) {
+      // If it's a crate and player has Boost Capacity tuning or is boosting, smash right through!
+      if (h.type === 'crate' && (b.boosting || game.tunings.boostCap >= 1)) {
+        h.broken = true;
+        b.boost = Math.min(b.maxBoost, b.boost + 18);
+        game.score += 100;
+        AudioSys.sfxNearMiss();
+        spawnParticles(h.x, 1.0, h.z, [0.95, 0.72, 0.25], 16, 14);
+        spawnBoostOrb('SMASH BONUS!');
+      } else if (b.invulnTimer <= 0) {
+        const nx = (b.x - h.x) / (d || 1);
+        const nz = (b.z - h.z) / (d || 1);
+        triggerBikeStall(nx, nz, 0.7);
+      }
+    } else if (d < hitRad + nearRadius && Math.abs(b.speed) > 15 && !h.nearMissed) {
+      h.nearMissed = true;
+      setTimeout(() => { h.nearMissed = false; }, 2200);
+      awardNearMiss(h.x, h.z);
+    }
+  }
+}
+
+function checkDeliveryObjectives() {
+  const b = game.bike;
+  if (game.phase === 'PICKUP') {
+    if (dist2D(b.x, b.z, game.pickupPos.x, game.pickupPos.z) < 6.5) {
+      game.phase = 'DELIVER';
+      b.hasPackage = true;
+      AudioSys.sfxPickup();
+      spawnParticles(game.pickupPos.x, 1.5, game.pickupPos.z, [0.22, 1.0, 0.65], 22, 15);
+      game.floatingTexts.push({
+        text: 'PACKAGE PICKED UP! CLOCK STARTED!',
+        x: hudCanvas.width * 0.5,
+        y: hudCanvas.height * 0.54,
+        col: '#63e6be',
+        life: 1.5
+      });
+    }
+  } else if (game.phase === 'DELIVER') {
+    const dDrop = dist2D(b.x, b.z, game.dropoffPos.x, game.dropoffPos.z);
+
+    // Check Mid-Route Address Change!
+    if (game.altDropoffPos && !game.addressChangedThisJob && dDrop < game.altDropoffPos.triggerDist) {
+      game.addressChangedThisJob = true;
+      game.dropoffPos = { ...game.altDropoffPos.newDropoff };
+      game.clock += game.altDropoffPos.bonusTime;
+      game.maxClock = Math.max(game.maxClock, game.clock);
+      game.clockPausedTimer = 3.5; // Pauses the delivery clock while revealing the detour!
+      game.addressChangeText = game.altDropoffPos.reason;
+      game.addressChangeBannerTimer = 5.5;
+      AudioSys.sfxAddressChange();
+      spawnParticles(b.x, b.y + 2.0, b.z, [1.0, 0.85, 0.2], 24, 14);
+      return;
+    }
+
+    // Check reaching Drop-Off before clock empties
+    if (dDrop < 6.8) {
+      AudioSys.sfxDropoff();
+      b.hasPackage = false;
+      spawnParticles(game.dropoffPos.x, 2.0, game.dropoffPos.z, [1.0, 0.88, 0.2], 35, 18);
+      if (game.state === STATE.HOW_TO_PLAY) {
+        game.practiceFlags.sampleDelivery = true;
+        updatePracticeChecklistUI();
+        // Reset practice loop so player can keep practicing
+        game.phase = 'PICKUP';
+        game.floatingTexts.push({
+          text: 'PRACTICE DROP-OFF CLEARED!',
+          x: hudCanvas.width * 0.5,
+          y: hudCanvas.height * 0.35,
+          col: '#ffcc00',
+          life: 1.8
+        });
+      } else {
+        game.phase = 'WIN_ANIM';
+        game.winAnimTimer = 1.65;
+        const timeBonus = Math.round(game.clock * 25);
+        game.score += 500 + timeBonus;
+        game.bankedTimeTotal += game.clock;
+        game.floatingTexts.push({
+          text: 'DELIVERY BANKED! +' + (500 + timeBonus) + ' PTS',
+          x: hudCanvas.width * 0.5,
+          y: hudCanvas.height * 0.35,
+          col: '#ffcc00',
+          life: 1.6
+        });
+      }
+    }
+  }
+}
+
+function updateParticlesAndCamera(dt) {
+  for (let i = game.particles.length - 1; i >= 0; i--) {
+    const p = game.particles[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.z += p.vz * dt;
+    p.vy -= 18 * dt;
+    p.life -= dt;
+    if (p.life <= 0) game.particles.splice(i, 1);
+  }
+  for (let i = game.floatingTexts.length - 1; i >= 0; i--) {
+    const ft = game.floatingTexts[i];
+    ft.y -= 32 * dt;
+    ft.life -= dt;
+    if (ft.life <= 0) game.floatingTexts.splice(i, 1);
+  }
+  for (let i = game.boostOrbs.length - 1; i >= 0; i--) {
+    const o = game.boostOrbs[i];
+    o.t += dt * 2.8;
+    if (o.t >= 1) game.boostOrbs.splice(i, 1);
+  }
+
+  // Smoothly return mouse camera offset when mouse is idle
+  if (game.cam.mouseIdleTimer > 0) {
+    game.cam.mouseIdleTimer -= dt;
+  } else {
+    game.cam.mouseYawOffset = lerp(game.cam.mouseYawOffset, 0, dt * 3.5);
+    game.cam.mousePitchOffset = lerp(game.cam.mousePitchOffset, 0, dt * 3.5);
+  }
+
+  if (game.cam.shake > 0) game.cam.shake = Math.max(0, game.cam.shake - dt * 1.8);
+
+  const b = game.bike;
+  const camYaw = b.yaw + game.cam.mouseYawOffset;
+  const dist = b.boosting ? 11.2 : 12.6;
+  const height = 5.4 + game.cam.mousePitchOffset * 6.0;
+  const targetCamX = b.x - Math.sin(camYaw) * dist;
+  const targetCamY = Math.max(1.8, b.y + height);
+  const targetCamZ = b.z - Math.cos(camYaw) * dist;
+
+  game.cam.x = lerp(game.cam.x, targetCamX, clamp(dt * 12, 0, 1));
+  game.cam.y = lerp(game.cam.y, targetCamY, clamp(dt * 10, 0, 1));
+  game.cam.z = lerp(game.cam.z, targetCamZ, clamp(dt * 12, 0, 1));
+
+  const shakeX = (Math.random() - 0.5) * game.cam.shake * 1.5;
+  const shakeY = (Math.random() - 0.5) * game.cam.shake * 1.5;
+  game.cam.lookX = b.x + Math.sin(camYaw) * 10 + shakeX;
+  game.cam.lookY = b.y + 2.1 + shakeY;
+  game.cam.lookZ = b.z + Math.cos(camYaw) * 10;
+}
+// === PART 7: HUD, SCREENS, CUTSCENES & MAIN LOOP ===
+function render3DScene(timeSec) {
+  const w = glCanvas.width, h = glCanvas.height;
+  gl.viewport(0, 0, w, h);
+  gl.clearColor(0.28, 0.56, 0.92, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  // Set camera for Intro / Menu / Ending vs In-Play
+  const b = game.bike;
+  if (game.state === STATE.INTRO) {
+    const angle = timeSec * 0.25 + game.cutsceneStep * 0.7;
+    game.cam.x = 0 + Math.sin(angle) * 20;
+    game.cam.y = 6.5 + game.cutsceneStep * 1.2;
+    game.cam.z = -240 - Math.cos(angle) * 20;
+    game.cam.lookX = 0;
+    game.cam.lookY = 2.0;
+    game.cam.lookZ = -236;
+  } else if (game.state === STATE.ENDING) {
+    game.cam.x = 2.5 + Math.sin(timeSec * 0.65) * 4.5;
+    game.cam.y = 4.8;
+    game.cam.z = 263;
+    game.cam.lookX = 2.0;
+    game.cam.lookY = 2.8;
+    game.cam.lookZ = 230;
+    if (Math.random() < 0.45) {
+      spawnParticles(2 + (Math.random() - 0.5) * 14, 1.5, 248, [1.0, 0.85, 0.2], 2, 12);
+    }
+  } else if (game.state === STATE.MENU || game.state === STATE.SETTINGS) {
+    const angle = timeSec * 0.16;
+    game.cam.x = Math.sin(angle) * 58;
+    game.cam.y = 26;
+    game.cam.z = Math.cos(angle) * 58 - 60;
+    game.cam.lookX = 0;
+    game.cam.lookY = 4;
+    game.cam.lookZ = -60;
+  }
+
+  const fovRad = ((b.boosting ? 68 : 60) * Math.PI) / 180;
+  Mat4.perspective(mProj, fovRad, w / Math.max(1, h), 0.5, 520.0);
+  Mat4.lookAt(mView, game.cam.x, game.cam.y, game.cam.z, game.cam.lookX, game.cam.lookY, game.cam.lookZ, 0, 1, 0);
+  Mat4.multiply(mProjView, mProj, mView);
+
+  gl.uniformMatrix4fv(loc.uProjView, false, mProjView);
+  gl.uniform3f(loc.uCamPos, game.cam.x, game.cam.y, game.cam.z);
+
+  // 1. Draw static city world mesh
+  drawMesh(Meshes.city, 0, 0, 0, 0, 0, 0, 1, 1, 1, [1, 1, 1], 0.0);
+
+  // 2. Draw Player Motorcycle
+  const bikeX = (game.state === STATE.INTRO) ? 0 : (game.state === STATE.ENDING ? 5.5 : b.x);
+  const bikeY = (game.state === STATE.INTRO || game.state === STATE.ENDING) ? 0 : b.y;
+  const bikeZ = (game.state === STATE.INTRO) ? -238 : (game.state === STATE.ENDING ? 250 : b.z);
+  const bikeYaw = (game.state === STATE.INTRO) ? 0 : (game.state === STATE.ENDING ? Math.PI * 0.8 + timeSec * 0.7 : b.yaw);
+  const bikePitch = (game.state === STATE.PLAY || game.state === STATE.HOW_TO_PLAY) ? b.pitchAngle : 0;
+  const bikeRoll = (game.state === STATE.PLAY || game.state === STATE.HOW_TO_PLAY) ? b.leanAngle : 0;
+
+  drawMesh(Meshes.bikeBody, bikeX, bikeY, bikeZ, bikeYaw, bikePitch, bikeRoll, 1, 1, 1, [1, 1, 1], b.boosting ? 0.25 : 0.0);
+
+  // Front and rear wheels
+  const fwX = bikeX + Math.sin(bikeYaw) * 0.95;
+  const fwZ = bikeZ + Math.cos(bikeYaw) * 0.95;
+  const rwX = bikeX - Math.sin(bikeYaw) * 0.95;
+  const rwZ = bikeZ - Math.cos(bikeYaw) * 0.95;
+  drawMesh(Meshes.wheel, fwX, bikeY + 0.52, fwZ, bikeYaw + b.steerAngle * 0.35, b.wheelSpin, bikeRoll, 1, 1, 1);
+  drawMesh(Meshes.wheel, rwX, bikeY + 0.52, rwZ, bikeYaw, b.wheelSpin, bikeRoll, 1, 1, 1);
+
+  // Strapped Courier Package on Rear Rack when picked up
+  if (b.hasPackage || game.state === STATE.ENDING) {
+    const px = bikeX - Math.sin(bikeYaw) * 0.98;
+    const pz = bikeZ - Math.cos(bikeYaw) * 0.98;
+    drawMesh(Meshes.pkg, px, bikeY + 1.48, pz, bikeYaw, bikePitch, bikeRoll, 1, 1, 1, [1, 1, 1], 0.12);
+  }
+
+  // 3. Draw Pickup / Drop-off Beacons & Floating Package
+  const targetPos = (game.phase === 'PICKUP') ? game.pickupPos : game.dropoffPos;
+  if (game.state !== STATE.ENDING) {
+    const beaconCol = (game.phase === 'PICKUP') ? [0.22, 1.0, 0.65] : [1.0, 0.82, 0.15];
+    const pulse = 1.0 + Math.sin(timeSec * 5) * 0.14;
+    drawMesh(Meshes.beacon, targetPos.x, 0, targetPos.z, timeSec * 1.2, 0, 0, pulse, 1, pulse, beaconCol, 0.65);
+
+    if (game.phase === 'PICKUP') {
+      drawMesh(Meshes.pkg, game.pickupPos.x, 2.2 + Math.sin(timeSec * 4) * 0.35, game.pickupPos.z, timeSec * 2.0, 0.2, 0, 1.35, 1.35, 1.35, [1, 1, 1], 0.25);
+    }
+  }
+
+  // 4. Draw 3D Overhead Route Arrow above motorcycle during play
+  if (game.state === STATE.PLAY || game.state === STATE.HOW_TO_PLAY) {
+    const toTargetYaw = Math.atan2(targetPos.x - b.x, targetPos.z - b.z);
+    const arrowCol = (game.phase === 'PICKUP') ? [0.25, 1.0, 0.68] : (game.addressChangeBannerTimer > 0 ? [1.0, 0.35, 0.25] : [1.0, 0.88, 0.15]);
+    drawMesh(Meshes.arrow, b.x, b.y + 4.15 + Math.sin(timeSec * 6) * 0.12, b.z, toTargetYaw, 0, 0, 1.15, 1.15, 1.15, arrowCol, 0.75);
+  }
+
+  // 5. Draw Active City Chaos Hazards
+  for (const h of game.activeHazards) {
+    if (h.broken) continue;
+    if (h.type === 'parade') {
+      drawMesh(Meshes.parade, h.x, 0, h.z, h.yaw || 0, 0, Math.sin(timeSec * 3 + h.id) * 0.04, 1, 1, 1, [1, 1, 1], 0.15);
+    } else if (h.type === 'cow') {
+      const hop = Math.abs(Math.sin(timeSec * 8 + h.id)) * 0.35;
+      drawMesh(Meshes.cow, h.x, hop, h.z, h.yaw || 0, 0, 0, 1.1, 1.1, 1.1);
+    } else if (h.type === 'mascot') {
+      const bounce = Math.abs(Math.sin(timeSec * 4.5 + h.id)) * 2.8;
+      const squash = 1.0 + Math.sin(timeSec * 9 + h.id) * 0.12;
+      drawMesh(Meshes.mascot, h.x, bounce, h.z, timeSec * 1.5, 0, 0, squash, 2.0 - squash, squash, [1, 1, 1], 0.18);
+    } else if (h.type === 'flood') {
+      const waveY = 0.22 + Math.sin(timeSec * 3.5 + h.id) * 0.06;
+      drawMesh(Meshes.cube, h.x, waveY, h.z, 0, 0, 0, h.w, 0.42, h.l, [0.18, 0.68, 0.98], 0.38);
+    } else if (h.type === 'crate') {
+      drawMesh(Meshes.crate, h.x, 0, h.z, 0, 0, 0, 1, 1, 1);
+    }
+  }
+
+  // 6. Draw 3D Particles
+  for (const p of game.particles) {
+    const s = p.size * (p.life / p.maxLife);
+    drawMesh(Meshes.cube, p.x, p.y, p.z, timeSec * 4, timeSec * 3, 0, s, s, s, p.col, 0.65);
+  }
+}
+
+function render2DHUD(timeSec) {
+  const w = hudCanvas.width, h = hudCanvas.height;
+  ctx2d.clearRect(0, 0, w, h);
+
+  if (game.state !== STATE.PLAY && game.state !== STATE.HOW_TO_PLAY) {
+    return;
+  }
+
+  const b = game.bike;
+  const del = DELIVERIES[game.shiftIndex];
+  const isPractice = (game.state === STATE.HOW_TO_PLAY);
+  const targetPos = (game.phase === 'PICKUP') ? game.pickupPos : game.dropoffPos;
+  const distMeters = Math.round(dist2D(b.x, b.z, targetPos.x, targetPos.z));
+
+  // 1. TOP-CENTER: THE DELIVERY CLOCK & ROUTE ARROW COMPASS
+  if (!isPractice) {
+    const clockW = 280, clockH = 88;
+    const clockX = (w - clockW) * 0.5, clockY = 14;
+    ctx2d.save();
+    ctx2d.fillStyle = 'rgba(16, 20, 38, 0.92)';
+    const urgent = (game.clock < 12.0 && game.phase === 'DELIVER');
+    ctx2d.strokeStyle = game.clockPausedTimer > 0 ? '#38d9a9' : (urgent ? '#ff4d4d' : '#ffcc00');
+    ctx2d.lineWidth = 4;
+    ctx2d.beginPath();
+    ctx2d.roundRect(clockX, clockY, clockW, clockH, 14);
+    ctx2d.fill();
+    ctx2d.stroke();
+
+    ctx2d.textAlign = 'center';
+    ctx2d.font = '900 13px "Trebuchet MS", sans-serif';
+    ctx2d.fillStyle = '#ffd966';
+    const headerTxt = game.phase === 'PICKUP'
+      ? 'DRIVE INTO GREEN RING TO PICK UP PACKAGE'
+      : (game.clockPausedTimer > 0 ? 'CLOCK PAUSED — DETOUR TIME ADDED!' : 'DELIVERY CLOCK');
+    ctx2d.fillText(headerTxt, w * 0.5, clockY + 22);
+
+    ctx2d.font = '900 42px "Trebuchet MS", sans-serif';
+    ctx2d.fillStyle = game.clockPausedTimer > 0 ? '#63e6be' : (urgent && Math.floor(timeSec * 8) % 2 === 0 ? '#ff4d4d' : '#ffffff');
+    ctx2d.fillText(game.clock.toFixed(1) + 's', w * 0.5, clockY + 64);
+
+    // Progress bar inside clock box
+    const ratio = clamp(game.clock / Math.max(1, game.maxClock), 0, 1);
+    ctx2d.fillStyle = '#252e4d';
+    ctx2d.fillRect(clockX + 18, clockY + 72, clockW - 36, 8);
+    ctx2d.fillStyle = urgent ? '#ff4d4d' : '#38d9a9';
+    ctx2d.fillRect(clockX + 18, clockY + 72, (clockW - 36) * ratio, 8);
+    ctx2d.restore();
+  }
+
+  // 2D Route Arrow & Shortcut Hint below clock
+  const arrowCenterY = isPractice ? 136 : 138;
+  const toTargetYaw = Math.atan2(targetPos.x - b.x, targetPos.z - b.z);
+  const relAngle = angleDiff(b.yaw, toTargetYaw);
+
+  ctx2d.save();
+  ctx2d.translate(w * 0.5, arrowCenterY);
+  ctx2d.rotate(-relAngle);
+  ctx2d.fillStyle = (game.phase === 'PICKUP') ? '#38d9a9' : '#ffcc00';
+  ctx2d.strokeStyle = '#141829';
+  ctx2d.lineWidth = 3;
+  ctx2d.beginPath();
+  ctx2d.moveTo(0, -24);
+  ctx2d.lineTo(18, 14);
+  ctx2d.lineTo(6, 8);
+  ctx2d.lineTo(6, 22);
+  ctx2d.lineTo(-6, 22);
+  ctx2d.lineTo(-6, 8);
+  ctx2d.lineTo(-18, 14);
+  ctx2d.closePath();
+  ctx2d.fill();
+  ctx2d.stroke();
+  ctx2d.restore();
+
+  ctx2d.save();
+  ctx2d.textAlign = 'center';
+  ctx2d.font = '900 14px "Trebuchet MS", sans-serif';
+  ctx2d.fillStyle = '#ffffff';
+  ctx2d.shadowColor = '#000';
+  ctx2d.shadowBlur = 4;
+  const routeHint = b.onShortcut ? 'NEON SHORTCUT ALLEY ACTIVE!' : (distMeters + 'm TO ' + targetPos.name.toUpperCase());
+  ctx2d.fillText(routeHint, w * 0.5, arrowCenterY + 38);
+  ctx2d.restore();
+
+  // 2. TOP-LEFT: CURRENT JOB (Shift # + Pickup & Drop-off Names + Score)
+  ctx2d.save();
+  ctx2d.fillStyle = 'rgba(16, 20, 38, 0.90)';
+  ctx2d.strokeStyle = '#4d5e9c';
+  ctx2d.lineWidth = 3;
+  ctx2d.beginPath();
+  ctx2d.roundRect(16, 16, 330, 108, 12);
+  ctx2d.fill();
+  ctx2d.stroke();
+
+  ctx2d.textAlign = 'left';
+  ctx2d.font = '900 15px "Trebuchet MS", sans-serif';
+  ctx2d.fillStyle = '#ffcc00';
+  ctx2d.fillText(isPractice ? 'PRACTICE RUN' : `SHIFT DELIVERY ${game.shiftIndex + 1} / ${game.totalDeliveries}`, 30, 40);
+
+  ctx2d.font = '800 14px "Trebuchet MS", sans-serif';
+  ctx2d.fillStyle = '#a5d8ff';
+  ctx2d.fillText('PICKUP: ' + game.pickupPos.name, 30, 64);
+
+  ctx2d.fillStyle = game.addressChangedThisJob ? '#ff922b' : '#63e6be';
+  ctx2d.fillText('DROP-OFF: ' + game.dropoffPos.name, 30, 86);
+
+  ctx2d.font = '700 13px "Trebuchet MS", sans-serif';
+  ctx2d.fillStyle = '#ffd966';
+  ctx2d.fillText(`SHIFT SCORE: ${game.score}   STATUS: ${b.hasPackage ? 'IN TRANSIT' : 'AT DEPOT'}`, 30, 108);
+  ctx2d.restore();
+
+  // 3. TOP-RIGHT: CITY RADAR MINIMAP (Shows Main Streets, Neon Shortcuts, Chaos Hazards, & Route)
+  const mapSize = 148;
+  const mapX = w - mapSize - 18, mapY = 16;
+  ctx2d.save();
+  ctx2d.fillStyle = 'rgba(14, 18, 34, 0.92)';
+  ctx2d.strokeStyle = '#ffcc00';
+  ctx2d.lineWidth = 3;
+  ctx2d.beginPath();
+  ctx2d.roundRect(mapX, mapY, mapSize, mapSize, 12);
+  ctx2d.fill();
+  ctx2d.stroke();
+
+  const toMapX = (wx) => mapX + mapSize * 0.5 + (wx / 280) * (mapSize * 0.44);
+  const toMapY = (wz) => mapY + mapSize * 0.5 - (wz / 280) * (mapSize * 0.44);
+
+  // Draw main street grid on radar
+  ctx2d.strokeStyle = '#2e3859';
+  ctx2d.lineWidth = 3;
+  for (const c of [-240, -160, -80, 0, 80, 160, 240]) {
+    ctx2d.beginPath();
+    ctx2d.moveTo(toMapX(c), toMapY(-260));
+    ctx2d.lineTo(toMapX(c), toMapY(260));
+    ctx2d.stroke();
+    ctx2d.beginPath();
+    ctx2d.moveTo(toMapX(-260), toMapY(c));
+    ctx2d.lineTo(toMapX(260), toMapY(c));
+    ctx2d.stroke();
+  }
+  // Draw neon cut-through alleys on radar
+  ctx2d.fillStyle = 'rgba(56, 217, 169, 0.35)';
+  for (const sc of shortcutZones) {
+    const sx0 = toMapX(sc.minX), sy0 = toMapY(sc.maxZ);
+    const sw = Math.max(2, toMapX(sc.maxX) - sx0);
+    const sh = Math.max(2, toMapY(sc.minZ) - sy0);
+    ctx2d.fillRect(sx0, sy0, sw, sh);
+  }
+  // Draw hazards on radar
+  for (const hz of game.activeHazards) {
+    if (hz.broken) continue;
+    ctx2d.fillStyle = hz.type === 'flood' ? '#339af0' : (hz.type === 'parade' ? '#ff4d6d' : '#ff922b');
+    ctx2d.beginPath();
+    ctx2d.arc(toMapX(hz.x), toMapY(hz.z), 3.5, 0, Math.PI * 2);
+    ctx2d.fill();
+  }
+  // Draw target beacon on radar
+  ctx2d.fillStyle = (game.phase === 'PICKUP') ? '#38d9a9' : '#ffcc00';
+  ctx2d.beginPath();
+  ctx2d.arc(toMapX(targetPos.x), toMapY(targetPos.z), 5.5, 0, Math.PI * 2);
+  ctx2d.fill();
+  // Draw player arrow on radar
+  ctx2d.fillStyle = '#ffffff';
+  ctx2d.beginPath();
+  ctx2d.arc(toMapX(b.x), toMapY(b.z), 4.2, 0, Math.PI * 2);
+  ctx2d.fill();
+  ctx2d.restore();
+
+  // 4. BOTTOM-LEFT: SPEEDOMETER & ACTIVE MOTORCYCLE TUNINGS
+  ctx2d.save();
+  ctx2d.fillStyle = 'rgba(16, 20, 38, 0.90)';
+  ctx2d.strokeStyle = '#4d5e9c';
+  ctx2d.lineWidth = 3;
+  ctx2d.beginPath();
+  ctx2d.roundRect(16, h - 118, 325, 102, 12);
+  ctx2d.fill();
+  ctx2d.stroke();
+
+  const kmh = Math.round(Math.abs(b.speed) * 2.4);
+  ctx2d.textAlign = 'left';
+  ctx2d.font = '900 36px "Trebuchet MS", sans-serif';
+  ctx2d.fillStyle = b.boosting ? '#38d9a9' : '#ffffff';
+  ctx2d.fillText(`${kmh} KM/H`, 30, h - 72);
+
+  if (b.drifting) {
+    ctx2d.font = '900 14px "Trebuchet MS", sans-serif';
+    ctx2d.fillStyle = '#ffcc00';
+    ctx2d.fillText('DRIFT SLIDE', 215, h - 80);
+  } else if (b.inWater) {
+    ctx2d.font = '900 13px "Trebuchet MS", sans-serif';
+    ctx2d.fillStyle = game.tunings.grip > 0 ? '#38d9a9' : '#4dabf7';
+    ctx2d.fillText(game.tunings.grip > 0 ? 'HYDRO-TREAD SKIM!' : 'FLOODED STREET!', 195, h - 80);
+  }
+
+  ctx2d.font = '800 13px "Trebuchet MS", sans-serif';
+  ctx2d.fillStyle = '#ffd966';
+  ctx2d.fillText(
+    `TUNINGS: SPD +${game.tunings.topSpeed} | GRIP +${game.tunings.grip} | BST +${game.tunings.boostCap} | HND +${game.tunings.handling}`,
+    30, h - 46
+  );
+  ctx2d.font = '700 12px "Trebuchet MS", sans-serif';
+  ctx2d.fillStyle = '#bac8ff';
+  ctx2d.fillText('W/S: Ride  A/D: Steer  Space: Drift  Shift: Boost  Mouse: Look', 30, h - 25);
+  ctx2d.restore();
+
+  // 5. BOTTOM-RIGHT: BOOST METER & FLYING BOOST ORBS
+  const bstW = 290, bstH = 82;
+  const bstX = w - bstW - 18, bstY = h - bstH - 16;
+  ctx2d.save();
+  ctx2d.fillStyle = 'rgba(16, 20, 38, 0.90)';
+  ctx2d.strokeStyle = b.boosting ? '#38d9a9' : '#ffcc00';
+  ctx2d.lineWidth = 3;
+  ctx2d.beginPath();
+  ctx2d.roundRect(bstX, bstY, bstW, bstH, 12);
+  ctx2d.fill();
+  ctx2d.stroke();
+
+  ctx2d.textAlign = 'left';
+  ctx2d.font = '900 15px "Trebuchet MS", sans-serif';
+  ctx2d.fillStyle = '#38d9a9';
+  ctx2d.fillText(`BOOST METER (${Math.round(b.boost)} / ${b.maxBoost})`, bstX + 16, bstY + 26);
+
+  const bRatio = clamp(b.boost / Math.max(1, b.maxBoost), 0, 1);
+  ctx2d.fillStyle = '#222b47';
+  ctx2d.fillRect(bstX + 16, bstY + 36, bstW - 32, 22);
+  const grad = ctx2d.createLinearGradient(bstX + 16, 0, bstX + bstW - 16, 0);
+  grad.addColorStop(0, '#ff922b');
+  grad.addColorStop(1, '#38d9a9');
+  ctx2d.fillStyle = grad;
+  ctx2d.fillRect(bstX + 16, bstY + 36, (bstW - 32) * bRatio, 22);
+
+  ctx2d.font = '700 12px "Trebuchet MS", sans-serif';
+  ctx2d.fillStyle = '#dbe4ff';
+  ctx2d.fillText('Hold [SHIFT] for burst speed', bstX + 16, bstY + 73);
+  ctx2d.restore();
+
+  // Draw flying Boost Energy Orbs (visual discovery feedback for drifting & near misses!)
+  for (const o of game.boostOrbs) {
+    const ox = lerp(o.x, o.tx, o.t);
+    const oy = lerp(o.y, o.ty, o.t) - Math.sin(o.t * Math.PI) * 55;
+    ctx2d.save();
+    ctx2d.fillStyle = '#63e6be';
+    ctx2d.shadowColor = '#38d9a9';
+    ctx2d.shadowBlur = 12;
+    ctx2d.beginPath();
+    ctx2d.arc(ox, oy, 7, 0, Math.PI * 2);
+    ctx2d.fill();
+    ctx2d.restore();
+  }
+
+  // 6. ADDRESS-CHANGE ALERT BANNER & CHAOS CALLOUTS
+  if (game.phase === 'WIN_ANIM') {
+    ctx2d.save();
+    const vw = 520, vh = 78;
+    const vx = (w - vw) * 0.5, vy = h * 0.42;
+    ctx2d.fillStyle = 'rgba(20, 26, 48, 0.96)';
+    ctx2d.strokeStyle = '#38d9a9';
+    ctx2d.lineWidth = 4;
+    ctx2d.beginPath();
+    ctx2d.roundRect(vx, vy, vw, vh, 14);
+    ctx2d.fill();
+    ctx2d.stroke();
+    ctx2d.textAlign = 'center';
+    ctx2d.font = '900 28px "Trebuchet MS", sans-serif';
+    ctx2d.fillStyle = '#ffcc00';
+    ctx2d.fillText('DELIVERY COMPLETE!', w * 0.5, vy + 36);
+    ctx2d.font = '800 16px "Trebuchet MS", sans-serif';
+    ctx2d.fillStyle = '#63e6be';
+    ctx2d.fillText(`Delivered with ${game.clock.toFixed(1)}s remaining on the clock!`, w * 0.5, vy + 62);
+    ctx2d.restore();
+  } else if (game.addressChangeBannerTimer > 0) {
+    ctx2d.save();
+    ctx2d.font = '900 16px "Trebuchet MS", sans-serif';
+    const textW = ctx2d.measureText(game.addressChangeText).width;
+    const bw = Math.min(w - 32, Math.max(580, textW + 48));
+    const bx = (w - bw) * 0.5, by = 188;
+    ctx2d.fillStyle = 'rgba(255, 85, 0, 0.94)';
+    ctx2d.strokeStyle = '#ffffff';
+    ctx2d.lineWidth = 3;
+    ctx2d.beginPath();
+    ctx2d.roundRect(bx, by, bw, 52, 12);
+    ctx2d.fill();
+    ctx2d.stroke();
+
+    ctx2d.textAlign = 'center';
+    ctx2d.fillStyle = '#ffffff';
+    ctx2d.fillText(game.addressChangeText, w * 0.5, by + 32);
+    ctx2d.restore();
+  } else if (game.chaosCalloutTimer > 0 && game.chaosCalloutText && !isPractice) {
+    ctx2d.save();
+    ctx2d.font = '800 14px "Trebuchet MS", sans-serif';
+    const textW = ctx2d.measureText(game.chaosCalloutText).width;
+    const cw = Math.min(w - 32, Math.max(540, textW + 44));
+    const cx = (w - cw) * 0.5, cy = 188;
+    ctx2d.fillStyle = 'rgba(20, 26, 48, 0.92)';
+    ctx2d.strokeStyle = '#ff922b';
+    ctx2d.lineWidth = 3;
+    ctx2d.beginPath();
+    ctx2d.roundRect(cx, cy, cw, 44, 10);
+    ctx2d.fill();
+    ctx2d.stroke();
+
+    ctx2d.textAlign = 'center';
+    ctx2d.fillStyle = '#ffd966';
+    ctx2d.fillText(game.chaosCalloutText, w * 0.5, cy + 27);
+    ctx2d.restore();
+  }
+
+  // 7. FLOATING ACTION TEXTS
+  for (const ft of game.floatingTexts) {
+    ctx2d.save();
+    ctx2d.textAlign = 'center';
+    ctx2d.font = '900 22px "Trebuchet MS", sans-serif';
+    ctx2d.fillStyle = ft.col;
+    ctx2d.shadowColor = '#000';
+    ctx2d.shadowBlur = 6;
+    ctx2d.fillText(ft.text, ft.x, ft.y);
+    ctx2d.restore();
+  }
+}
+
+// === PART 7B: CUTSCENES, MENUS, TUNING & MAIN LOOP ===
+const INTRO_LINES = [
+  {
+    speaker: 'COURIER CHAOS — NEW CASCADIA DEPOT',
+    line: 'Welcome to RapidBolt Couriers! Your first shift starts right now on the wildest streets in the city.'
+  },
+  {
+    speaker: 'DISPATCH CHIEF MARA',
+    line: 'Every package has a strict Delivery Clock. Pick up the box at the green beacon and reach the gold drop-off before 0.0s!'
+  },
+  {
+    speaker: 'DISPATCH CHIEF MARA',
+    line: 'Watch out for parades, runaway cows, burst water mains, and loose mascots—and tune your bike after every job! Let\'s ride!'
+  }
+];
+
+const ENDING_LINES = [
+  {
+    speaker: 'SHIFT COMPLETE — APEX SPIRE PLAZA',
+    line: 'Incredible riding, Courier! You cleared all 12 deliveries across New Cascadia without missing a single deadline!'
+  },
+  {
+    speaker: 'MAYOR & DISPATCH CHIEF MARA',
+    line: 'Through parades, runaway cows, flooded avenues, and last-second detours, your tuned motorcycle conquered the city!'
+  },
+  {
+    speaker: 'LEGENDARY COURIER CROWNED',
+    line: 'You are officially New Cascadia\'s #1 Express Legend! Thank you for playing Courier Chaos!'
+  }
+];
+
+function setUIState(newState) {
+  game.state = newState;
+  AudioSys.syncMute();
+
+  const showHud = (newState === STATE.PLAY || newState === STATE.HOW_TO_PLAY);
+  hudCanvas.style.display = showHud ? 'block' : 'none';
+  if (!showHud) {
+    ctx2d.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
+  }
+
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  document.getElementById('cutsceneBar').classList.remove('active');
+  document.getElementById('practiceHud').classList.remove('active');
+
+  if (newState === STATE.INTRO) {
+    game.cutsceneStep = 0;
+    setupDelivery(0);
+    document.getElementById('cutsceneBar').classList.add('active');
+    updateCutsceneBarUI();
+  } else if (newState === STATE.ENDING) {
+    game.cutsceneStep = 0;
+    clearShiftProgress();
+    document.getElementById('cutsceneBar').classList.add('active');
+    updateCutsceneBarUI();
+    spawnParticles(0, 2.5, 240, [1.0, 0.85, 0.2], 40, 18);
+  } else if (newState === STATE.MENU) {
+    document.getElementById('screenMenu').classList.add('active');
+    refreshMainMenuSaveUI();
+  } else if (newState === STATE.SETTINGS) {
+    document.getElementById('screenSettings').classList.add('active');
+    syncSoundButtonsUI();
+  } else if (newState === STATE.HOW_TO_PLAY) {
+    setupPracticeStreet();
+    document.getElementById('practiceHud').classList.add('active');
+  } else if (newState === STATE.PAUSE) {
+    const del = DELIVERIES[game.shiftIndex];
+    document.getElementById('pauseJobSummary').textContent =
+      `${del.title} — ${game.pickupPos.name} to ${game.dropoffPos.name} (${game.clock.toFixed(1)}s left)`;
+    document.getElementById('screenPause').classList.add('active');
+    syncSoundButtonsUI();
+  } else if (newState === STATE.TUNING) {
+    buildTuningScreenUI();
+    document.getElementById('screenTuning').classList.add('active');
+  } else if (newState === STATE.FAIL) {
+    const del = DELIVERIES[game.shiftIndex];
+    document.getElementById('failReason').textContent =
+      `${del.title} failed! The delivery clock emptied before reaching ${game.dropoffPos.name}.`;
+    document.getElementById('screenFail').classList.add('active');
+  }
+}
+
+function updateCutsceneBarUI() {
+  const lines = (game.state === STATE.ENDING) ? ENDING_LINES : INTRO_LINES;
+  const item = lines[clamp(game.cutsceneStep, 0, lines.length - 1)];
+  document.getElementById('cutsceneSpeaker').textContent = item.speaker;
+  document.getElementById('cutsceneLine').textContent = item.line;
+}
+
+function advanceCutscene() {
+  AudioSys.resume();
+  const lines = (game.state === STATE.ENDING) ? ENDING_LINES : INTRO_LINES;
+  game.cutsceneStep++;
+  if (game.cutsceneStep >= lines.length) {
+    setUIState(STATE.MENU);
+  } else {
+    updateCutsceneBarUI();
+    if (game.state === STATE.ENDING) {
+      AudioSys.sfxDropoff();
+      spawnParticles(0, 3.0, 240, [0.25, 1.0, 0.75], 30, 16);
+    }
+  }
+}
+
+function refreshMainMenuSaveUI() {
+  const saved = loadShiftProgress();
+  const infoBox = document.getElementById('menuSavedInfo');
+  const btnCont = document.getElementById('btnContinueShift');
+  if (saved) {
+    infoBox.style.display = 'block';
+    infoBox.innerHTML = `<strong>SAVED SHIFT IN PROGRESS:</strong> Ready for Delivery ${saved.shiftIndex + 1} / ${game.totalDeliveries} &bull; Score: ${saved.score}`;
+    btnCont.style.display = 'inline-block';
+    btnCont.textContent = `Continue Shift (Job #${saved.shiftIndex + 1})`;
+  } else {
+    infoBox.style.display = 'none';
+    btnCont.style.display = 'none';
+  }
+}
+
+function updatePracticeChecklistUI() {
+  const f = game.practiceFlags;
+  const items = [
+    { done: f.accelerate, label: 'W / Up: Accelerate' },
+    { done: f.steer, label: 'A & D / Left & Right: Steer' },
+    { done: f.drift, label: 'Space: Handbrake Drift' },
+    { done: f.boost, label: 'Shift: Spend Boost' },
+    { done: f.sampleDelivery, label: 'Deliver Practice Package' }
+  ];
+  const el = document.getElementById('practiceChecklist');
+  el.innerHTML = items.map(it =>
+    `<div class="chk-pill ${it.done ? 'done' : ''}">${it.done ? '[DONE] ' : ''}${it.label}</div>`
+  ).join('');
+}
+
+function finishDeliveryStep() {
+  // Check if the player just cleared the final delivery!
+  if (game.shiftIndex + 1 >= game.totalDeliveries) {
+    AudioSys.sfxDropoff();
+    setUIState(STATE.ENDING);
+  } else {
+    setUIState(STATE.TUNING);
+  }
+}
+
+function buildTuningScreenUI() {
+  const del = DELIVERIES[game.shiftIndex];
+  const nextDel = DELIVERIES[game.shiftIndex + 1];
+  document.getElementById('tuningSummary').innerHTML =
+    `Cleared <strong>${del.title}</strong> with <strong>${game.clock.toFixed(1)}s</strong> left on the clock!<br>` +
+    `Next up: <strong>${nextDel.title}</strong> (${nextDel.pickup.name} &rarr; ${nextDel.dropoff.name})`;
+
+  const grid = document.getElementById('tuningGrid');
+  grid.innerHTML = '';
+  for (const cat of TUNING_CATALOG) {
+    const curTier = game.tunings[cat.key];
+    const card = document.createElement('div');
+    card.className = 'tuning-card';
+    card.innerHTML = `
+      <div>
+        <div class="tuning-title">
+          <span>${cat.name}</span>
+          <span class="tuning-tier">Tier ${curTier} &rarr; ${curTier + 1}</span>
+        </div>
+        <div style="font-size:13px; color:#ffd966; font-weight:800; margin-bottom:6px;">${cat.subtitle}</div>
+        <div class="tuning-desc">${cat.desc}</div>
+      </div>
+      <div class="tuning-perk">${cat.perk}</div>
+    `;
+    card.addEventListener('click', () => {
+      AudioSys.sfxPickup();
+      game.tunings[cat.key]++;
+      game.shiftIndex++;
+      saveShiftProgress();
+      setupDelivery(game.shiftIndex);
+      setUIState(STATE.PLAY);
+    });
+    grid.appendChild(card);
+  }
+}
+
+function triggerShiftFail() {
+  AudioSys.sfxFail();
+  setUIState(STATE.FAIL);
+}
+
+function syncSoundButtonsUI() {
+  const label = `Sound: ${game.soundOn ? 'ON' : 'OFF'}`;
+  document.getElementById('btnToggleSoundSettings').textContent = label;
+  document.getElementById('btnToggleSoundPause').textContent = label;
+  const sensNames = ['Low', 'Normal', 'High'];
+  document.getElementById('btnCamSens').textContent = `Mouse Look Sensitivity: ${sensNames[game.camSensIndex]}`;
+}
+
+function toggleSoundSetting() {
+  game.soundOn = !game.soundOn;
+  AudioSys.syncMute();
+  syncSoundButtonsUI();
+}
+
+function handleEscapeKey() {
+  if (game.state === STATE.INTRO || game.state === STATE.ENDING) {
+    setUIState(STATE.MENU);
+  } else if (game.state === STATE.PLAY) {
+    setUIState(STATE.PAUSE);
+  } else if (game.state === STATE.PAUSE) {
+    setUIState(STATE.PLAY);
+  } else if (game.state === STATE.SETTINGS || game.state === STATE.HOW_TO_PLAY) {
+    setUIState(STATE.MENU);
+  }
+}
+
+// Bind UI Buttons
+document.getElementById('btnCutsceneNext').addEventListener('click', () => advanceCutscene());
+document.getElementById('btnCutsceneSkip').addEventListener('click', () => {
+  AudioSys.resume();
+  setUIState(STATE.MENU);
+});
+
+document.getElementById('btnStartShift').addEventListener('click', () => {
+  AudioSys.resume();
+  game.shiftIndex = 0;
+  game.score = 0;
+  game.bankedTimeTotal = 0;
+  game.tunings = { topSpeed: 0, grip: 0, boostCap: 0, handling: 0 };
+  clearShiftProgress();
+  setupDelivery(0);
+  setUIState(STATE.PLAY);
+});
+
+document.getElementById('btnContinueShift').addEventListener('click', () => {
+  AudioSys.resume();
+  const saved = loadShiftProgress();
+  if (saved) {
+    game.shiftIndex = saved.shiftIndex;
+    game.score = saved.score || 0;
+    game.bankedTimeTotal = saved.bankedTimeTotal || 0;
+    game.tunings = { ...saved.tunings };
+    setupDelivery(game.shiftIndex);
+    setUIState(STATE.PLAY);
+  }
+});
+
+document.getElementById('btnHowToPlay').addEventListener('click', () => {
+  AudioSys.resume();
+  setUIState(STATE.HOW_TO_PLAY);
+});
+
+document.getElementById('btnPracticeBack').addEventListener('click', () => {
+  setUIState(STATE.MENU);
+});
+
+document.getElementById('btnSettings').addEventListener('click', () => {
+  AudioSys.resume();
+  setUIState(STATE.SETTINGS);
+});
+
+document.getElementById('btnToggleSoundSettings').addEventListener('click', toggleSoundSetting);
+document.getElementById('btnToggleSoundPause').addEventListener('click', toggleSoundSetting);
+
+document.getElementById('btnCamSens').addEventListener('click', () => {
+  game.camSensIndex = (game.camSensIndex + 1) % 3;
+  syncSoundButtonsUI();
+});
+
+document.getElementById('btnPlayEndingSettings').addEventListener('click', () => {
+  AudioSys.resume();
+  setUIState(STATE.ENDING);
+});
+
+document.getElementById('btnSettingsBack').addEventListener('click', () => {
+  setUIState(STATE.MENU);
+});
+
+document.getElementById('btnResume').addEventListener('click', () => {
+  setUIState(STATE.PLAY);
+});
+
+document.getElementById('btnRestartDelivery').addEventListener('click', () => {
+  setupDelivery(game.shiftIndex);
+  setUIState(STATE.PLAY);
+});
+
+document.getElementById('btnPauseToMenu').addEventListener('click', () => {
+  setUIState(STATE.MENU);
+});
+
+document.getElementById('btnFailRetry').addEventListener('click', () => {
+  setupDelivery(game.shiftIndex);
+  setUIState(STATE.PLAY);
+});
+
+document.getElementById('btnFailMenu').addEventListener('click', () => {
+  setUIState(STATE.MENU);
+});
+
+// Initialize intro state and start main animation loop
+setUIState(STATE.INTRO);
+
+let lastFrameMs = performance.now();
+let simTimeSec = 0;
+
+function mainLoop(nowMs) {
+  const rawDt = (nowMs - lastFrameMs) * 0.001;
+  lastFrameMs = nowMs;
+  const dt = Math.min(0.05, Math.max(0.001, rawDt));
+
+  // When paused, freeze all timers, physics, enemies/hazards, and music!
+  if (game.state !== STATE.PAUSE) {
+    simTimeSec += dt;
+    if (game.state === STATE.PLAY || game.state === STATE.HOW_TO_PLAY) {
+      updatePhysicsAndWorld(dt);
+      if (game.state === STATE.HOW_TO_PLAY) {
+        updatePracticeChecklistUI();
+      }
+    }
+    AudioSys.update(dt);
+  }
+
+  render3DScene(simTimeSec);
+  render2DHUD(simTimeSec);
+
+  requestAnimationFrame(mainLoop);
+}
+requestAnimationFrame(mainLoop);
+</script>
+</body>
+</html>

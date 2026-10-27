@@ -1,0 +1,3267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wellspring</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #1e130c;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #f7ead9;
+  }
+  #gl-canvas {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    display: block; z-index: 1; cursor: crosshair;
+  }
+  .overlay-screen {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 10; display: none; flex-direction: column;
+    justify-content: center; align-items: center;
+    background: radial-gradient(circle at center, rgba(35, 21, 12, 0.55) 0%, rgba(18, 10, 5, 0.88) 100%);
+    padding: 24px;
+  }
+  .overlay-screen.active { display: flex; }
+
+  .panel {
+    background: linear-gradient(165deg, rgba(64, 41, 24, 0.94), rgba(38, 23, 13, 0.97));
+    border: 2px solid #c98a4b;
+    border-radius: 12px;
+    box-shadow: 0 18px 48px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,220,175,0.2);
+    padding: 28px 36px;
+    max-width: 880px;
+    width: 92%;
+    max-height: 90vh;
+    overflow-y: auto;
+    text-align: center;
+  }
+  h1.game-title {
+    font-size: 3.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #ffd399;
+    text-shadow: 0 4px 16px rgba(0,0,0,0.85), 0 0 28px rgba(235, 145, 56, 0.45);
+    margin-bottom: 6px;
+    font-weight: 800;
+  }
+  .subtitle {
+    font-size: 1.08rem;
+    color: #e0be99;
+    margin-bottom: 22px;
+    letter-spacing: 0.04em;
+  }
+  .btn-row {
+    display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 18px;
+  }
+  button.btn {
+    background: linear-gradient(180deg, #d88b3e 0%, #a55d1c 100%);
+    color: #fff8ef;
+    border: 1px solid #f7c382;
+    border-radius: 8px;
+    padding: 11px 24px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  button.btn:hover {
+    background: linear-gradient(180deg, #eaa054 0%, #bd6e24 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.65);
+  }
+  button.btn:active { transform: translateY(0); }
+  button.btn.secondary {
+    background: linear-gradient(180deg, #5d4330 0%, #3d2a1d 100%);
+    border-color: #9e7756;
+  }
+  button.btn.secondary:hover {
+    background: linear-gradient(180deg, #72533c 0%, #4e3626 100%);
+  }
+  button.btn.water-btn {
+    background: linear-gradient(180deg, #38a3d8 0%, #1d6fa3 100%);
+    border-color: #93dcf7;
+  }
+  button.btn.water-btn:hover {
+    background: linear-gradient(180deg, #4db6ea 0%, #2682bc 100%);
+  }
+
+  /* Village selector grid on Main Menu */
+  .village-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+    gap: 10px;
+    margin: 14px 0 18px 0;
+    text-align: left;
+  }
+  .village-card {
+    background: rgba(25, 15, 8, 0.72);
+    border: 1px solid #7d5636;
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.12s;
+  }
+  .village-card:hover {
+    border-color: #f3b562;
+    background: rgba(54, 34, 19, 0.9);
+    transform: translateY(-2px);
+  }
+  .village-card.saved {
+    border-color: #58b967;
+    background: rgba(24, 48, 28, 0.75);
+  }
+  .village-card .v-num {
+    font-size: 0.75rem; text-transform: uppercase; color: #c79a6b; font-weight: 700;
+  }
+  .village-card .v-name {
+    font-size: 0.98rem; font-weight: 700; color: #ffe6c4; margin: 2px 0;
+  }
+  .village-card .v-desc {
+    font-size: 0.78rem; color: #bfa082;
+  }
+
+  /* Intro & Ending captions */
+  .cinematic-bar {
+    position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%);
+    background: rgba(24, 14, 8, 0.88);
+    border: 2px solid #c98a4b;
+    border-radius: 12px;
+    padding: 20px 32px;
+    max-width: 760px; width: 90%;
+    text-align: center;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.8);
+  }
+  .cinematic-title {
+    font-size: 2.4rem; font-weight: 800; color: #ffd399; letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .cinematic-text {
+    font-size: 1.12rem; color: #f3dec3; line-height: 1.5; margin-bottom: 14px;
+  }
+
+  /* How to play grid */
+  .howto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin: 16px 0;
+    text-align: left;
+  }
+  .howto-card {
+    background: rgba(22, 13, 7, 0.8);
+    border: 1px solid #865c39;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .howto-card canvas {
+    width: 100%; height: 110px; border-radius: 6px;
+    border: 1px solid #63442b; background: #2c1b10;
+  }
+  .howto-card h3 { font-size: 1rem; color: #ffd093; }
+  .howto-card p { font-size: 0.85rem; color: #d8bea2; line-height: 1.38; }
+
+  /* HUD in play */
+  #hud {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    pointer-events: none; z-index: 5; display: none;
+  }
+  #hud.active { display: block; }
+  .hud-top {
+    position: absolute; top: 14px; left: 16px; right: 16px;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 14px;
+    flex-wrap: wrap;
+  }
+  .hud-box {
+    background: rgba(30, 18, 10, 0.88);
+    border: 1.5px solid #b87b3e;
+    border-radius: 10px;
+    padding: 10px 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    pointer-events: auto;
+  }
+  .hud-village-title {
+    font-size: 1.2rem; font-weight: 800; color: #ffd69c; letter-spacing: 0.04em;
+  }
+  .hud-village-sub {
+    font-size: 0.82rem; color: #cfa982; margin-top: 2px;
+  }
+  .meter-group {
+    display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+  }
+  .meter-item { min-width: 185px; }
+  .meter-label {
+    display: flex; justify-content: space-between; gap: 12px; font-size: 0.82rem;
+    font-weight: 700; margin-bottom: 4px; color: #f5dec3;
+  }
+  .meter-bar-bg {
+    width: 100%; height: 13px; background: #1a0f08;
+    border: 1px solid #6e4b2c; border-radius: 7px; overflow: hidden;
+  }
+  .meter-bar-fill {
+    height: 100%; width: 100%; transition: width 0.1s linear;
+  }
+  .hunger-fill { background: linear-gradient(90deg, #d94330, #f09c38); }
+  .water-fill { background: linear-gradient(90deg, #2288c9, #60d2ff); }
+
+  .fields-status-list {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .field-badge {
+    background: rgba(20, 12, 6, 0.85);
+    border: 1px solid #8a623e;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #e7c8a5;
+  }
+  .field-badge.watered {
+    background: rgba(28, 72, 34, 0.9);
+    border-color: #6ce07a;
+    color: #b8ffc0;
+  }
+
+  .hud-bottom {
+    position: absolute; bottom: 14px; left: 16px; right: 16px;
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 12px;
+    flex-wrap: wrap;
+  }
+  .tool-hint-box {
+    font-size: 0.88rem; color: #ffe7c7;
+    display: flex; flex-direction: column; gap: 4px;
+    max-width: 315px;
+  }
+  .tool-mode-pill {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    background: #b86d29; color: #fff; font-weight: 700; font-size: 0.78rem;
+  }
+  .hud-banner {
+    position: absolute; top: 92px; left: 16px;
+    background: rgba(34, 20, 10, 0.88);
+    border: 1.5px solid #e3a359;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.84rem;
+    line-height: 1.35;
+    color: #ffe8c8;
+    text-align: left;
+    max-width: 265px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.65);
+    pointer-events: none;
+  }
+  .valley-canvas-wrap {
+    margin: 14px auto;
+    width: 100%; max-width: 640px;
+    border: 2px solid #96683f; border-radius: 8px;
+    overflow: hidden; background: #1e130b;
+  }
+  #valley-map-canvas { width: 100%; height: 220px; display: block; }
+  .settings-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; margin: 10px 0;
+    background: rgba(20, 12, 6, 0.65);
+    border: 1px solid #755032; border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="gl-canvas"></canvas>
+
+<!-- 1. INTRO SCREEN -->
+<div id="screen-intro" class="overlay-screen active" style="background: transparent; justify-content: flex-end;">
+  <div class="cinematic-bar">
+    <div class="cinematic-title">Wellspring</div>
+    <div id="intro-caption" class="cinematic-text">
+      Three summers without rain have baked the river valley into cracked dust. High in the granite peaks, the ancient mountain springs still bubble behind stone sluices—waiting for someone to carve a path down to the starving villages.
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="btn-skip-intro">Skip Intro &amp; Enter Valley</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. MAIN MENU -->
+<div id="screen-menu" class="overlay-screen">
+  <div class="panel">
+    <h1 class="game-title">Wellspring</h1>
+    <div class="subtitle">Carve the parched hills. Guide the mountain spring. Save the watershed.</div>
+    <div class="btn-row" style="margin-bottom: 16px;">
+      <button class="btn" id="btn-start-game">Start / Continue Journey</button>
+      <button class="btn secondary" id="btn-open-howto">How to Play</button>
+      <button class="btn secondary" id="btn-open-settings">Settings</button>
+    </div>
+    <div style="text-align:left; font-size:0.9rem; color:#e2ba8e; font-weight:700; margin-top:8px;">
+      Select a Village in the Watershed:
+    </div>
+    <div id="menu-village-grid" class="village-grid"></div>
+  </div>
+</div>
+
+<!-- 3. HOW TO PLAY -->
+<div id="screen-howto" class="overlay-screen">
+  <div class="panel">
+    <h1 class="game-title" style="font-size:2.3rem;">How to Play</h1>
+    <div class="subtitle">Every drop counts against the village hunger clock.</div>
+    <div class="howto-grid" id="howto-grid"></div>
+    <div class="btn-row">
+      <button class="btn" id="btn-howto-back">Back to Main Menu (Esc)</button>
+    </div>
+  </div>
+</div>
+
+<!-- 4. SETTINGS -->
+<div id="screen-settings" class="overlay-screen">
+  <div class="panel" style="max-width: 540px;">
+    <h1 class="game-title" style="font-size:2.3rem;">Settings</h1>
+    <div class="settings-row">
+      <span><strong>Sound &amp; Music</strong> (Holds across all screens)</span>
+      <button class="btn" id="btn-toggle-sound">Sound: ON</button>
+    </div>
+    <div class="settings-row">
+      <span><strong>Watershed Finale</strong> (Watch the ending scene directly)</span>
+      <button class="btn water-btn" id="btn-play-ending">Play Ending Scene</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn secondary" id="btn-settings-back">Back (Esc)</button>
+    </div>
+  </div>
+</div>
+
+<!-- 5. IN-PLAY HUD -->
+<div id="hud">
+  <div class="hud-top">
+    <div class="hud-box">
+      <div class="hud-village-title" id="hud-village-name">1. Suncrest Furrow</div>
+      <div class="hud-village-sub" id="hud-village-sub">Upper Headwaters</div>
+    </div>
+
+    <div class="hud-box meter-group">
+      <div class="meter-item">
+        <div class="meter-label">
+          <span>HUNGER METER</span>
+          <span id="hud-hunger-text">100%</span>
+        </div>
+        <div class="meter-bar-bg">
+          <div class="meter-bar-fill hunger-fill" id="hud-hunger-bar"></div>
+        </div>
+      </div>
+      <div class="meter-item">
+        <div class="meter-label">
+          <span>WATER SUPPLY</span>
+          <span id="hud-water-text">100%</span>
+        </div>
+        <div class="meter-bar-bg">
+          <div class="meter-bar-fill water-fill" id="hud-water-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud-box">
+      <div style="font-size:0.76rem; color:#d4af87; font-weight:700; margin-bottom:4px;">FIELD STATUS</div>
+      <div class="fields-status-list" id="hud-fields-list"></div>
+    </div>
+  </div>
+
+  <div class="hud-banner" id="hud-banner"></div>
+
+  <div class="hud-bottom">
+    <div class="hud-box tool-hint-box">
+      <div>
+        <span class="tool-mode-pill" id="hud-tool-mode">NEXT DRAG: DIG CHANNEL</span>
+        <span id="hud-stone-carried" style="margin-left:8px; color:#8fd8ff; font-weight:700;"></span>
+      </div>
+      <div id="hud-cursor-info" style="font-size:0.84rem; color:#dfc2a2;">Cursor: Soft Earth</div>
+      <div style="font-size:0.76rem; color:#b89673;">
+        L-Drag: Dig | Shift+L-Drag: Raise Wall | Click Obstacle/Gate: Clear/Open | R-Click: Pick/Drop Stone or Nudge Boulder | Scroll: Zoom
+      </div>
+    </div>
+
+    <div class="hud-box" style="display:flex; gap:10px; align-items:center;">
+      <button class="btn water-btn" id="btn-hud-open-spring">Open Spring</button>
+      <button class="btn secondary" id="btn-hud-restart">Restart</button>
+      <button class="btn secondary" id="btn-hud-pause">Pause (Esc)</button>
+    </div>
+  </div>
+</div>
+
+<!-- 6. PAUSE MENU -->
+<div id="screen-pause" class="overlay-screen">
+  <div class="panel" style="max-width: 480px;">
+    <h1 class="game-title" style="font-size:2.3rem;">Paused</h1>
+    <div class="subtitle" id="pause-village-label">Village Paused</div>
+    <div class="btn-row" style="flex-direction:column; align-items:stretch;">
+      <button class="btn" id="btn-pause-resume">Resume (Esc)</button>
+      <button class="btn secondary" id="btn-pause-sound">Sound: ON</button>
+      <button class="btn secondary" id="btn-pause-restart">Restart Level</button>
+      <button class="btn secondary" id="btn-pause-menu">Back to Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- 7. LEVEL FAIL SCREEN -->
+<div id="screen-fail" class="overlay-screen">
+  <div class="panel" style="max-width: 540px;">
+    <h1 class="game-title" style="font-size:2.4rem; color:#ff7b61;">Drought Prevails</h1>
+    <div class="subtitle" id="fail-reason-text">The hunger meter ran out before all fields could drink.</div>
+    <div class="btn-row">
+      <button class="btn" id="btn-fail-retry">Retry Village</button>
+      <button class="btn secondary" id="btn-fail-menu">Back to Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- 8. BETWEEN-VILLAGE SCREEN -->
+<div id="screen-between" class="overlay-screen">
+  <div class="panel" style="max-width: 720px;">
+    <h1 class="game-title" style="font-size:2.4rem; color:#86ef92;">Village Saved!</h1>
+    <div class="subtitle" id="between-summary-text">The parched crops drink deeply and turn bright emerald green.</div>
+    <div class="valley-canvas-wrap">
+      <canvas id="valley-map-canvas" width="640" height="220"></canvas>
+    </div>
+    <div id="between-bonus-text" style="font-size:0.95rem; color:#9be3ff; margin-bottom:10px; font-weight:700;">
+      Clean spring carried forward: +15% Water Supply for the next village down the valley!
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="btn-between-next">Journey to Next Village</button>
+      <button class="btn secondary" id="btn-between-menu">Back to Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- 9. ENDING SCENE -->
+<div id="screen-ending" class="overlay-screen" style="background: transparent; justify-content: flex-end;">
+  <div class="cinematic-bar">
+    <div class="cinematic-title" style="color:#88f596;">The Watershed Restored</div>
+    <div id="ending-caption" class="cinematic-text">
+      From the highest mountain spring to the widest valley delta, clear water courses through every carved channel. One by one, the villages bloom into emerald life, and the great drought is broken at last.
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="btn-ending-menu">Return to Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// === PART 1: CORE STATE & AUDIO ===
+"use strict";
+
+const GAME_STATE = {
+  screen: 'intro', // 'intro' | 'menu' | 'howto' | 'settings' | 'play' | 'pause' | 'fail' | 'between' | 'ending'
+  prevMenuScreen: 'menu',
+  soundOn: true,
+  currentVillageIdx: 0,
+  unlockedVillageIdx: 11, // All villages selectable from Main Menu as required ("player picks a village from the main menu")
+  savedVillages: new Array(12).fill(false),
+  carriedSpringBonus: 0, // Extra water percentage carried forward from saved villages
+  introTimer: 0,
+  endingTimer: 0,
+  betweenTimer: 0,
+  celebrationTimer: 0, // In-level greening celebration before transitioning to between-village screen
+  shiftHeld: false,
+  carriedStone: false,
+  cameraZoom: 1.0,
+  cameraTargetZoom: 1.0,
+  cameraPanX: 0,
+  cameraPanZ: 0,
+  cursorGridX: -1,
+  cursorGridZ: -1,
+  cursorWorldX: 0,
+  cursorWorldY: 0,
+  cursorWorldZ: 0,
+  cursorHoverLabel: 'Soft Earth',
+  lastFailReason: '',
+  particles: [],
+  screenShake: 0
+};
+
+// Expose read-only/debug hook for automated testing and verification
+window.__game = GAME_STATE;
+
+// 3D Math Utilities
+const Mat4 = {
+  create() {
+    return new Float32Array([
+      1,0,0,0,
+      0,1,0,0,
+      0,0,1,0,
+      0,0,0,1
+    ]);
+  },
+  perspective(out, fovy, aspect, near, far) {
+    const f = 1.0 / Math.tan(fovy / 2);
+    const nf = 1 / (near - far);
+    out[0] = f / aspect; out[1] = 0; out[2] = 0; out[3] = 0;
+    out[4] = 0; out[5] = f; out[6] = 0; out[7] = 0;
+    out[8] = 0; out[9] = 0; out[10] = (far + near) * nf; out[11] = -1;
+    out[12] = 0; out[13] = 0; out[14] = (2 * far * near) * nf; out[15] = 0;
+    return out;
+  },
+  lookAt(out, eye, center, up) {
+    let x0, x1, x2, y0, y1, y2, z0, z1, z2, len;
+    const eyex = eye[0], eyey = eye[1], eyez = eye[2];
+    const upx = up[0], upy = up[1], upz = up[2];
+    const centerx = center[0], centery = center[1], centerz = center[2];
+    z0 = eyex - centerx; z1 = eyey - centery; z2 = eyez - centerz;
+    len = 1 / Math.hypot(z0, z1, z2);
+    z0 *= len; z1 *= len; z2 *= len;
+    x0 = upy * z2 - upz * z1;
+    x1 = upz * z0 - upx * z2;
+    x2 = upx * z1 - upy * z0;
+    len = Math.hypot(x0, x1, x2);
+    if (!len) { x0 = 0; x1 = 0; x2 = 0; } else { len = 1 / len; x0 *= len; x1 *= len; x2 *= len; }
+    y0 = z1 * x2 - z2 * x1; y1 = z2 * x0 - z0 * x2; y2 = z0 * x1 - z1 * x0;
+    len = Math.hypot(y0, y1, y2);
+    if (!len) { y0 = 0; y1 = 0; y2 = 0; } else { len = 1 / len; y0 *= len; y1 *= len; y2 *= len; }
+    out[0] = x0; out[1] = y0; out[2] = z0; out[3] = 0;
+    out[4] = x1; out[5] = y1; out[6] = z1; out[7] = 0;
+    out[8] = x2; out[9] = y2; out[10] = z2; out[11] = 0;
+    out[12] = -(x0 * eyex + x1 * eyey + x2 * eyez);
+    out[13] = -(y0 * eyex + y1 * eyey + y2 * eyez);
+    out[14] = -(z0 * eyex + z1 * eyey + z2 * eyez);
+    out[15] = 1;
+    return out;
+  },
+  multiply(out, a, b) {
+    const a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+    const a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+    const a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+    const a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+    let b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+    out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
+    out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
+    out[8] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[9] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
+    out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    return out;
+  },
+  invert(out, a) {
+    const a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+    const a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+    const a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+    const a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+    const b00 = a00 * a11 - a01 * a10;
+    const b01 = a00 * a12 - a02 * a10;
+    const b02 = a00 * a13 - a03 * a10;
+    const b03 = a01 * a12 - a02 * a11;
+    const b04 = a01 * a13 - a03 * a11;
+    const b05 = a02 * a13 - a03 * a12;
+    const b06 = a20 * a31 - a21 * a30;
+    const b07 = a20 * a32 - a22 * a30;
+    const b08 = a20 * a33 - a23 * a30;
+    const b09 = a21 * a32 - a22 * a31;
+    const b10 = a21 * a33 - a23 * a31;
+    const b11 = a22 * a33 - a23 * a32;
+    let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+    if (!det) return null;
+    det = 1.0 / det;
+    out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+    out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+    out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+    out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+    out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+    out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+    out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+    out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+    out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+    out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+    out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+    out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+    out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+    out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+    out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+    out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+    return out;
+  }
+};
+
+// Procedural Web Audio API Engine
+const AudioEngine = {
+  ctx: null,
+  masterGain: null,
+  musicGain: null,
+  waterNoiseNode: null,
+  waterFilter: null,
+  waterGain: null,
+  musicTimer: 0,
+  musicStep: 0,
+  lastDigSound: 0,
+
+  init() {
+    if (this.ctx) return;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    this.ctx = new AudioCtx();
+    this.masterGain = this.ctx.createGain();
+    this.masterGain.gain.value = GAME_STATE.soundOn ? 0.65 : 0;
+    this.masterGain.connect(this.ctx.destination);
+
+    this.musicGain = this.ctx.createGain();
+    this.musicGain.gain.value = 0.22;
+    this.musicGain.connect(this.masterGain);
+
+    // Continuous water stream synth (modulated by flowing water amount)
+    const bufSize = this.ctx.sampleRate * 2;
+    const noiseBuf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+    const out = noiseBuf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) out[i] = Math.random() * 2 - 1;
+
+    this.waterNoiseNode = this.ctx.createBufferSource();
+    this.waterNoiseNode.buffer = noiseBuf;
+    this.waterNoiseNode.loop = true;
+
+    this.waterFilter = this.ctx.createBiquadFilter();
+    this.waterFilter.type = 'bandpass';
+    this.waterFilter.frequency.value = 650;
+    this.waterFilter.Q.value = 1.8;
+
+    this.waterGain = this.ctx.createGain();
+    this.waterGain.gain.value = 0.0;
+
+    this.waterNoiseNode.connect(this.waterFilter);
+    this.waterFilter.connect(this.waterGain);
+    this.waterGain.connect(this.masterGain);
+    this.waterNoiseNode.start();
+  },
+
+  resume() {
+    if (!this.ctx) this.init();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+  },
+
+  updateSoundState() {
+    if (this.ctx && this.masterGain) {
+      const active = GAME_STATE.soundOn && GAME_STATE.screen !== 'pause';
+      this.masterGain.gain.setTargetAtTime(active ? 0.65 : 0.0, this.ctx.currentTime, 0.03);
+    }
+    const label = `Sound: ${GAME_STATE.soundOn ? 'ON' : 'OFF'}`;
+    const b1 = document.getElementById('btn-toggle-sound');
+    const b2 = document.getElementById('btn-pause-sound');
+    if (b1) b1.textContent = label;
+    if (b2) b2.textContent = label;
+  },
+
+  setWaterFlowLevel(level) {
+    if (!this.ctx || !this.waterGain) return;
+    const active = GAME_STATE.soundOn && GAME_STATE.screen === 'play';
+    const target = active ? Math.min(0.28, level * 0.25) : 0;
+    this.waterGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.08);
+    if (this.waterFilter) {
+      this.waterFilter.frequency.setTargetAtTime(480 + level * 420, this.ctx.currentTime, 0.1);
+    }
+  },
+
+  updateMusic(dt) {
+    if (!this.ctx || !GAME_STATE.soundOn || GAME_STATE.screen === 'pause') return;
+    this.musicTimer += dt;
+    const tempo = (GAME_STATE.screen === 'ending' || GAME_STATE.screen === 'between') ? 0.42 : 0.58;
+    if (this.musicTimer >= tempo) {
+      this.musicTimer -= tempo;
+      // Warm acoustic pentatonic plucked notes
+      const scale = (GAME_STATE.screen === 'ending' || GAME_STATE.screen === 'between')
+        ? [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25] // C major pentatonic
+        : [220.00, 246.94, 293.66, 329.63, 392.00, 440.00, 493.88, 587.33]; // A dorian/folk
+      const pattern = [0, 2, 4, 3, 5, 4, 2, 1, 0, 3, 4, 6, 5, 3, 2, 4];
+      const noteIdx = pattern[this.musicStep % pattern.length];
+      this.musicStep++;
+      const freq = scale[noteIdx];
+      this.playTone(freq, 0.35, 'triangle', 0.12, freq * 0.998);
+      if (this.musicStep % 4 === 1) {
+        this.playTone(scale[0] * 0.5, 0.85, 'sine', 0.14);
+      }
+    }
+  },
+
+  playTone(freq, duration, type = 'sine', vol = 0.2, endFreq = null) {
+    if (!GAME_STATE.soundOn || GAME_STATE.screen === 'pause') return;
+    this.resume();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (endFreq !== null) {
+      osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), now + duration);
+    }
+    g.gain.setValueAtTime(0.001, now);
+    g.gain.linearRampToValueAtTime(vol, now + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0008, now + duration);
+    osc.connect(g);
+    g.connect(this.masterGain);
+    osc.start(now);
+    osc.stop(now + duration + 0.02);
+  },
+
+  sfxDig(isRaise = false) {
+    const nowMs = performance.now();
+    if (nowMs - this.lastDigSound < 70) return;
+    this.lastDigSound = nowMs;
+    if (isRaise) {
+      this.playTone(150, 0.11, 'triangle', 0.24, 230);
+    } else {
+      this.playTone(210, 0.09, 'triangle', 0.22, 115);
+    }
+  },
+
+  sfxRockHit() {
+    this.playTone(620, 0.07, 'square', 0.16, 280);
+  },
+
+  sfxStonePick(pick = true) {
+    this.playTone(pick ? 310 : 440, 0.12, 'sine', 0.25, pick ? 480 : 240);
+  },
+
+  sfxBoulderNudge() {
+    this.playTone(95, 0.22, 'sawtooth', 0.24, 60);
+  },
+
+  sfxSluiceOpen() {
+    this.playTone(240, 0.18, 'triangle', 0.28, 520);
+    setTimeout(() => this.playTone(360, 0.25, 'sine', 0.25, 680), 70);
+  },
+
+  sfxTrapSwallow() {
+    this.playTone(380, 0.16, 'sine', 0.18, 120);
+  },
+
+  sfxFieldDrink() {
+    this.playTone(440, 0.18, 'sine', 0.22, 660);
+    setTimeout(() => this.playTone(554.37, 0.22, 'triangle', 0.22, 880), 90);
+  },
+
+  sfxVillageSaved() {
+    const notes = [261.63, 329.63, 392.00, 523.25, 659.25];
+    notes.forEach((n, i) => {
+      setTimeout(() => this.playTone(n, 0.45, 'triangle', 0.26), i * 95);
+    });
+  },
+
+  sfxLevelFail() {
+    const notes = [311.13, 277.18, 246.94, 196.00];
+    notes.forEach((n, i) => {
+      setTimeout(() => this.playTone(n, 0.4, 'sawtooth', 0.18), i * 130);
+    });
+  }
+};
+
+// === PART 2: LEVEL DEFINITIONS (12 VILLAGES) ===
+
+const CELL_SOFT = 0;        // Standard soft earth (diggable, wall-raisable)
+const CELL_ROCK = 1;        // Uncarvable granite rock face
+const CELL_SAND = 2;        // Thirsty sand (drinks water rapidly)
+const CELL_CRACK = 3;       // Ground crack / sinkhole (swallows water)
+const CELL_HIDDEN_PIT = 4;  // Crust that collapses into an open pit under water weight
+const CELL_OPEN_PIT = 5;    // Collapsed pit swallowing water
+const CELL_FAULT = 6;       // Trap that interacts with player walls (wall nearby seals or collapses)
+
+const VILLAGES = [
+  {
+    id: 1,
+    name: "1. Highspring Furrow",
+    region: "Upper Headwaters • Elev. 1,420m",
+    desc: "Single straight downhill channel to one parched field.",
+    banner: "Left-drag through the dry ridge to dig a channel from the Spring (top) to the Field (bottom), then click the Spring Gate to release the water.",
+    gridW: 24, gridH: 26,
+    hungerTime: 135,
+    waterSupplyMax: 160,
+    slopeDrop: 5.2,
+    spring: { x: 12, z: 3 },
+    fields: [
+      { x: 12, z: 22, r: 2.3, needed: 28, name: "South Barley Plot" }
+    ],
+    prefabChannel: [
+      { x1: 12, z1: 3, x2: 12, z2: 9, depth: 0.55 },
+      { x1: 12, z1: 15, x2: 12, z2: 22, depth: 0.55 }
+    ],
+    ridges: [
+      { x1: 7, z1: 11, x2: 17, z2: 13, height: 0.52 }
+    ],
+    rocks: [],
+    walls: [],
+    sluices: [],
+    stones: [{ x: 16, z: 10 }],
+    boulders: [],
+    cracks: [],
+    sands: [],
+    hiddenPits: [],
+    faults: [],
+    houses: [{ x: 7, z: 21 }, { x: 17, z: 21 }]
+  },
+  {
+    id: 2,
+    name: "2. Terraced Rim",
+    region: "Windward Shelf • Elev. 1,280m",
+    desc: "Sloping bench where raised walls keep water from spilling away.",
+    banner: "Hold SHIFT + Left-drag along the low left rim to raise a wall so water doesn't spill down the cliffside!",
+    gridW: 26, gridH: 28,
+    hungerTime: 135,
+    waterSupplyMax: 170,
+    slopeDrop: 5.8,
+    sideTilt: -0.9,
+    spring: { x: 15, z: 3 },
+    fields: [
+      { x: 15, z: 23, r: 2.3, needed: 30, name: "Terrace Wheat" }
+    ],
+    prefabChannel: [
+      { x1: 15, z1: 3, x2: 15, z2: 10, depth: 0.52 },
+      { x1: 15, z1: 16, x2: 15, z2: 23, depth: 0.52 }
+    ],
+    ridges: [
+      { x1: 4, z1: 10, x2: 10, z2: 22, height: -0.75 } // Low gulley on the left
+    ],
+    rocks: [],
+    walls: [],
+    sluices: [],
+    stones: [],
+    boulders: [],
+    cracks: [],
+    sands: [],
+    hiddenPits: [],
+    faults: [],
+    houses: [{ x: 20, z: 14 }, { x: 20, z: 22 }]
+  },
+  {
+    id: 3,
+    name: "3. Old Sluice Hollow",
+    region: "Mason's Gorge • Elev. 1,150m",
+    desc: "Blocked masonry walls and closed field drain gates.",
+    banner: "Click directly on old rubble walls or closed blue Sluice Gates to clear and open blocked paths to both fields.",
+    gridW: 28, gridH: 30,
+    hungerTime: 140,
+    waterSupplyMax: 190,
+    slopeDrop: 6.2,
+    spring: { x: 14, z: 3 },
+    fields: [
+      { x: 9, z: 25, r: 2.2, needed: 26, name: "West Orchard" },
+      { x: 19, z: 25, r: 2.2, needed: 26, name: "East Orchard" }
+    ],
+    prefabChannel: [
+      { x1: 14, z1: 3, x2: 14, z2: 13, depth: 0.58 },
+      { x1: 14, z1: 13, x2: 9, z2: 25, depth: 0.52 },
+      { x1: 14, z1: 13, x2: 19, z2: 25, depth: 0.52 }
+    ],
+    ridges: [],
+    rocks: [],
+    walls: [
+      { x: 11, z: 18 }, { x: 10, z: 18 }, { x: 12, z: 18 }
+    ],
+    sluices: [
+      { x: 17, z: 19, open: false }
+    ],
+    stones: [],
+    boulders: [],
+    cracks: [],
+    sands: [],
+    hiddenPits: [],
+    faults: [],
+    houses: [{ x: 5, z: 23 }, { x: 23, z: 23 }, { x: 14, z: 26 }]
+  },
+  {
+    id: 4,
+    name: "4. Stepping Stones",
+    region: "Cairn Basin • Elev. 1,010m",
+    desc: "Pick up and drop small river stones to dam or split the stream.",
+    banner: "Right-click a small grey Stone to pick it up, and Right-click again to drop it to dam leaks or split water between fields.",
+    gridW: 28, gridH: 30,
+    hungerTime: 145,
+    waterSupplyMax: 195,
+    slopeDrop: 6.4,
+    spring: { x: 14, z: 3 },
+    fields: [
+      { x: 8, z: 25, r: 2.2, needed: 28, name: "Upper Millet" },
+      { x: 20, z: 25, r: 2.2, needed: 28, name: "Lower Millet" }
+    ],
+    prefabChannel: [
+      { x1: 14, z1: 3, x2: 14, z2: 14, depth: 0.58 },
+      { x1: 14, z1: 14, x2: 14, z2: 24, depth: 0.65 }, // Center drain chute that wastes water unless dammed!
+      { x1: 14, z1: 13, x2: 8, z2: 25, depth: 0.45 },
+      { x1: 14, z1: 13, x2: 20, z2: 25, depth: 0.45 }
+    ],
+    ridges: [],
+    rocks: [],
+    walls: [],
+    sluices: [],
+    stones: [
+      { x: 10, z: 10 }, { x: 18, z: 10 }, { x: 11, z: 15 }, { x: 17, z: 15 }
+    ],
+    boulders: [],
+    cracks: [],
+    sands: [],
+    hiddenPits: [],
+    faults: [],
+    houses: [{ x: 4, z: 24 }, { x: 24, z: 24 }]
+  },
+  {
+    id: 5,
+    name: "5. Granite Spur",
+    region: "Ironstone Outcrop • Elev. 890m",
+    desc: "Hard rock faces cannot be dug—carve through the soft soil seams.",
+    banner: "Dark grey Granite Rock cannot be dug! Carve channels through the warm brown earth around the rock spurs.",
+    gridW: 30, gridH: 32,
+    hungerTime: 150,
+    waterSupplyMax: 210,
+    slopeDrop: 6.8,
+    spring: { x: 15, z: 3 },
+    fields: [
+      { x: 8, z: 27, r: 2.2, needed: 30, name: "West Terrace" },
+      { x: 22, z: 27, r: 2.2, needed: 30, name: "East Terrace" }
+    ],
+    prefabChannel: [
+      { x1: 15, z1: 3, x2: 15, z2: 8, depth: 0.55 }
+    ],
+    ridges: [],
+    rocks: [
+      { x1: 10, z1: 10, x2: 20, z2: 14 },
+      { x1: 13, z1: 19, x2: 17, z2: 25 }
+    ],
+    walls: [],
+    sluices: [{ x: 8, z: 18, open: false }, { x: 22, z: 18, open: false }],
+    stones: [{ x: 7, z: 9 }, { x: 23, z: 9 }],
+    boulders: [],
+    cracks: [],
+    sands: [],
+    hiddenPits: [],
+    faults: [],
+    houses: [{ x: 4, z: 27 }, { x: 15, z: 28 }, { x: 26, z: 27 }]
+  },
+  {
+    id: 6,
+    name: "6. Thunder Scree",
+    region: "Boulder Escarpment • Elev. 760m",
+    desc: "Heavy boulders roll downhill on steep slopes and crush dug channels.",
+    banner: "Heavy Boulders roll down steep slopes and crush channels! Right-click to nudge boulders aside, or click obstructions to clear.",
+    gridW: 30, gridH: 32,
+    hungerTime: 155,
+    waterSupplyMax: 215,
+    slopeDrop: 7.6,
+    spring: { x: 15, z: 3 },
+    fields: [
+      { x: 9, z: 27, r: 2.2, needed: 30, name: "Scree Meadow" },
+      { x: 21, z: 27, r: 2.2, needed: 30, name: "Basin Cropland" }
+    ],
+    prefabChannel: [
+      { x1: 15, z1: 3, x2: 15, z2: 10, depth: 0.55 }
+    ],
+    ridges: [
+      { x1: 8, z1: 14, x2: 22, z2: 16, height: 0.45 }
+    ],
+    rocks: [{ x1: 14, z1: 18, x2: 16, z2: 22 }],
+    walls: [],
+    sluices: [],
+    stones: [{ x: 12, z: 9 }, { x: 18, z: 9 }],
+    boulders: [
+      { x: 11, z: 11, r: 0.9 },
+      { x: 19, z: 11, r: 0.9 },
+      { x: 15, z: 15, r: 0.9 }
+    ],
+    cracks: [],
+    sands: [],
+    hiddenPits: [],
+    faults: [],
+    houses: [{ x: 5, z: 26 }, { x: 25, z: 26 }]
+  },
+  {
+    id: 7,
+    name: "7. Fissure Bench",
+    region: "Shattered Claylands • Elev. 640m",
+    desc: "Deep fissures and holes swallow flowing water into the abyss.",
+    banner: "Beware dark Cracks & Holes! They drink water away. Steer your channels around them or dam them off with walls and stones.",
+    gridW: 30, gridH: 32,
+    hungerTime: 155,
+    waterSupplyMax: 210,
+    slopeDrop: 7.0,
+    spring: { x: 15, z: 3 },
+    fields: [
+      { x: 8, z: 27, r: 2.2, needed: 32, name: "West Grainfield" },
+      { x: 22, z: 27, r: 2.2, needed: 32, name: "East Grainfield" }
+    ],
+    prefabChannel: [
+      { x1: 15, z1: 3, x2: 15, z2: 11, depth: 0.55 }
+    ],
+    ridges: [],
+    rocks: [{ x1: 4, z1: 14, x2: 8, z2: 17 }, { x1: 22, z1: 14, x2: 26, z2: 17 }],
+    walls: [],
+    sluices: [{ x: 15, z: 8, open: false }],
+    stones: [{ x: 12, z: 10 }, { x: 18, z: 10 }, { x: 15, z: 18 }],
+    boulders: [{ x: 10, z: 13, r: 0.9 }],
+    cracks: [
+      { x: 14, z: 13 }, { x: 15, z: 13 }, { x: 16, z: 13 },
+      { x: 11, z: 20 }, { x: 12, z: 20 },
+      { x: 18, z: 20 }, { x: 19, z: 20 }
+    ],
+    sands: [],
+    hiddenPits: [],
+    faults: [],
+    houses: [{ x: 4, z: 26 }, { x: 15, z: 27 }, { x: 26, z: 26 }]
+  },
+  {
+    id: 8,
+    name: "8. Thirsty Dunes",
+    region: "Sun-Baked Wash • Elev. 520m",
+    desc: "Wide belts of thirsty golden sand soak up water rapidly.",
+    banner: "Golden Thirsty Sand drinks water quickly! Carve channels through the firmer brown earth and open the sluices to feed all 3 fields.",
+    gridW: 32, gridH: 34,
+    hungerTime: 165,
+    waterSupplyMax: 235,
+    slopeDrop: 7.4,
+    spring: { x: 16, z: 3 },
+    fields: [
+      { x: 7, z: 29, r: 2.1, needed: 28, name: "West Oasis" },
+      { x: 16, z: 29, r: 2.1, needed: 28, name: "Center Oasis" },
+      { x: 25, z: 29, r: 2.1, needed: 28, name: "East Oasis" }
+    ],
+    prefabChannel: [
+      { x1: 16, z1: 3, x2: 16, z2: 9, depth: 0.55 }
+    ],
+    ridges: [],
+    rocks: [{ x1: 11, z1: 16, x2: 13, z2: 20 }, { x1: 19, z1: 16, x2: 21, z2: 20 }],
+    walls: [{ x: 16, z: 21 }, { x: 15, z: 21 }],
+    sluices: [{ x: 9, z: 21, open: false }, { x: 23, z: 21, open: false }],
+    stones: [{ x: 13, z: 9 }, { x: 19, z: 9 }],
+    boulders: [],
+    cracks: [{ x: 16, z: 14 }, { x: 15, z: 14 }],
+    sands: [
+      { x1: 12, z1: 10, x2: 20, z2: 13 },
+      { x1: 6, z1: 23, x2: 11, z2: 25 },
+      { x1: 21, z1: 23, x2: 26, z2: 25 }
+    ],
+    hiddenPits: [],
+    faults: [],
+    houses: [{ x: 4, z: 29 }, { x: 12, z: 30 }, { x: 20, z: 30 }, { x: 28, z: 29 }]
+  },
+  {
+    id: 9,
+    name: "9. Hollow Karst",
+    region: "Limestone Sink • Elev. 410m",
+    desc: "Hidden pits collapse under the weight of flowing water.",
+    banner: "Pale limestone crusts hold Hidden Pits that open under water's weight! Watch the flow and patch leaks with walls or stones.",
+    gridW: 32, gridH: 34,
+    hungerTime: 165,
+    waterSupplyMax: 240,
+    slopeDrop: 7.5,
+    spring: { x: 16, z: 3 },
+    fields: [
+      { x: 7, z: 29, r: 2.1, needed: 28, name: "Karst West" },
+      { x: 16, z: 29, r: 2.1, needed: 28, name: "Karst Center" },
+      { x: 25, z: 29, r: 2.1, needed: 28, name: "Karst East" }
+    ],
+    prefabChannel: [
+      { x1: 16, z1: 3, x2: 16, z2: 10, depth: 0.55 }
+    ],
+    ridges: [],
+    rocks: [{ x1: 10, z1: 12, x2: 12, z2: 16 }, { x1: 20, z1: 12, x2: 22, z2: 16 }],
+    walls: [],
+    sluices: [{ x: 16, z: 19, open: false }],
+    stones: [{ x: 14, z: 9 }, { x: 18, z: 9 }, { x: 13, z: 21 }, { x: 19, z: 21 }],
+    boulders: [{ x: 8, z: 13, r: 0.9 }, { x: 24, z: 13, r: 0.9 }],
+    cracks: [{ x: 13, z: 24 }, { x: 19, z: 24 }],
+    sands: [{ x1: 14, z1: 13, x2: 18, z2: 15 }],
+    hiddenPits: [
+      { x: 15, z: 11 }, { x: 16, z: 11 }, { x: 17, z: 11 },
+      { x: 9, z: 21 }, { x: 10, z: 21 },
+      { x: 22, z: 21 }, { x: 23, z: 21 }
+    ],
+    faults: [],
+    houses: [{ x: 4, z: 28 }, { x: 28, z: 28 }]
+  },
+  {
+    id: 10,
+    name: "10. Faultline Terrace",
+    region: "Shattered Escarpment • Elev. 300m",
+    desc: "Fault traps interact with raised walls—heavy walls on faults trigger cave-ins.",
+    banner: "Red-veined Fault Traps collapse if you raise heavy walls directly on them, but walls built beside them channel water safely past!",
+    gridW: 32, gridH: 34,
+    hungerTime: 170,
+    waterSupplyMax: 245,
+    slopeDrop: 7.8,
+    spring: { x: 16, z: 3 },
+    fields: [
+      { x: 7, z: 29, r: 2.1, needed: 30, name: "North Terrace" },
+      { x: 16, z: 29, r: 2.1, needed: 30, name: "Mid Terrace" },
+      { x: 25, z: 29, r: 2.1, needed: 30, name: "South Terrace" }
+    ],
+    prefabChannel: [
+      { x1: 16, z1: 3, x2: 16, z2: 9, depth: 0.55 }
+    ],
+    ridges: [{ x1: 6, z1: 17, x2: 26, z2: 18, height: 0.4 }],
+    rocks: [{ x1: 12, z1: 11, x2: 14, z2: 14 }, { x1: 18, z1: 11, x2: 20, z2: 14 }],
+    walls: [{ x: 16, z: 15 }, { x: 15, z: 15 }],
+    sluices: [{ x: 8, z: 18, open: false }, { x: 24, z: 18, open: false }],
+    stones: [{ x: 11, z: 8 }, { x: 21, z: 8 }, { x: 16, z: 22 }],
+    boulders: [{ x: 9, z: 12, r: 0.9 }, { x: 23, z: 12, r: 0.9 }],
+    cracks: [{ x: 16, z: 20 }],
+    sands: [{ x1: 10, z1: 23, x2: 13, z2: 25 }, { x1: 19, z1: 23, x2: 22, z2: 25 }],
+    hiddenPits: [{ x: 8, z: 22 }, { x: 24, z: 22 }],
+    faults: [
+      { x: 15, z: 12 }, { x: 16, z: 12 }, { x: 17, z: 12 },
+      { x: 11, z: 19 }, { x: 12, z: 19 },
+      { x: 20, z: 19 }, { x: 21, z: 19 }
+    ],
+    houses: [{ x: 4, z: 29 }, { x: 12, z: 29 }, { x: 20, z: 29 }, { x: 28, z: 29 }]
+  },
+  {
+    id: 11,
+    name: "11. Twin Gorges",
+    region: "Canyon Confluence • Elev. 180m",
+    desc: "Steep dual ravines with boulders, hidden pits, thirsty sand, and three fields.",
+    banner: "Twin Gorges: Use every tool—clear sluices, nudge boulders, seal pits, and split the mountain spring across three canyon fields.",
+    gridW: 34, gridH: 36,
+    hungerTime: 175,
+    waterSupplyMax: 255,
+    slopeDrop: 8.2,
+    spring: { x: 17, z: 3 },
+    fields: [
+      { x: 7, z: 31, r: 2.1, needed: 30, name: "West Gorge" },
+      { x: 17, z: 31, r: 2.1, needed: 30, name: "Confluence Plot" },
+      { x: 27, z: 31, r: 2.1, needed: 30, name: "East Gorge" }
+    ],
+    prefabChannel: [
+      { x1: 17, z1: 3, x2: 17, z2: 9, depth: 0.55 }
+    ],
+    ridges: [{ x1: 5, z1: 19, x2: 29, z2: 20, height: 0.45 }],
+    rocks: [
+      { x1: 13, z1: 11, x2: 15, z2: 17 },
+      { x1: 19, z1: 11, x2: 21, z2: 17 },
+      { x1: 11, z1: 24, x2: 13, z2: 28 },
+      { x1: 21, z1: 24, x2: 23, z2: 28 }
+    ],
+    walls: [{ x: 10, z: 15 }, { x: 24, z: 15 }, { x: 17, z: 22 }],
+    sluices: [
+      { x: 17, z: 14, open: false },
+      { x: 8, z: 22, open: false },
+      { x: 26, z: 22, open: false }
+    ],
+    stones: [{ x: 14, z: 8 }, { x: 20, z: 8 }, { x: 16, z: 18 }, { x: 18, z: 18 }],
+    boulders: [
+      { x: 9, z: 10, r: 0.9 },
+      { x: 25, z: 10, r: 0.9 },
+      { x: 17, z: 17, r: 0.9 }
+    ],
+    cracks: [{ x: 11, z: 13 }, { x: 23, z: 13 }, { x: 17, z: 26 }],
+    sands: [{ x1: 6, z1: 16, x2: 9, z2: 18 }, { x1: 25, z1: 16, x2: 28, z2: 18 }],
+    hiddenPits: [{ x: 9, z: 25 }, { x: 17, z: 24 }, { x: 25, z: 25 }],
+    faults: [{ x: 16, z: 12 }, { x: 18, z: 12 }],
+    houses: [{ x: 3, z: 30 }, { x: 12, z: 31 }, { x: 22, z: 31 }, { x: 31, z: 30 }]
+  },
+  {
+    id: 12,
+    name: "12. Wellspring Delta",
+    region: "Lower River Valley • Elev. 60m",
+    desc: "The final village at the valley floor: four parched fields await the watershed.",
+    banner: "Final Village: Route the headwaters across the entire delta to all four fields before hunger runs out to restore the watershed!",
+    gridW: 36, gridH: 36,
+    hungerTime: 185,
+    waterSupplyMax: 280,
+    slopeDrop: 8.6,
+    spring: { x: 18, z: 3 },
+    fields: [
+      { x: 6, z: 31, r: 2.0, needed: 28, name: "West Delta" },
+      { x: 14, z: 31, r: 2.0, needed: 28, name: "North-Mid Delta" },
+      { x: 22, z: 31, r: 2.0, needed: 28, name: "South-Mid Delta" },
+      { x: 30, z: 31, r: 2.0, needed: 28, name: "East Delta" }
+    ],
+    prefabChannel: [
+      { x1: 18, z1: 3, x2: 18, z2: 9, depth: 0.58 }
+    ],
+    ridges: [
+      { x1: 5, z1: 15, x2: 31, z2: 16, height: 0.42 },
+      { x1: 5, z1: 24, x2: 31, z2: 25, height: 0.38 }
+    ],
+    rocks: [
+      { x1: 14, z1: 10, x2: 16, z2: 13 },
+      { x1: 20, z1: 10, x2: 22, z2: 13 },
+      { x1: 9, z1: 19, x2: 11, z2: 22 },
+      { x1: 17, z1: 19, x2: 19, z2: 22 },
+      { x1: 25, z1: 19, x2: 27, z2: 22 }
+    ],
+    walls: [{ x: 12, z: 15 }, { x: 18, z: 15 }, { x: 24, z: 15 }],
+    sluices: [
+      { x: 8, z: 16, open: false },
+      { x: 18, z: 16, open: false },
+      { x: 28, z: 16, open: false },
+      { x: 14, z: 25, open: false },
+      { x: 22, z: 25, open: false }
+    ],
+    stones: [
+      { x: 15, z: 8 }, { x: 21, z: 8 },
+      { x: 13, z: 18 }, { x: 23, z: 18 },
+      { x: 18, z: 26 }
+    ],
+    boulders: [
+      { x: 11, z: 11, r: 0.9 },
+      { x: 25, z: 11, r: 0.9 },
+      { x: 15, z: 21, r: 0.9 },
+      { x: 21, z: 21, r: 0.9 }
+    ],
+    cracks: [
+      { x: 18, z: 12 }, { x: 12, z: 21 }, { x: 24, z: 21 }, { x: 10, z: 27 }, { x: 26, z: 27 }
+    ],
+    sands: [
+      { x1: 6, z1: 19, x2: 8, z2: 21 },
+      { x1: 28, z1: 19, x2: 30, z2: 21 }
+    ],
+    hiddenPits: [
+      { x: 14, z: 27 }, { x: 22, z: 27 }, { x: 18, z: 18 }
+    ],
+    faults: [
+      { x: 17, z: 12 }, { x: 19, z: 12 },
+      { x: 13, z: 24 }, { x: 23, z: 24 }
+    ],
+    houses: [
+      { x: 3, z: 31 }, { x: 10, z: 32 }, { x: 18, z: 32 }, { x: 26, z: 32 }, { x: 33, z: 31 }
+    ]
+  }
+];
+
+// === PART 3: SIMULATION & TERRAIN / WATER / BOULDER PHYSICS ===
+
+const World = {
+  gridW: 24,
+  gridH: 26,
+  cells: [],
+  spring: { x: 12, z: 3, open: false },
+  fields: [],
+  sluices: [],
+  stones: [],
+  boulders: [],
+  houses: [],
+  hungerMax: 120,
+  hungerLeft: 120,
+  waterSupplyMax: 160,
+  waterSupplyLeft: 160,
+  waterLost: 0,
+  totalFlowingWater: 0,
+  villageSaved: false,
+  meshDirty: true,
+  waterDirty: true,
+
+  idx(x, z) {
+    return z * this.gridW + x;
+  },
+
+  inBounds(x, z) {
+    return x >= 0 && x < this.gridW && z >= 0 && z < this.gridH;
+  },
+
+  cellAt(x, z) {
+    if (!this.inBounds(x, z)) return null;
+    return this.cells[z * this.gridW + x];
+  },
+
+  loadVillage(villageIdx) {
+    const def = VILLAGES[villageIdx] || VILLAGES[0];
+    GAME_STATE.currentVillageIdx = villageIdx;
+    GAME_STATE.carriedStone = false;
+    GAME_STATE.celebrationTimer = 0;
+    GAME_STATE.particles = [];
+    GAME_STATE.cameraZoom = 1.0;
+    GAME_STATE.cameraTargetZoom = 1.0;
+
+    this.gridW = def.gridW;
+    this.gridH = def.gridH;
+    this.hungerMax = def.hungerTime;
+    this.hungerLeft = def.hungerTime;
+    const bonusMult = 1 + (GAME_STATE.carriedSpringBonus * 0.01);
+    this.waterSupplyMax = Math.round(def.waterSupplyMax * bonusMult);
+    this.waterSupplyLeft = this.waterSupplyMax;
+    this.waterLost = 0;
+    this.totalFlowingWater = 0;
+    this.villageSaved = false;
+    this.spring = { x: def.spring.x, z: def.spring.z, open: false };
+
+    this.cells = new Array(this.gridW * this.gridH);
+    const sideTilt = def.sideTilt || 0;
+
+    for (let z = 0; z < this.gridH; z++) {
+      const zNorm = z / (this.gridH - 1);
+      for (let x = 0; x < this.gridW; x++) {
+        const xNorm = (x / (this.gridW - 1)) - 0.5;
+        // Downhill slope from top (z=0) to bottom (z=gridH-1)
+        let h = (1.0 - zNorm) * def.slopeDrop + xNorm * sideTilt;
+        // Raised valley rim along left and right outer edges
+        const edgeDist = Math.min(x, this.gridW - 1 - x, z, this.gridH - 1 - z);
+        if (edgeDist < 2 && z < this.gridH - 3) {
+          h += (2 - edgeDist) * 0.65;
+        }
+        // Subtle natural dry hill undulation
+        h += Math.sin(x * 0.45) * Math.cos(z * 0.35) * 0.08;
+        this.cells[z * this.gridW + x] = {
+          x, z,
+          baseHeight: h,
+          height: h,
+          type: CELL_SOFT,
+          wallAmount: 0,
+          dugAmount: 0,
+          water: 0,
+          nextWater: 0,
+          waterWeightAccum: 0,
+          wetness: 0,
+          greenness: 0,
+          hasStone: false,
+          sluiceRef: null
+        };
+      }
+    }
+
+    // Apply ridges / gullies
+    (def.ridges || []).forEach(r => {
+      for (let z = r.z1; z <= r.z2; z++) {
+        for (let x = r.x1; x <= r.x2; x++) {
+          const c = this.cellAt(x, z);
+          if (c) {
+            c.baseHeight += r.height;
+            c.height = c.baseHeight;
+          }
+        }
+      }
+    });
+
+    // Apply pre-carved channel segments
+    (def.prefabChannel || []).forEach(seg => {
+      const steps = Math.max(Math.abs(seg.x2 - seg.x1), Math.abs(seg.z2 - seg.z1), 1) * 2;
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const cx = Math.round(seg.x1 + (seg.x2 - seg.x1) * t);
+        const cz = Math.round(seg.z1 + (seg.z2 - seg.z1) * t);
+        for (let dz = -1; dz <= 1; dz++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const c = this.cellAt(cx + dx, cz + dz);
+            if (!c) continue;
+            const d = Math.hypot(dx, dz);
+            if (d <= 1.1) {
+              const carve = seg.depth * (d === 0 ? 1.0 : 0.45);
+              if (c.dugAmount < carve) {
+                c.dugAmount = carve;
+                c.height = c.baseHeight - c.dugAmount;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Apply rock faces
+    (def.rocks || []).forEach(rk => {
+      for (let z = rk.z1; z <= rk.z2; z++) {
+        for (let x = rk.x1; x <= rk.x2; x++) {
+          const c = this.cellAt(x, z);
+          if (c) {
+            c.type = CELL_ROCK;
+            c.dugAmount = 0;
+            c.baseHeight += 0.95;
+            c.height = c.baseHeight;
+          }
+        }
+      }
+    });
+
+    // Apply thirsty sands
+    (def.sands || []).forEach(s => {
+      for (let z = s.z1; z <= s.z2; z++) {
+        for (let x = s.x1; x <= s.x2; x++) {
+          const c = this.cellAt(x, z);
+          if (c && c.type === CELL_SOFT) c.type = CELL_SAND;
+        }
+      }
+    });
+
+    // Apply cracks, hidden pits, faults
+    (def.cracks || []).forEach(p => {
+      const c = this.cellAt(p.x, p.z);
+      if (c) { c.type = CELL_CRACK; c.height -= 0.25; }
+    });
+    (def.hiddenPits || []).forEach(p => {
+      const c = this.cellAt(p.x, p.z);
+      if (c) c.type = CELL_HIDDEN_PIT;
+    });
+    (def.faults || []).forEach(p => {
+      const c = this.cellAt(p.x, p.z);
+      if (c) c.type = CELL_FAULT;
+    });
+
+    // Pre-placed rubble walls (clickable to clear & flatten)
+    (def.walls || []).forEach(w => {
+      const c = this.cellAt(w.x, w.z);
+      if (c) {
+        c.wallAmount = 0.85;
+        c.height = c.baseHeight + c.wallAmount;
+      }
+    });
+
+    // Sluices / Field Drains
+    this.sluices = (def.sluices || []).map(s => {
+      const obj = { x: s.x, z: s.z, open: !!s.open };
+      const c = this.cellAt(s.x, s.z);
+      if (c) c.sluiceRef = obj;
+      return obj;
+    });
+
+    // Small stones
+    this.stones = (def.stones || []).map(s => {
+      const c = this.cellAt(s.x, s.z);
+      if (c) {
+        c.hasStone = true;
+        c.height += 0.65;
+      }
+      return { x: s.x, z: s.z };
+    });
+
+    // Heavy Boulders
+    this.boulders = (def.boulders || []).map(b => ({
+      x: b.x + 0.5,
+      z: b.z + 0.5,
+      vx: 0,
+      vz: 0,
+      r: b.r || 0.9,
+      rotX: 0,
+      rotZ: 0
+    }));
+
+    // Fields
+    this.fields = (def.fields || []).map((f, idx) => {
+      for (let dz = -2; dz <= 2; dz++) {
+        for (let dx = -2; dx <= 2; dx++) {
+          const c = this.cellAt(f.x + dx, f.z + dz);
+          if (c && Math.hypot(dx, dz) <= f.r) {
+            c.dugAmount = Math.max(c.dugAmount, 0.45);
+            c.height = c.baseHeight - c.dugAmount;
+          }
+        }
+      }
+      return {
+        id: idx + 1,
+        name: f.name || `Field ${idx + 1}`,
+        x: f.x,
+        z: f.z,
+        r: f.r || 2.1,
+        needed: f.needed || 28,
+        drank: 0,
+        saved: false,
+        receivingFlow: false
+      };
+    });
+
+    // Spring basin at top: pre-fill 3x3 basin with gushing spring water behind its gate
+    for (let dz = -1; dz <= 0; dz++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const sp = this.cellAt(this.spring.x + dx, this.spring.z + dz);
+        if (sp) {
+          sp.dugAmount = 0.65;
+          sp.height = sp.baseHeight - sp.dugAmount;
+          sp.water = 0.95;
+        }
+      }
+    }
+
+    this.houses = (def.houses || []).map(h => ({ x: h.x, z: h.z }));
+    this.meshDirty = true;
+    this.waterDirty = true;
+    updateHUD();
+  }
+};
+
+// === PART 3B: TERRAIN SHAPING, WATER FLOW & BOULDER UPDATE ===
+
+World.spawnParticles = function(wx, wy, wz, color, count = 8, speed = 2.2) {
+  for (let i = 0; i < count; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const spd = (0.35 + Math.random() * 0.65) * speed;
+    GAME_STATE.particles.push({
+      x: wx + (Math.random() - 0.5) * 0.4,
+      y: wy + 0.15,
+      z: wz + (Math.random() - 0.5) * 0.4,
+      vx: Math.cos(ang) * spd,
+      vy: 1.5 + Math.random() * 2.4,
+      vz: Math.sin(ang) * spd,
+      color,
+      life: 0.45 + Math.random() * 0.35,
+      maxLife: 0.75,
+      size: 0.14 + Math.random() * 0.12
+    });
+  }
+};
+
+World.shovelAt = function(gx, gz, raiseWall = false) {
+  if (!this.inBounds(gx, gz)) return false;
+  const center = this.cellAt(gx, gz);
+  if (!center) return false;
+
+  // Cannot dig or raise on granite rock face
+  if (center.type === CELL_ROCK) {
+    AudioEngine.sfxRockHit();
+    this.spawnParticles(gx + 0.5, center.height, gz + 0.5, [0.95, 0.82, 0.45], 5, 2.5);
+    return false;
+  }
+
+  let changed = false;
+  for (let dz = -1; dz <= 1; dz++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const c = this.cellAt(gx + dx, gz + dz);
+      if (!c || c.type === CELL_ROCK || c.hasStone) continue;
+      const dist = Math.hypot(dx, dz);
+      if (dist > 1.15) continue;
+      const weight = dist === 0 ? 1.0 : 0.42;
+
+      if (raiseWall) {
+        // Fault trap interaction: raising a heavy wall directly on a fault collapses it into an open pit!
+        if (c.type === CELL_FAULT && dist === 0) {
+          c.type = CELL_OPEN_PIT;
+          c.wallAmount = 0;
+          c.height = c.baseHeight - 0.65;
+          AudioEngine.sfxTrapSwallow();
+          GAME_STATE.screenShake = Math.max(GAME_STATE.screenShake, 0.25);
+          this.spawnParticles(c.x + 0.5, c.height, c.z + 0.5, [0.85, 0.32, 0.22], 14, 3.0);
+          changed = true;
+          continue;
+        }
+        const add = 0.24 * weight;
+        if (c.wallAmount < 1.15) {
+          c.wallAmount = Math.min(1.15, c.wallAmount + add);
+          c.dugAmount = Math.max(0, c.dugAmount - add * 0.5);
+          c.height = c.baseHeight + c.wallAmount - c.dugAmount;
+          changed = true;
+        }
+      } else {
+        // Digging a channel
+        const dig = 0.24 * weight;
+        if (c.wallAmount > 0) {
+          c.wallAmount = Math.max(0, c.wallAmount - dig * 1.2);
+          c.height = c.baseHeight + c.wallAmount - c.dugAmount;
+          changed = true;
+        } else if (c.dugAmount < 0.92) {
+          c.dugAmount = Math.min(0.92, c.dugAmount + dig);
+          c.height = c.baseHeight - c.dugAmount;
+          changed = true;
+        }
+      }
+    }
+  }
+
+  if (changed) {
+    this.meshDirty = true;
+    AudioEngine.sfxDig(raiseWall);
+    const col = raiseWall ? [0.76, 0.60, 0.42] : [0.68, 0.46, 0.28];
+    this.spawnParticles(gx + 0.5, center.height, gz + 0.5, col, 6, 1.8);
+  }
+  return changed;
+};
+
+// Left-click action on a specific tile/object:
+// - Click on spring gate or sluice/field drain -> opens it
+// - Click on a raised wall -> clears the wall and drops it to flatten the surrounding slope
+// - Click on a stone -> clears obstruction
+// - Click on a boulder -> clears/chips stationary boulder obstruction
+World.handleSingleClick = function(gx, gz) {
+  if (!this.inBounds(gx, gz)) return false;
+
+  // 1. Check distance to Spring Gate
+  if (Math.hypot(gx - this.spring.x, gz - this.spring.z) <= 2.2 && !this.spring.open) {
+    this.openSpring();
+    return true;
+  }
+
+  // 2. Check distance to any Sluice / Field Drain
+  for (let i = 0; i < this.sluices.length; i++) {
+    const sl = this.sluices[i];
+    if (Math.hypot(gx - sl.x, gz - sl.z) <= 1.8) {
+      sl.open = !sl.open;
+      AudioEngine.sfxSluiceOpen();
+      const c = this.cellAt(sl.x, sl.z);
+      this.spawnParticles(sl.x + 0.5, c ? c.height + 0.5 : 2, sl.z + 0.5, [0.35, 0.78, 0.98], 12, 2.4);
+      this.meshDirty = true;
+      return true;
+    }
+  }
+
+  // 3. Check if clicking a Boulder to clear/break obstruction
+  for (let i = 0; i < this.boulders.length; i++) {
+    const b = this.boulders[i];
+    if (Math.hypot((gx + 0.5) - b.x, (gz + 0.5) - b.z) <= b.r + 0.85) {
+      this.spawnParticles(b.x, this.sampleHeight(b.x, b.z) + 0.5, b.z, [0.6, 0.58, 0.55], 16, 3.0);
+      AudioEngine.sfxBoulderNudge();
+      GAME_STATE.screenShake = Math.max(GAME_STATE.screenShake, 0.2);
+      this.boulders.splice(i, 1);
+      this.meshDirty = true;
+      return true;
+    }
+  }
+
+  // 4. Check if clicking a small Stone to clear it
+  for (let i = 0; i < this.stones.length; i++) {
+    const st = this.stones[i];
+    if (Math.hypot(gx - st.x, gz - st.z) <= 1.2) {
+      const c = this.cellAt(st.x, st.z);
+      if (c) {
+        c.hasStone = false;
+        c.height = c.baseHeight + c.wallAmount - c.dugAmount;
+      }
+      this.spawnParticles(st.x + 0.5, c ? c.height : 2, st.z + 0.5, [0.65, 0.65, 0.68], 10, 2.0);
+      AudioEngine.sfxStonePick(false);
+      this.stones.splice(i, 1);
+      this.meshDirty = true;
+      return true;
+    }
+  }
+
+  // 5. Check if clicking a raised wall / rubble wall -> clears wall AND flattens the local slope!
+  const c = this.cellAt(gx, gz);
+  if (c && c.wallAmount > 0.12) {
+    let avgBase = 0, cnt = 0;
+    for (let dz = -1; dz <= 1; dz++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const nb = this.cellAt(gx + dx, gz + dz);
+        if (nb && nb.type !== CELL_ROCK) {
+          avgBase += nb.baseHeight;
+          cnt++;
+        }
+      }
+    }
+    avgBase /= Math.max(1, cnt);
+    // Dropping a raised wall flattens the slope across its 3x3 footprint
+    for (let dz = -1; dz <= 1; dz++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const nb = this.cellAt(gx + dx, gz + dz);
+        if (nb && nb.type !== CELL_ROCK) {
+          nb.wallAmount = 0;
+          nb.baseHeight = nb.baseHeight * 0.35 + avgBase * 0.65;
+          nb.height = nb.baseHeight - nb.dugAmount;
+        }
+      }
+    }
+    AudioEngine.sfxDig(false);
+    this.spawnParticles(gx + 0.5, c.height, gz + 0.5, [0.78, 0.62, 0.44], 12, 2.2);
+    this.meshDirty = true;
+    return true;
+  }
+
+  return false;
+};
+
+// Right-click action:
+// - Near a boulder: nudges the boulder slowly away / sideways
+// - If not carrying a stone and clicking near a small stone: picks it up
+// - If carrying a stone and clicking on valid ground: drops the stone to dam/deflect water
+World.handleRightClick = function(gx, gz) {
+  if (!this.inBounds(gx, gz)) return false;
+
+  // 1. Check if near a boulder -> nudge it slowly
+  for (let i = 0; i < this.boulders.length; i++) {
+    const b = this.boulders[i];
+    const dx = b.x - (gx + 0.5);
+    const dz = b.z - (gz + 0.5);
+    const dist = Math.hypot(dx, dz);
+    if (dist <= b.r + 1.5) {
+      const nx = dist > 0.05 ? dx / dist : (b.x < this.gridW * 0.5 ? -1 : 1);
+      const nz = dist > 0.05 ? dz / dist : 0;
+      b.vx += nx * 1.65;
+      b.vz += nz * 0.95;
+      AudioEngine.sfxBoulderNudge();
+      this.spawnParticles(b.x, this.sampleHeight(b.x, b.z), b.z, [0.65, 0.58, 0.5], 8, 1.8);
+      return true;
+    }
+  }
+
+  // 2. Pick up a small stone if not carrying one
+  if (!GAME_STATE.carriedStone) {
+    for (let i = 0; i < this.stones.length; i++) {
+      const st = this.stones[i];
+      if (Math.hypot(gx - st.x, gz - st.z) <= 1.6) {
+        const c = this.cellAt(st.x, st.z);
+        if (c) {
+          c.hasStone = false;
+          c.height = c.baseHeight + c.wallAmount - c.dugAmount;
+        }
+        this.stones.splice(i, 1);
+        GAME_STATE.carriedStone = true;
+        AudioEngine.sfxStonePick(true);
+        this.meshDirty = true;
+        updateHUD();
+        return true;
+      }
+    }
+  } else {
+    // 3. Drop carried stone at (gx, gz)
+    const c = this.cellAt(gx, gz);
+    if (c && c.type !== CELL_ROCK && !c.hasStone) {
+      // If dropped on an open crack or pit, it seals/dams it!
+      if (c.type === CELL_CRACK || c.type === CELL_OPEN_PIT) {
+        c.type = CELL_SOFT;
+      }
+      c.hasStone = true;
+      c.height = c.baseHeight + c.wallAmount - c.dugAmount + 0.65;
+      this.stones.push({ x: gx, z: gz });
+      GAME_STATE.carriedStone = false;
+      AudioEngine.sfxStonePick(false);
+      this.spawnParticles(gx + 0.5, c.height, gz + 0.5, [0.7, 0.72, 0.75], 8, 1.7);
+      this.meshDirty = true;
+      updateHUD();
+      return true;
+    }
+  }
+  return false;
+};
+
+World.openSpring = function() {
+  if (this.spring.open) return;
+  this.spring.open = true;
+  AudioEngine.sfxSluiceOpen();
+  const c = this.cellAt(this.spring.x, this.spring.z);
+  if (c) {
+    this.spawnParticles(this.spring.x + 0.5, c.height + 0.6, this.spring.z + 0.5, [0.4, 0.85, 1.0], 18, 3.2);
+  }
+  updateHUD();
+};
+
+World.sampleHeight = function(wx, wz) {
+  const gx = Math.max(0, Math.min(this.gridW - 1, Math.floor(wx)));
+  const gz = Math.max(0, Math.min(this.gridH - 1, Math.floor(wz)));
+  const c = this.cellAt(gx, gz);
+  return c ? c.height : 0;
+};
+
+// === PART 3C: SIMULATION STEP (WATER FLOW, TRAPS, BOULDERS, FIELDS, HUNGER) ===
+
+World.update = function(dt) {
+  if (GAME_STATE.screen !== 'play') return;
+
+  // If village is already saved, run the in-level greening celebration for 2.2s before transitioning
+  if (this.villageSaved) {
+    GAME_STATE.celebrationTimer += dt;
+    for (let i = 0; i < this.cells.length; i++) {
+      const c = this.cells[i];
+      if (c.type !== CELL_ROCK) {
+        c.greenness = Math.min(1.0, c.greenness + dt * 0.65);
+      }
+    }
+    this.meshDirty = true;
+    this.updateParticles(dt);
+    if (GAME_STATE.celebrationTimer >= 2.1) {
+      completeCurrentVillage();
+    }
+    return;
+  }
+
+  // 1. Drain Hunger Meter from the moment the village loads
+  this.hungerLeft = Math.max(0, this.hungerLeft - dt);
+  if (this.hungerLeft <= 0) {
+    triggerLevelFail("The hunger meter emptied before every field in the village could drink.");
+    return;
+  }
+
+  // 2. Spring gushing at top of village
+  const spCell = this.cellAt(this.spring.x, this.spring.z);
+  if (spCell) {
+    if (!this.spring.open) {
+      // Keep 3x2 spring basin bubbling visibly behind its gate
+      for (let dz = -1; dz <= 0; dz++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const bc = this.cellAt(this.spring.x + dx, this.spring.z + dz);
+          if (bc) bc.water = 0.92 + Math.sin(performance.now() * 0.009 + dx) * 0.08;
+        }
+      }
+      if (Math.random() < 0.55) {
+        this.spawnParticles(this.spring.x + 0.5, spCell.height + 1.1, this.spring.z + 0.2, [0.45, 0.88, 1.0], 2, 1.6);
+      }
+    } else if (this.waterSupplyLeft > 0) {
+      const emit = Math.min(this.waterSupplyLeft, dt * 8.5);
+      spCell.water += emit;
+      this.waterSupplyLeft = Math.max(0, this.waterSupplyLeft - emit);
+      if (Math.random() < 0.65) {
+        this.spawnParticles(this.spring.x + 0.5, spCell.height + 0.9, this.spring.z + 0.5, [0.45, 0.88, 1.0], 2, 2.0);
+      }
+    }
+  }
+
+  // 3. Boulders rolling downhill on steep slopes & crushing dug channels
+  for (let i = 0; i < this.boulders.length; i++) {
+    const b = this.boulders[i];
+    const gx = Math.floor(b.x);
+    const gz = Math.floor(b.z);
+    const hL = this.sampleHeight(b.x - 0.8, b.z);
+    const hR = this.sampleHeight(b.x + 0.8, b.z);
+    const hU = this.sampleHeight(b.x, b.z - 0.8);
+    const hD = this.sampleHeight(b.x, b.z + 0.8);
+    const slopeX = (hL - hR) * 0.625;
+    const slopeZ = (hU - hD) * 0.625;
+    const slopeMag = Math.hypot(slopeX, slopeZ);
+
+    // Boulders roll downhill if the slope is steep enough
+    if (slopeMag > 0.29) {
+      b.vx += slopeX * dt * 2.8;
+      b.vz += slopeZ * dt * 2.8;
+    }
+    b.vx *= Math.pow(0.22, dt);
+    b.vz *= Math.pow(0.22, dt);
+
+    const speed = Math.hypot(b.vx, b.vz);
+    if (speed > 0.05) {
+      const nextX = Math.max(2.0, Math.min(this.gridW - 2.0, b.x + b.vx * dt));
+      const nextZ = Math.max(2.0, Math.min(this.gridH - 2.0, b.z + b.vz * dt));
+      const nextCell = this.cellAt(Math.floor(nextX), Math.floor(nextZ));
+      // Stop against solid rock or high raised wall
+      if (nextCell && (nextCell.type === CELL_ROCK || nextCell.wallAmount > 0.45 || nextCell.hasStone)) {
+        b.vx *= -0.2;
+        b.vz *= -0.2;
+      } else {
+        b.x = nextX;
+        b.z = nextZ;
+        b.rotX += b.vz * dt * 1.5;
+        b.rotZ -= b.vx * dt * 1.5;
+        // Crushes any dug channel in its way!
+        const under = this.cellAt(Math.floor(b.x), Math.floor(b.z));
+        if (under && under.dugAmount > 0.08) {
+          under.dugAmount = 0;
+          under.height = under.baseHeight + under.wallAmount;
+          this.meshDirty = true;
+          GAME_STATE.screenShake = Math.max(GAME_STATE.screenShake, 0.14);
+          this.spawnParticles(b.x, under.height, b.z, [0.72, 0.52, 0.34], 5, 2.0);
+        }
+      }
+    }
+    // Keep boulder cell slightly elevated to deflect water around it
+    const bc = this.cellAt(gx, gz);
+    if (bc && bc.water > 0.05) {
+      // Push water gently to side cells
+      const leftC = this.cellAt(gx - 1, gz);
+      const rightC = this.cellAt(gx + 1, gz);
+      if (leftC && rightC) {
+        const push = bc.water * 0.4;
+        bc.water -= push;
+        leftC.water += push * 0.5;
+        rightC.water += push * 0.5;
+      }
+    }
+  }
+
+  // 4. Water Flow Simulation (sub-stepped for responsive downhill flow)
+  const subSteps = 2;
+  const subDt = dt / subSteps;
+  const dirs = [
+    [0, 1, 1.0], [0, -1, 1.0], [-1, 0, 1.0], [1, 0, 1.0],
+    [-1, 1, 0.7], [1, 1, 0.7]
+  ];
+
+  for (let step = 0; step < subSteps; step++) {
+    for (let i = 0; i < this.cells.length; i++) {
+      this.cells[i].nextWater = this.cells[i].water;
+    }
+
+    for (let z = 0; z < this.gridH; z++) {
+      for (let x = 0; x < this.gridW; x++) {
+        const c = this.cells[z * this.gridW + x];
+        if (c.water <= 0.002) continue;
+        // If spring gate is closed, hold water in the upper spring basin
+        if (!this.spring.open && Math.abs(x - this.spring.x) <= 1 && z <= this.spring.z) continue;
+        // If cell has a closed sluice gate, it blocks flow out
+        if (c.sluiceRef && !c.sluiceRef.open) continue;
+
+        const surf = c.height + c.water * 0.45;
+        let totalWeight = 0;
+        const lowers = [];
+
+        for (let d = 0; d < dirs.length; d++) {
+          const nx = x + dirs[d][0];
+          const nz = z + dirs[d][1];
+          const nb = this.cellAt(nx, nz);
+          if (!nb || nb.type === CELL_ROCK) continue;
+          if (nb.sluiceRef && !nb.sluiceRef.open) continue;
+          const nSurf = nb.height + nb.water * 0.45;
+          const diff = surf - nSurf;
+          if (diff > 0.006) {
+            const w = diff * dirs[d][2];
+            lowers.push({ nb, w, diff });
+            totalWeight += w;
+          }
+        }
+
+        if (totalWeight > 0) {
+          // Speed increases on steeper drops
+          const maxDiff = lowers.reduce((m, it) => Math.max(m, it.diff), 0);
+          const flowRate = Math.min(0.92, (2.8 + maxDiff * 5.5) * subDt);
+          const avail = c.water * flowRate;
+          for (let k = 0; k < lowers.length; k++) {
+            const item = lowers[k];
+            const amt = avail * (item.w / totalWeight);
+            c.nextWater -= amt;
+            item.nb.nextWater += amt;
+          }
+        }
+      }
+    }
+
+    // Apply nextWater, traps, evaporation on uncarved dry ground, and wetness
+    let activeWaterSum = 0;
+    for (let i = 0; i < this.cells.length; i++) {
+      const c = this.cells[i];
+      let w = Math.max(0, c.nextWater);
+
+      if (w > 0.01) {
+        c.wetness = Math.min(1.0, c.wetness + subDt * 1.8);
+
+        // Hidden pit check: collapses under flowing water's weight!
+        if (c.type === CELL_HIDDEN_PIT) {
+          c.waterWeightAccum += w * subDt;
+          if (c.waterWeightAccum > 0.26) {
+            c.type = CELL_OPEN_PIT;
+            c.height -= 0.55;
+            this.meshDirty = true;
+            AudioEngine.sfxTrapSwallow();
+            GAME_STATE.screenShake = Math.max(GAME_STATE.screenShake, 0.22);
+            this.spawnParticles(c.x + 0.5, c.height + 0.2, c.z + 0.5, [0.45, 0.32, 0.2], 14, 2.8);
+          }
+        }
+
+        // Traps swallowing water: Cracks, Open Pits, Faults, Thirsty Sand
+        if (c.type === CELL_CRACK || c.type === CELL_OPEN_PIT) {
+          const swallow = Math.min(w, subDt * 1.45);
+          w -= swallow;
+          this.waterLost += swallow;
+          if (Math.random() < 0.08) AudioEngine.sfxTrapSwallow();
+        } else if (c.type === CELL_SAND) {
+          const soak = Math.min(w, subDt * 0.75);
+          w -= soak;
+          this.waterLost += soak;
+        } else if (c.type === CELL_FAULT) {
+          const leak = Math.min(w, subDt * 0.35);
+          w -= leak;
+          this.waterLost += leak;
+        }
+
+        // Spilled puddle loss on uncarved flat dry earth outside channels
+        if (c.dugAmount < 0.1 && (c.x !== this.spring.x || c.z !== this.spring.z)) {
+          const dryLoss = Math.min(w, subDt * 0.14);
+          w -= dryLoss;
+          this.waterLost += dryLoss;
+        }
+
+        // Edge drain loss if water runs off the borders without entering a field
+        if (c.x === 0 || c.x === this.gridW - 1 || c.z === this.gridH - 1) {
+          const edgeLoss = Math.min(w, subDt * 1.1);
+          w -= edgeLoss;
+          this.waterLost += edgeLoss;
+        }
+      }
+
+      c.water = w;
+      if (this.spring.open || c.x !== this.spring.x || c.z !== this.spring.z) {
+        activeWaterSum += w;
+      }
+    }
+    this.totalFlowingWater = activeWaterSum;
+  }
+
+  // 5. Verify unbroken wet path from Spring and let connected Fields drink!
+  const connected = this.computeSpringConnectedMap();
+  let allFieldsSaved = true;
+  let remainingFieldNeed = 0;
+
+  for (let i = 0; i < this.fields.length; i++) {
+    const f = this.fields[i];
+    f.receivingFlow = false;
+    if (!f.saved) {
+      let drankThisFrame = 0;
+      for (let dz = -2; dz <= 2; dz++) {
+        for (let dx = -2; dx <= 2; dx++) {
+          const gx = f.x + dx;
+          const gz = f.z + dz;
+          if (Math.hypot(dx, dz) <= f.r && this.inBounds(gx, gz)) {
+            const cIdx = this.idx(gx, gz);
+            const c = this.cells[cIdx];
+            // Field drinks only when connected to the spring by an unbroken wet downhill path!
+            if (c.water > 0.025 && connected[cIdx]) {
+              const sip = Math.min(c.water * 0.55, dt * 3.8);
+              c.water -= sip;
+              drankThisFrame += sip;
+              c.greenness = Math.min(1.0, (f.drank / f.needed));
+            }
+          }
+        }
+      }
+      if (drankThisFrame > 0) {
+        f.receivingFlow = true;
+        f.drank = Math.min(f.needed, f.drank + drankThisFrame * 3.2);
+        this.meshDirty = true;
+        if (f.drank >= f.needed) {
+          f.saved = true;
+          AudioEngine.sfxFieldDrink();
+          this.spawnParticles(f.x + 0.5, this.sampleHeight(f.x, f.z) + 0.5, f.z + 0.5, [0.35, 0.92, 0.42], 24, 3.4);
+          // Turn entire field patch bright green on the spot
+          for (let dz = -3; dz <= 3; dz++) {
+            for (let dx = -3; dx <= 3; dx++) {
+              const c = this.cellAt(f.x + dx, f.z + dz);
+              if (c && Math.hypot(dx, dz) <= f.r + 0.8) c.greenness = 1.0;
+            }
+          }
+        }
+      }
+      if (!f.saved) {
+        allFieldsSaved = false;
+        remainingFieldNeed += (f.needed - f.drank) / 3.2;
+      }
+    }
+  }
+
+  // 6. Check if all fields are saved -> Village Saved!
+  if (allFieldsSaved && this.fields.length > 0) {
+    this.villageSaved = true;
+    GAME_STATE.celebrationTimer = 0;
+    GAME_STATE.savedVillages[GAME_STATE.currentVillageIdx] = true;
+    // Saving a village carries its clean unblocked spring forward (+8% bonus water per saved village, up to +40%)
+    const savedCount = GAME_STATE.savedVillages.filter(Boolean).length;
+    GAME_STATE.carriedSpringBonus = Math.min(40, savedCount * 8);
+    AudioEngine.sfxVillageSaved();
+    AudioEngine.setWaterFlowLevel(0);
+    updateHUD();
+    return;
+  }
+
+  // 7. Check if too much water was lost and remaining supply cannot fill the fields
+  if (this.spring.open && (this.waterSupplyLeft + this.totalFlowingWater) < remainingFieldNeed * 0.45 && this.waterSupplyLeft <= 0.5) {
+    triggerLevelFail("Too much water was lost to traps and dry ground—remaining supply cannot fill every field.");
+    return;
+  }
+
+  // Update water audio ambience & particles
+  AudioEngine.setWaterFlowLevel(Math.min(1.0, this.totalFlowingWater / 12.0));
+  this.updateParticles(dt);
+  this.waterDirty = true;
+  updateHUD();
+};
+
+// BFS from the spring across wet cells to verify the path is whole
+World.computeSpringConnectedMap = function() {
+  const visited = new Uint8Array(this.cells.length);
+  if (!this.spring.open) return visited;
+  const startIdx = this.idx(this.spring.x, this.spring.z);
+  const q = [startIdx];
+  visited[startIdx] = 1;
+  let head = 0;
+  while (head < q.length) {
+    const curr = q[head++];
+    const cx = curr % this.gridW;
+    const cz = (curr / this.gridW) | 0;
+    for (let dz = -1; dz <= 1; dz++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dz === 0) continue;
+        const nx = cx + dx, nz = cz + dz;
+        if (!this.inBounds(nx, nz)) continue;
+        const nIdx = nz * this.gridW + nx;
+        if (visited[nIdx]) continue;
+        const nb = this.cells[nIdx];
+        if (nb.water > 0.012 || nb.wetness > 0.25) {
+          visited[nIdx] = 1;
+          q.push(nIdx);
+        }
+      }
+    }
+  }
+  return visited;
+};
+
+World.updateParticles = function(dt) {
+  for (let i = GAME_STATE.particles.length - 1; i >= 0; i--) {
+    const p = GAME_STATE.particles[i];
+    p.life -= dt;
+    if (p.life <= 0) {
+      GAME_STATE.particles.splice(i, 1);
+      continue;
+    }
+    p.vy -= 6.5 * dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.z += p.vz * dt;
+  }
+  if (GAME_STATE.screenShake > 0) {
+    GAME_STATE.screenShake = Math.max(0, GAME_STATE.screenShake - dt * 1.5);
+  }
+};
+
+
+
+// === PART 4: WEBGL 3D RENDERER ===
+
+const Renderer = {
+  canvas: null,
+  gl: null,
+  prog: null,
+  attribs: {},
+  uniforms: {},
+  terrainBuf: null,
+  terrainVertCount: 0,
+  waterBuf: null,
+  waterVertCount: 0,
+  dynBuf: null,
+  projMat: Mat4.create(),
+  viewMat: Mat4.create(),
+  vpMat: Mat4.create(),
+  invVpMat: Mat4.create(),
+  camEye: [12, 22, 28],
+  camCenter: [12, 2, 13],
+
+  init() {
+    this.canvas = document.getElementById('gl-canvas');
+    this.gl = this.canvas.getContext('webgl', { antialias: true, alpha: false });
+    if (!this.gl) return;
+    const gl = this.gl;
+
+    const vsSource = `
+      attribute vec3 aPos;
+      attribute vec3 aNorm;
+      attribute vec4 aColor;
+      uniform mat4 uVP;
+      varying vec3 vPos;
+      varying vec3 vNorm;
+      varying vec4 vColor;
+      void main() {
+        vPos = aPos;
+        vNorm = aNorm;
+        vColor = aColor;
+        gl_Position = uVP * vec4(aPos, 1.0);
+      }
+    `;
+
+    const fsSource = `
+      precision mediump float;
+      varying vec3 vPos;
+      varying vec3 vNorm;
+      varying vec4 vColor;
+      uniform float uTime;
+      uniform int uIsWater;
+      void main() {
+        vec3 n = normalize(vNorm);
+        vec3 sunDir = normalize(vec3(0.45, 0.82, 0.34));
+        float diff = max(dot(n, sunDir), 0.0);
+        float amb = 0.42 + 0.14 * n.y;
+        vec3 col = vColor.rgb * (amb + diff * 0.66);
+
+        if (uIsWater == 1) {
+          float ripple = sin(vPos.x * 5.5 + uTime * 4.5) * cos(vPos.z * 5.5 - uTime * 3.8);
+          col += vec3(0.18, 0.28, 0.35) * max(0.0, ripple);
+          if (n.y > 0.7) {
+            col += vec3(0.12, 0.18, 0.22) * pow(diff, 6.0);
+          }
+        } else {
+          // Subtle dry earth crack pattern on baked ground
+          float gridCrack = abs( fract(vPos.x * 1.3 + sin(vPos.z * 0.8)*0.25) - 0.5 )
+                          + abs( fract(vPos.z * 1.3 + cos(vPos.x * 0.8)*0.25) - 0.5 );
+          if (gridCrack < 0.06 && vColor.g < 0.62 && vPos.y > 0.0) {
+            col *= 0.88;
+          }
+        }
+        gl_FragColor = vec4(col, vColor.a);
+      }
+    `;
+
+    const vs = this.compileShader(gl.VERTEX_SHADER, vsSource);
+    const fs = this.compileShader(gl.FRAGMENT_SHADER, fsSource);
+    this.prog = gl.createProgram();
+    gl.attachShader(this.prog, vs);
+    gl.attachShader(this.prog, fs);
+    gl.linkProgram(this.prog);
+    gl.useProgram(this.prog);
+
+    this.attribs = {
+      aPos: gl.getAttribLocation(this.prog, 'aPos'),
+      aNorm: gl.getAttribLocation(this.prog, 'aNorm'),
+      aColor: gl.getAttribLocation(this.prog, 'aColor')
+    };
+    this.uniforms = {
+      uVP: gl.getUniformLocation(this.prog, 'uVP'),
+      uTime: gl.getUniformLocation(this.prog, 'uTime'),
+      uIsWater: gl.getUniformLocation(this.prog, 'uIsWater')
+    };
+
+    this.terrainBuf = gl.createBuffer();
+    this.waterBuf = gl.createBuffer();
+    this.dynBuf = gl.createBuffer();
+
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+  },
+
+  compileShader(type, src) {
+    const gl = this.gl;
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  },
+
+  resize() {
+    if (!this.canvas || !this.gl) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.canvas.width = Math.max(1, Math.floor(window.innerWidth * dpr));
+    this.canvas.height = Math.max(1, Math.floor(window.innerHeight * dpr));
+    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+  },
+
+  // Push a single triangle (3 vertices * 10 floats: x,y,z, nx,ny,nz, r,g,b,a)
+  pushTri(arr, p1, p2, p3, c1, c2, c3) {
+    const ux = p2[0] - p1[0], uy = p2[1] - p1[1], uz = p2[2] - p1[2];
+    const vx = p3[0] - p1[0], vy = p3[1] - p1[1], vz = p3[2] - p1[2];
+    let nx = uy * vz - uz * vy;
+    let ny = uz * vx - ux * vz;
+    let nz = ux * vy - uy * vx;
+    const len = Math.hypot(nx, ny, nz) || 1;
+    nx /= len; ny /= len; nz /= len;
+    const pts = [p1, p2, p3];
+    const cols = [c1, c2 || c1, c3 || c1];
+    for (let i = 0; i < 3; i++) {
+      const p = pts[i], c = cols[i];
+      arr.push(p[0], p[1], p[2], nx, ny, nz, c[0], c[1], c[2], c[3] !== undefined ? c[3] : 1.0);
+    }
+  },
+
+  pushBox(arr, cx, cy, cz, sx, sy, sz, color, topColor = null) {
+    const x0 = cx - sx * 0.5, x1 = cx + sx * 0.5;
+    const y0 = cy,            y1 = cy + sy;
+    const z0 = cz - sz * 0.5, z1 = cz + sz * 0.5;
+    const tc = topColor || color;
+    // Top
+    this.pushTri(arr, [x0,y1,z0], [x0,y1,z1], [x1,y1,z1], tc);
+    this.pushTri(arr, [x0,y1,z0], [x1,y1,z1], [x1,y1,z0], tc);
+    // Front (+z)
+    this.pushTri(arr, [x0,y1,z1], [x0,y0,z1], [x1,y0,z1], color);
+    this.pushTri(arr, [x0,y1,z1], [x1,y0,z1], [x1,y1,z1], color);
+    // Back (-z)
+    this.pushTri(arr, [x1,y1,z0], [x1,y0,z0], [x0,y0,z0], color);
+    this.pushTri(arr, [x1,y1,z0], [x0,y0,z0], [x0,y1,z0], color);
+    // Left (-x)
+    this.pushTri(arr, [x0,y1,z0], [x0,y0,z0], [x0,y0,z1], color);
+    this.pushTri(arr, [x0,y1,z0], [x0,y0,z1], [x0,y1,z1], color);
+    // Right (+x)
+    this.pushTri(arr, [x1,y1,z1], [x1,y0,z1], [x1,y0,z0], color);
+    this.pushTri(arr, [x1,y1,z1], [x1,y0,z0], [x1,y1,z0], color);
+  },
+
+  cellColor(c) {
+    if (!c) return [0.76, 0.49, 0.28, 1];
+    if (c.type === CELL_ROCK) return [0.42, 0.44, 0.48, 1];
+    if (c.type === CELL_CRACK || c.type === CELL_OPEN_PIT) return [0.14, 0.08, 0.05, 1];
+    if (c.type === CELL_SAND) return [0.90, 0.74, 0.42, 1];
+    if (c.type === CELL_HIDDEN_PIT) return [0.85, 0.80, 0.70, 1];
+    if (c.type === CELL_FAULT) return [0.72, 0.30, 0.22, 1];
+
+    // Base sun-baked clay color
+    let r = 0.78, g = 0.51, b = 0.29;
+    // Carved channel earth is darker, richer brown
+    if (c.dugAmount > 0.05) {
+      const t = Math.min(1, c.dugAmount / 0.65);
+      r = r * (1 - t) + 0.48 * t;
+      g = g * (1 - t) + 0.31 * t;
+      b = b * (1 - t) + 0.17 * t;
+    }
+    // Raised wall is pale sun-dried stone/earth
+    if (c.wallAmount > 0.05) {
+      const t = Math.min(1, c.wallAmount / 0.85);
+      r = r * (1 - t) + 0.86 * t;
+      g = g * (1 - t) + 0.69 * t;
+      b = b * (1 - t) + 0.46 * t;
+    }
+    // Wetness darkens soil slightly
+    if (c.wetness > 0.01) {
+      const w = c.wetness * 0.22;
+      r *= (1 - w);
+      g *= (1 - w * 0.7);
+      b *= (1 - w * 0.5);
+    }
+    // Greenness from saved fields / village bloom
+    if (c.greenness > 0.01) {
+      const gr = Math.min(1, c.greenness);
+      r = r * (1 - gr) + 0.24 * gr;
+      g = g * (1 - gr) + 0.74 * gr;
+      b = b * (1 - gr) + 0.32 * gr;
+    }
+    return [r, g, b, 1.0];
+  },
+
+  rebuildTerrainMesh() {
+    const gl = this.gl;
+    if (!gl) return;
+    const verts = [];
+    const w = World.gridW, h = World.gridH;
+
+    for (let z = 0; z < h - 1; z++) {
+      for (let x = 0; x < w - 1; x++) {
+        const c00 = World.cellAt(x, z);
+        const c10 = World.cellAt(x + 1, z);
+        const c01 = World.cellAt(x, z + 1);
+        const c11 = World.cellAt(x + 1, z + 1);
+
+        const p00 = [x + 0.5, c00.height, z + 0.5];
+        const p10 = [x + 1.5, c10.height, z + 0.5];
+        const p01 = [x + 0.5, c01.height, z + 1.5];
+        const p11 = [x + 1.5, c11.height, z + 1.5];
+
+        const col00 = this.cellColor(c00);
+        const col10 = this.cellColor(c10);
+        const col01 = this.cellColor(c01);
+        const col11 = this.cellColor(c11);
+
+        this.pushTri(verts, p00, p01, p11, col00, col01, col11);
+        this.pushTri(verts, p00, p11, p10, col00, col11, col10);
+      }
+    }
+
+    const data = new Float32Array(verts);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.terrainBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+    this.terrainVertCount = verts.length / 10;
+    World.meshDirty = false;
+  },
+
+  rebuildWaterMesh() {
+    const gl = this.gl;
+    if (!gl) return;
+    const verts = [];
+    const w = World.gridW, h = World.gridH;
+
+    const cornerWaterY = (gx, gz) => {
+      let sumH = 0, sumW = 0, cnt = 0;
+      for (let dz = -1; dz <= 0; dz++) {
+        for (let dx = -1; dx <= 0; dx++) {
+          const nb = World.cellAt(gx + dx, gz + dz);
+          if (nb) {
+            sumH += nb.height;
+            sumW = Math.max(sumW, nb.water);
+            cnt++;
+          }
+        }
+      }
+      return (sumH / Math.max(1, cnt)) + 0.14 + Math.min(0.45, sumW * 0.28);
+    };
+
+    for (let z = 0; z < h; z++) {
+      for (let x = 0; x < w; x++) {
+        const c = World.cellAt(x, z);
+        if (!c || c.water <= 0.01) continue;
+        const foam = Math.min(1, c.water * 0.45);
+        const col = [0.14 + foam * 0.20, 0.66 + foam * 0.22, 0.96, 0.88];
+        const x0 = x, x1 = x + 1, z0 = z, z1 = z + 1;
+        const y00 = cornerWaterY(x, z);
+        const y10 = cornerWaterY(x + 1, z);
+        const y01 = cornerWaterY(x, z + 1);
+        const y11 = cornerWaterY(x + 1, z + 1);
+        this.pushTri(verts, [x0, y00, z0], [x0, y01, z1], [x1, y11, z1], col);
+        this.pushTri(verts, [x0, y00, z0], [x1, y11, z1], [x1, y10, z0], col);
+      }
+    }
+
+    const data = new Float32Array(verts);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.waterBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+    this.waterVertCount = verts.length / 10;
+    World.waterDirty = false;
+  }
+};
+
+// === PART 4B: 3D PROPS, STAGED SCENES & RENDER FRAME ===
+
+Renderer.buildDynamicProps = function(verts, timeSec) {
+  // 1. Mountain Spring Arch, Gushing Waterfall & Gate at top of village
+  const sp = World.spring;
+  const spY = World.sampleHeight(sp.x, sp.z);
+  const archCol = [0.55, 0.56, 0.58, 1];
+  this.pushBox(verts, sp.x - 0.95, spY, sp.z + 0.3, 0.55, 1.9, 0.7, archCol);
+  this.pushBox(verts, sp.x + 1.95, spY, sp.z + 0.3, 0.55, 1.9, 0.7, archCol);
+  this.pushBox(verts, sp.x + 0.5, spY + 1.65, sp.z + 0.3, 3.5, 0.5, 0.85, archCol);
+  // Gushing blue spring waterfall pouring from the mountain arch into the basin
+  const gushPulse = 0.08 * Math.sin(timeSec * 12.0);
+  this.pushBox(verts, sp.x + 0.5, spY + 0.15, sp.z - 0.1, 1.5 + gushPulse, 1.55, 0.45, [0.22, 0.78, 0.98, 0.92], [0.65, 0.94, 1.0, 0.95]);
+  // White foam crest at base of waterfall
+  this.pushBox(verts, sp.x + 0.5, spY + 0.12, sp.z + 0.25, 1.8 - gushPulse, 0.32, 0.55, [0.78, 0.96, 1.0, 0.9]);
+  // Spring Gate (lifts up when opened, glows cyan-blue if closed so player sees it's clickable)
+  const gateLift = sp.open ? 1.25 : 0.0;
+  const pulse = 0.5 + 0.5 * Math.sin(timeSec * 4.5);
+  const gateCol = sp.open ? [0.35, 0.75, 0.45, 1] : [0.20 + pulse * 0.25, 0.65 + pulse * 0.2, 0.96, 1];
+  this.pushBox(verts, sp.x + 0.5, spY + gateLift, sp.z + 1.15, 2.3, 1.05, 0.24, gateCol);
+
+  // 2. Sluices / Field Drains
+  for (let i = 0; i < World.sluices.length; i++) {
+    const sl = World.sluices[i];
+    const sy = World.sampleHeight(sl.x, sl.z);
+    this.pushBox(verts, sl.x - 0.5, sy, sl.z + 0.5, 0.35, 1.3, 0.4, archCol);
+    this.pushBox(verts, sl.x + 1.5, sy, sl.z + 0.5, 0.35, 1.3, 0.4, archCol);
+    const lift = sl.open ? 0.95 : 0.0;
+    const sCol = sl.open ? [0.32, 0.78, 0.48, 1] : [0.25, 0.68, 0.95, 1];
+    this.pushBox(verts, sl.x + 0.5, sy + lift, sl.z + 0.5, 1.7, 0.9, 0.22, sCol);
+  }
+
+  // 3. Small Stones (damming/deflecting stones)
+  for (let i = 0; i < World.stones.length; i++) {
+    const st = World.stones[i];
+    const c = World.cellAt(st.x, st.z);
+    const baseH = c ? (c.baseHeight + c.wallAmount - c.dugAmount) : 0;
+    this.pushBox(verts, st.x + 0.5, baseH, st.z + 0.5, 0.82, 0.68, 0.82, [0.60, 0.62, 0.65, 1], [0.72, 0.74, 0.77, 1]);
+  }
+
+  // 4. Heavy Boulders (multi-tiered 3D rock blocks that roll downhill)
+  for (let i = 0; i < World.boulders.length; i++) {
+    const b = World.boulders[i];
+    const by = World.sampleHeight(b.x, b.z);
+    const r = b.r * 1.45;
+    const bCol = [0.46, 0.42, 0.38, 1];
+    const bTop = [0.58, 0.53, 0.48, 1];
+    const bob = Math.abs(Math.sin(b.rotX + b.rotZ)) * 0.08;
+    this.pushBox(verts, b.x, by + bob, b.z, r, r * 0.95, r, bCol, bTop);
+    this.pushBox(verts, b.x, by + r * 0.15 + bob, b.z, r * 1.18, r * 0.65, r * 0.82, bCol, bTop);
+  }
+
+  // 5. Fields & Growing 3D Crops
+  for (let i = 0; i < World.fields.length; i++) {
+    const f = World.fields[i];
+    const fy = World.sampleHeight(f.x, f.z);
+    const ratio = Math.min(1.0, f.drank / Math.max(1, f.needed));
+    // Wooden border posts around field
+    const postCol = f.saved ? [0.35, 0.82, 0.42, 1] : [0.58, 0.38, 0.20, 1];
+    const rad = f.r;
+    this.pushBox(verts, f.x + 0.5 - rad, fy, f.z + 0.5 - rad, 0.25, 0.65, 0.25, postCol);
+    this.pushBox(verts, f.x + 0.5 + rad, fy, f.z + 0.5 - rad, 0.25, 0.65, 0.25, postCol);
+    this.pushBox(verts, f.x + 0.5 - rad, fy, f.z + 0.5 + rad, 0.25, 0.65, 0.25, postCol);
+    this.pushBox(verts, f.x + 0.5 + rad, fy, f.z + 0.5 + rad, 0.25, 0.65, 0.25, postCol);
+
+    // 3D Crop stalks inside the field: grow taller & turn vibrant green as watered!
+    const cropColor = [
+      0.68 * (1 - ratio) + 0.20 * ratio,
+      0.52 * (1 - ratio) + 0.86 * ratio,
+      0.24 * (1 - ratio) + 0.32 * ratio,
+      1.0
+    ];
+    const cropHeight = 0.22 + ratio * 0.88;
+    for (let dz = -1; dz <= 1; dz++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const cx = f.x + 0.5 + dx * 1.1;
+        const cz = f.z + 0.5 + dz * 1.1;
+        const cy = World.sampleHeight(cx, cz);
+        this.pushBox(verts, cx, cy, cz, 0.32, cropHeight, 0.32, cropColor);
+      }
+    }
+  }
+
+  // 6. Sun-Baked Village Adobe Houses & Trees
+  for (let i = 0; i < World.houses.length; i++) {
+    const h = World.houses[i];
+    const hy = World.sampleHeight(h.x, h.z);
+    // Adobe walls
+    this.pushBox(verts, h.x + 0.5, hy, h.z + 0.5, 1.65, 1.25, 1.65, [0.85, 0.68, 0.50, 1]);
+    // Terracotta roof
+    this.pushBox(verts, h.x + 0.5, hy + 1.25, h.z + 0.5, 1.85, 0.42, 1.85, [0.74, 0.32, 0.20, 1]);
+    // Village tree beside house (turns lush green when village is saved or during ending scene!)
+    const isLush = World.villageSaved || GAME_STATE.screen === 'ending';
+    this.pushBox(verts, h.x + 1.7, hy, h.z + 0.5, 0.26, 0.9, 0.26, [0.45, 0.28, 0.15, 1]);
+    const leafCol = isLush ? [0.22, 0.78, 0.34, 1] : [0.62, 0.46, 0.26, 1];
+    this.pushBox(verts, h.x + 1.7, hy + 0.85, h.z + 0.5, 0.95, 0.85, 0.95, leafCol);
+  }
+
+  // 7. 3D Cursor Highlight Ring in Play mode
+  if (GAME_STATE.screen === 'play' && World.inBounds(GAME_STATE.cursorGridX, GAME_STATE.cursorGridZ)) {
+    const gx = GAME_STATE.cursorGridX;
+    const gz = GAME_STATE.cursorGridZ;
+    const cy = World.sampleHeight(gx, gz) + 0.12;
+    const curCol = GAME_STATE.shiftHeld
+      ? [1.0, 0.88, 0.35, 0.9]
+      : (GAME_STATE.carriedStone ? [0.45, 0.85, 1.0, 0.9] : [1.0, 0.58, 0.22, 0.9]);
+    const s = 1.15;
+    const t = 0.14;
+    this.pushBox(verts, gx + 0.5, cy, gz + 0.5 - s*0.5, s, 0.12, t, curCol);
+    this.pushBox(verts, gx + 0.5, cy, gz + 0.5 + s*0.5, s, 0.12, t, curCol);
+    this.pushBox(verts, gx + 0.5 - s*0.5, cy, gz + 0.5, t, 0.12, s, curCol);
+    this.pushBox(verts, gx + 0.5 + s*0.5, cy, gz + 0.5, t, 0.12, s, curCol);
+  }
+
+  // 8. 3D Particles (splash, earth clods, emerald bloom)
+  for (let i = 0; i < GAME_STATE.particles.length; i++) {
+    const p = GAME_STATE.particles[i];
+    const sz = p.size * (p.life / p.maxLife);
+    this.pushBox(verts, p.x, p.y, p.z, sz, sz, sz, [p.color[0], p.color[1], p.color[2], 0.95]);
+  }
+};
+
+Renderer.updateCamera = function(timeSec) {
+  const w = World.gridW;
+  const h = World.gridH;
+  const cx = w * 0.5;
+  const cz = h * 0.5;
+
+  if (GAME_STATE.screen === 'intro') {
+    // Staged 3D drought scene over the dried-up farm looking across parched fields toward the hills
+    const t = GAME_STATE.introTimer;
+    const sweep = Math.sin(t * 0.35) * 6.5;
+    this.camEye[0] = cx + sweep;
+    this.camEye[1] = 17.5 + Math.sin(t * 0.25) * 1.5;
+    this.camEye[2] = h + 9.0;
+    this.camCenter[0] = cx - sweep * 0.2;
+    this.camCenter[1] = 2.0;
+    this.camCenter[2] = cz + 1.5;
+  } else if (GAME_STATE.screen === 'ending') {
+    // Staged 3D watershed finale: sweeping overview as the entire river valley turns emerald green
+    const angle = timeSec * 0.28;
+    this.camEye[0] = cx + Math.sin(angle) * 10;
+    this.camEye[1] = 28.0 + Math.sin(timeSec * 0.4) * 2.0;
+    this.camEye[2] = cz + 23 + Math.cos(angle) * 4;
+    this.camCenter[0] = cx;
+    this.camCenter[1] = 2.2;
+    this.camCenter[2] = cz;
+  } else {
+    // Top-down angled village view framing both the gushing spring at top and fields at far end
+    GAME_STATE.cameraZoom += (GAME_STATE.cameraTargetZoom - GAME_STATE.cameraZoom) * 0.14;
+    const zoom = GAME_STATE.cameraZoom;
+    const shakeX = GAME_STATE.screenShake > 0 ? (Math.random() - 0.5) * GAME_STATE.screenShake * 1.2 : 0;
+    const shakeZ = GAME_STATE.screenShake > 0 ? (Math.random() - 0.5) * GAME_STATE.screenShake * 1.2 : 0;
+    const baseDist = Math.max(w, h) * 1.26 * zoom;
+    this.camEye[0] = cx + shakeX;
+    this.camEye[1] = baseDist * 1.05;
+    this.camEye[2] = cz + baseDist * 0.62 + shakeZ;
+    this.camCenter[0] = cx + shakeX;
+    this.camCenter[1] = 2.4;
+    this.camCenter[2] = cz + 0.5 + shakeZ;
+  }
+
+  const aspect = this.canvas.width / Math.max(1, this.canvas.height);
+  Mat4.perspective(this.projMat, 45 * Math.PI / 180, aspect, 0.5, 160.0);
+  Mat4.lookAt(this.viewMat, this.camEye, this.camCenter, [0, 1, 0]);
+  Mat4.multiply(this.vpMat, this.projMat, this.viewMat);
+  Mat4.invert(this.invVpMat, this.vpMat);
+};
+
+Renderer.bindAndDrawBuffer = function(buf, vertCount, isWater = 0) {
+  if (vertCount <= 0) return;
+  const gl = this.gl;
+  gl.uniform1i(this.uniforms.uIsWater, isWater);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  const stride = 10 * 4;
+  gl.enableVertexAttribArray(this.attribs.aPos);
+  gl.vertexAttribPointer(this.attribs.aPos, 3, gl.FLOAT, false, stride, 0);
+  gl.enableVertexAttribArray(this.attribs.aNorm);
+  gl.vertexAttribPointer(this.attribs.aNorm, 3, gl.FLOAT, false, stride, 3 * 4);
+  gl.enableVertexAttribArray(this.attribs.aColor);
+  gl.vertexAttribPointer(this.attribs.aColor, 4, gl.FLOAT, false, stride, 6 * 4);
+  gl.drawArrays(gl.TRIANGLES, 0, vertCount);
+};
+
+Renderer.render = function(timeSec) {
+  const gl = this.gl;
+  if (!gl) return;
+
+  if (World.meshDirty) this.rebuildTerrainMesh();
+  if (World.waterDirty) this.rebuildWaterMesh();
+
+  this.updateCamera(timeSec);
+
+  // Warm sun-baked sky background (or vibrant clear sky during ending scene)
+  if (GAME_STATE.screen === 'ending') {
+    gl.clearColor(0.24, 0.52, 0.72, 1.0);
+  } else {
+    gl.clearColor(0.26, 0.16, 0.09, 1.0);
+  }
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  gl.useProgram(this.prog);
+  gl.uniformMatrix4fv(this.uniforms.uVP, false, this.vpMat);
+  gl.uniform1f(this.uniforms.uTime, timeSec);
+
+  // 1. Draw Terrain
+  this.bindAndDrawBuffer(this.terrainBuf, this.terrainVertCount, 0);
+
+  // 2. Build & Draw 3D Props (Spring, Sluices, Stones, Boulders, Fields, Crops, Houses, Cursor, Particles)
+  const propVerts = [];
+  this.buildDynamicProps(propVerts, timeSec);
+  if (propVerts.length > 0) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.dynBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(propVerts), gl.STREAM_DRAW);
+    this.bindAndDrawBuffer(this.dynBuf, propVerts.length / 10, 0);
+  }
+
+  // 3. Draw Translucent Shimmering Water Surface
+  this.bindAndDrawBuffer(this.waterBuf, this.waterVertCount, 1);
+};
+
+
+// === PART 5: INPUT, UI, HOW-TO-PLAY STILLS & MAIN LOOP ===
+
+function setScreen(scr) {
+  if (GAME_STATE.screen === 'menu' || GAME_STATE.screen === 'pause') {
+    GAME_STATE.prevMenuScreen = GAME_STATE.screen;
+  }
+  GAME_STATE.screen = scr;
+  const screens = ['intro', 'menu', 'howto', 'settings', 'pause', 'fail', 'between', 'ending'];
+  screens.forEach(s => {
+    const el = document.getElementById('screen-' + s);
+    if (el) el.classList.toggle('active', s === scr);
+  });
+  const hud = document.getElementById('hud');
+  if (hud) hud.classList.toggle('active', scr === 'play');
+
+  AudioEngine.updateSoundState();
+  if (scr !== 'play') AudioEngine.setWaterFlowLevel(0);
+
+  if (scr === 'menu') renderMenuVillageGrid();
+  if (scr === 'howto') renderHowToPlayCards();
+  if (scr === 'between') drawBetweenValleyMap();
+  if (scr === 'ending') setupEndingWatershedScene();
+}
+
+function renderMenuVillageGrid() {
+  const grid = document.getElementById('menu-village-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  VILLAGES.forEach((v, idx) => {
+    const saved = GAME_STATE.savedVillages[idx];
+    const card = document.createElement('div');
+    card.className = 'village-card' + (saved ? ' saved' : '');
+    card.innerHTML = `
+      <div class="v-num">Village ${v.id} ${saved ? '• SAVED' : ''}</div>
+      <div class="v-name">${v.name.replace(/^\d+\.\s*/, '')}</div>
+      <div class="v-desc">${v.desc}</div>
+    `;
+    card.addEventListener('click', () => {
+      AudioEngine.resume();
+      startVillage(idx);
+    });
+    grid.appendChild(card);
+  });
+}
+
+function startVillage(idx) {
+  World.loadVillage(idx);
+  setScreen('play');
+  updateHUD();
+}
+
+function triggerLevelFail(reason) {
+  if (GAME_STATE.screen === 'fail') return;
+  GAME_STATE.lastFailReason = reason;
+  const el = document.getElementById('fail-reason-text');
+  if (el) el.textContent = reason;
+  AudioEngine.sfxLevelFail();
+  setScreen('fail');
+}
+
+function completeCurrentVillage() {
+  const idx = GAME_STATE.currentVillageIdx;
+  if (idx >= VILLAGES.length - 1) {
+    // Last village down the valley is saved -> play the Ending Scene!
+    GAME_STATE.endingTimer = 0;
+    setScreen('ending');
+  } else {
+    GAME_STATE.betweenTimer = 0;
+    const curV = VILLAGES[idx];
+    const nextV = VILLAGES[idx + 1];
+    const sumEl = document.getElementById('between-summary-text');
+    if (sumEl) {
+      sumEl.textContent = `${curV.name} blooms emerald green! Follow the river down the valley toward ${nextV.name}.`;
+    }
+    const bonEl = document.getElementById('between-bonus-text');
+    if (bonEl) {
+      bonEl.textContent = `Clean spring carried forward: +${GAME_STATE.carriedSpringBonus}% Water Supply for ${nextV.name}!`;
+    }
+    setScreen('between');
+  }
+}
+
+function setupEndingWatershedScene() {
+  // Load the grand delta village and animate the entire valley watershed turning green
+  World.loadVillage(VILLAGES.length - 1);
+  World.spring.open = true;
+  World.villageSaved = true;
+  for (let i = 0; i < World.cells.length; i++) {
+    const c = World.cells[i];
+    if (c.dugAmount > 0.1 || Math.abs(c.x - World.spring.x) <= 2) {
+      c.water = 0.45;
+    }
+    if (c.type !== CELL_ROCK) {
+      c.greenness = 0.25;
+    }
+  }
+  World.fields.forEach(f => { f.drank = f.needed; f.saved = true; });
+  World.meshDirty = true;
+  World.waterDirty = true;
+}
+
+function updateHUD() {
+  const def = VILLAGES[GAME_STATE.currentVillageIdx] || VILLAGES[0];
+  const nameEl = document.getElementById('hud-village-name');
+  const subEl = document.getElementById('hud-village-sub');
+  const banEl = document.getElementById('hud-banner');
+  if (nameEl) nameEl.textContent = def.name;
+  if (subEl) {
+    const bonusStr = GAME_STATE.carriedSpringBonus > 0 ? ` • Spring Bonus +${GAME_STATE.carriedSpringBonus}%` : '';
+    subEl.textContent = def.region + bonusStr;
+  }
+  if (banEl) banEl.textContent = def.banner;
+
+  // Hunger meter
+  const hPct = Math.max(0, Math.min(100, Math.round((World.hungerLeft / Math.max(1, World.hungerMax)) * 100)));
+  const hText = document.getElementById('hud-hunger-text');
+  const hBar = document.getElementById('hud-hunger-bar');
+  if (hText) hText.textContent = `${Math.ceil(World.hungerLeft)}s (${hPct}%)`;
+  if (hBar) hBar.style.width = `${hPct}%`;
+
+  // Water supply
+  const wPct = Math.max(0, Math.min(100, Math.round((World.waterSupplyLeft / Math.max(1, World.waterSupplyMax)) * 100)));
+  const wText = document.getElementById('hud-water-text');
+  const wBar = document.getElementById('hud-water-bar');
+  if (wText) wText.textContent = `${wPct}%`;
+  if (wBar) wBar.style.width = `${wPct}%`;
+
+  // Fields status
+  const fList = document.getElementById('hud-fields-list');
+  if (fList) {
+    fList.innerHTML = '';
+    World.fields.forEach(f => {
+      const pct = Math.min(100, Math.round((f.drank / Math.max(1, f.needed)) * 100));
+      const badge = document.createElement('div');
+      badge.className = 'field-badge' + (f.saved ? ' watered' : '');
+      const status = f.saved ? 'WATERED ✓' : (f.receivingFlow ? `${pct}% (Drinking)` : `${pct}% (Dry)`);
+      badge.textContent = `${f.name}: ${status}`;
+      fList.appendChild(badge);
+    });
+  }
+
+  // Tool hint & cursor info
+  const modeEl = document.getElementById('hud-tool-mode');
+  if (modeEl) {
+    if (GAME_STATE.shiftHeld) {
+      modeEl.textContent = 'NEXT DRAG: RAISE WALL (SHIFT)';
+      modeEl.style.background = '#c89628';
+    } else {
+      modeEl.textContent = 'NEXT DRAG: DIG CHANNEL';
+      modeEl.style.background = '#b86d29';
+    }
+  }
+  const stoneEl = document.getElementById('hud-stone-carried');
+  if (stoneEl) {
+    stoneEl.textContent = GAME_STATE.carriedStone ? '[Carrying River Stone — R-Click to Drop]' : '';
+  }
+  const curEl = document.getElementById('hud-cursor-info');
+  if (curEl) {
+    curEl.textContent = `Cursor: ${GAME_STATE.cursorHoverLabel}`;
+  }
+
+  // Open Spring button state
+  const spBtn = document.getElementById('btn-hud-open-spring');
+  if (spBtn) {
+    spBtn.textContent = World.spring.open ? 'Spring Flowing' : 'Open Spring';
+    spBtn.disabled = World.spring.open;
+    spBtn.style.opacity = World.spring.open ? '0.6' : '1.0';
+  }
+}
+
+function renderHowToPlayCards() {
+  const grid = document.getElementById('howto-grid');
+  if (!grid || grid.children.length > 0) return;
+
+  const items = [
+    {
+      title: "1. Digging Channels (Left-Drag)",
+      desc: "Drag with the Left Mouse Button across soft brown earth to carve downhill channels from the mountain spring to each field.",
+      draw(ctx, w, h) {
+        ctx.fillStyle = '#b9743c'; ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#6b4223'; ctx.fillRect(w*0.2, h*0.35, w*0.6, h*0.3);
+        ctx.fillStyle = '#2fa8ec'; ctx.fillRect(w*0.22, h*0.41, w*0.45, h*0.18);
+        ctx.strokeStyle = '#ffdf9a'; ctx.lineWidth = 2;
+        ctx.strokeRect(w*0.6, h*0.32, 26, 34);
+      }
+    },
+    {
+      title: "2. Raising Walls (Shift + Drag)",
+      desc: "Hold SHIFT while dragging with the Left Mouse Button to raise an earthen wall that dams leaks or steers water along steep cliffs.",
+      draw(ctx, w, h) {
+        ctx.fillStyle = '#b9743c'; ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#2fa8ec'; ctx.fillRect(w*0.15, h*0.28, w*0.65, h*0.24);
+        ctx.fillStyle = '#e0b87c'; ctx.fillRect(w*0.15, h*0.54, w*0.65, 14);
+        ctx.fillStyle = '#8b5e36'; ctx.fillRect(w*0.15, h*0.68, w*0.65, 6);
+      }
+    },
+    {
+      title: "3. Spring & Sluice Gates (Click)",
+      desc: "Click on the Mountain Spring gate, a Field Drain Sluice, or an old rubble wall to open the path and release water downhill.",
+      draw(ctx, w, h) {
+        ctx.fillStyle = '#b9743c'; ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#6b4223'; ctx.fillRect(w*0.35, 0, w*0.3, h);
+        ctx.fillStyle = '#2596d4'; ctx.fillRect(w*0.35, 0, w*0.3, h*0.45);
+        ctx.fillStyle = '#7c8288'; ctx.fillRect(w*0.30, h*0.42, 12, 26);
+        ctx.fillRect(w*0.70 - 12, h*0.42, 12, 26);
+        ctx.fillStyle = '#4ad2ff'; ctx.fillRect(w*0.35, h*0.45, w*0.30, 12);
+      }
+    },
+    {
+      title: "4. River Stones (Right-Click)",
+      desc: "Right-click a small river stone to pick it up, then Right-click again to drop it to dam a side gulley or split a stream between two fields.",
+      draw(ctx, w, h) {
+        ctx.fillStyle = '#b9743c'; ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#2fa8ec';
+        ctx.fillRect(w*0.15, h*0.38, w*0.35, 24);
+        ctx.fillRect(w*0.5, h*0.18, w*0.35, 18);
+        ctx.fillRect(w*0.5, h*0.62, w*0.35, 18);
+        ctx.fillStyle = '#9aa0a8';
+        ctx.beginPath(); ctx.arc(w*0.52, h*0.5, 15, 0, Math.PI*2); ctx.fill();
+      }
+    },
+    {
+      title: "5. Heavy Boulders & Rock Faces",
+      desc: "Dark Granite cannot be dug. Heavy Boulders roll down steep slopes and crush dug channels! Right-click boulders to nudge them or click to clear.",
+      draw(ctx, w, h) {
+        ctx.fillStyle = '#b9743c'; ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#555960'; ctx.fillRect(18, 16, 56, 76);
+        ctx.fillStyle = '#6b4223'; ctx.fillRect(w*0.45, 10, 32, h - 20);
+        ctx.fillStyle = '#73685d';
+        ctx.beginPath(); ctx.arc(w*0.52, h*0.48, 22, 0, Math.PI*2); ctx.fill();
+      }
+    },
+    {
+      title: "6. Traps, Hunger & Water Supply",
+      desc: "Cracks, Thirsty Sand, and Hidden Pits waste water. Fill every field so crops turn green before the Hunger Meter or Water Supply runs out!",
+      draw(ctx, w, h) {
+        ctx.fillStyle = '#b9743c'; ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#e5bd68'; ctx.fillRect(18, 22, 68, 66);
+        ctx.fillStyle = '#1e1109'; ctx.fillRect(102, 36, 42, 18);
+        ctx.fillStyle = '#33c452'; ctx.fillRect(w - 78, 20, 60, 68);
+      }
+    }
+  ];
+
+  items.forEach(it => {
+    const card = document.createElement('div');
+    card.className = 'howto-card';
+    const cvs = document.createElement('canvas');
+    cvs.width = 240; cvs.height = 110;
+    const ctx = cvs.getContext('2d');
+    it.draw(ctx, 240, 110);
+    const h3 = document.createElement('h3');
+    h3.textContent = it.title;
+    const p = document.createElement('p');
+    p.textContent = it.desc;
+    card.appendChild(cvs);
+    card.appendChild(h3);
+    card.appendChild(p);
+    grid.appendChild(card);
+  });
+}
+
+function drawBetweenValleyMap() {
+  const cvs = document.getElementById('valley-map-canvas');
+  if (!cvs) return;
+  const ctx = cvs.getContext('2d');
+  const w = cvs.width, h = cvs.height;
+
+  // Sun-baked valley gradient from high mountain peaks (left) to lower river delta (right)
+  const bg = ctx.createLinearGradient(0, 0, w, h);
+  bg.addColorStop(0, '#4a311e');
+  bg.addColorStop(1, '#2a1b10');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+
+  // Draw winding watershed river path across all 12 villages
+  const pts = VILLAGES.map((v, i) => ({
+    x: 38 + (i / (VILLAGES.length - 1)) * (w - 76),
+    y: 44 + Math.sin(i * 0.95) * 32 + (i / (VILLAGES.length - 1)) * (h - 96)
+  }));
+
+  // Dry riverbed
+  ctx.strokeStyle = '#6c492d';
+  ctx.lineWidth = 10;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  pts.forEach((p, i) => { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+  ctx.stroke();
+
+  // Flowing blue water up to the next village
+  const curIdx = GAME_STATE.currentVillageIdx;
+  const reachIdx = Math.min(VILLAGES.length - 1, curIdx + 1);
+  ctx.strokeStyle = '#38b6ff';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  for (let i = 0; i <= reachIdx; i++) {
+    if (i === 0) ctx.moveTo(pts[i].x, pts[i].y);
+    else ctx.lineTo(pts[i].x, pts[i].y);
+  }
+  ctx.stroke();
+
+  // Draw village nodes
+  pts.forEach((p, i) => {
+    const saved = GAME_STATE.savedVillages[i] || i <= curIdx;
+    const isNext = i === curIdx + 1;
+    ctx.fillStyle = saved ? '#42d962' : (isNext ? '#ffd166' : '#8d6342');
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, isNext ? 11 : 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#1b1008';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = saved ? '#baffc8' : (isNext ? '#ffe8a3' : '#cfa882');
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`V${i + 1}`, p.x, p.y - 14);
+  });
+}
+
+// === PART 5B: 3D RAYCASTING, INPUT EVENTS & MAIN LOOP ===
+
+function unprojectPoint(nx, ny, nz, invVP) {
+  const x = invVP[0]*nx + invVP[4]*ny + invVP[8]*nz  + invVP[12];
+  const y = invVP[1]*nx + invVP[5]*ny + invVP[9]*nz  + invVP[13];
+  const z = invVP[2]*nx + invVP[6]*ny + invVP[10]*nz + invVP[14];
+  const w = invVP[3]*nx + invVP[7]*ny + invVP[11]*nz + invVP[15];
+  if (Math.abs(w) < 1e-6) return [0, 0, 0];
+  return [x / w, y / w, z / w];
+}
+
+function updateCursorFromMouse(clientX, clientY) {
+  const rect = Renderer.canvas.getBoundingClientRect();
+  const nx = ((clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1;
+  const ny = 1 - ((clientY - rect.top) / Math.max(1, rect.height)) * 2;
+  const pNear = unprojectPoint(nx, ny, -1, Renderer.invVpMat);
+  const pFar  = unprojectPoint(nx, ny,  1, Renderer.invVpMat);
+  let dx = pFar[0] - pNear[0];
+  let dy = pFar[1] - pNear[1];
+  let dz = pFar[2] - pNear[2];
+  const len = Math.hypot(dx, dy, dz) || 1;
+  dx /= len; dy /= len; dz /= len;
+
+  // Ray-march against the 3D terrain heightfield
+  let hitX = -1, hitZ = -1;
+  for (let t = 2.0; t < 95.0; t += 0.45) {
+    const rx = pNear[0] + dx * t;
+    const ry = pNear[1] + dy * t;
+    const rz = pNear[2] + dz * t;
+    if (rx >= 0 && rx < World.gridW && rz >= 0 && rz < World.gridH) {
+      const th = World.sampleHeight(rx, rz);
+      if (ry <= th + 0.35) {
+        hitX = Math.floor(rx);
+        hitZ = Math.floor(rz);
+        GAME_STATE.cursorWorldX = rx;
+        GAME_STATE.cursorWorldY = th;
+        GAME_STATE.cursorWorldZ = rz;
+        break;
+      }
+    }
+  }
+
+  GAME_STATE.cursorGridX = hitX;
+  GAME_STATE.cursorGridZ = hitZ;
+
+  // Determine hover description for HUD tool hint
+  if (!World.inBounds(hitX, hitZ)) {
+    GAME_STATE.cursorHoverLabel = 'Valley Rim';
+  } else {
+    const c = World.cellAt(hitX, hitZ);
+    if (Math.hypot(hitX - World.spring.x, hitZ - World.spring.z) <= 2.2) {
+      GAME_STATE.cursorHoverLabel = World.spring.open ? 'Mountain Spring (Flowing)' : 'Mountain Spring Gate (Click to Open)';
+    } else if (World.sluices.some(s => Math.hypot(hitX - s.x, hitZ - s.z) <= 1.8)) {
+      GAME_STATE.cursorHoverLabel = 'Sluice Gate / Field Drain (Click to Open/Close)';
+    } else if (World.boulders.some(b => Math.hypot((hitX + 0.5) - b.x, (hitZ + 0.5) - b.z) <= b.r + 0.9)) {
+      GAME_STATE.cursorHoverLabel = 'Heavy Boulder (R-Click to Nudge / Click to Clear)';
+    } else if (World.stones.some(s => Math.hypot(hitX - s.x, hitZ - s.z) <= 1.2)) {
+      GAME_STATE.cursorHoverLabel = 'Small Stone (R-Click to Pick Up / Click to Clear)';
+    } else if (c.wallAmount > 0.12) {
+      GAME_STATE.cursorHoverLabel = 'Raised Wall (Click to Clear)';
+    } else if (c.type === CELL_ROCK) {
+      GAME_STATE.cursorHoverLabel = 'Granite Rock Face (Cannot Dig)';
+    } else if (c.type === CELL_SAND) {
+      GAME_STATE.cursorHoverLabel = 'Thirsty Sand (Soaks Water Quickly)';
+    } else if (c.type === CELL_CRACK || c.type === CELL_OPEN_PIT) {
+      GAME_STATE.cursorHoverLabel = 'Deep Fissure / Pit (Swallows Water)';
+    } else if (c.type === CELL_HIDDEN_PIT) {
+      GAME_STATE.cursorHoverLabel = 'Pale Karst Crust (Hidden Pit Under Water)';
+    } else if (c.type === CELL_FAULT) {
+      GAME_STATE.cursorHoverLabel = 'Fault Seam (Collapses Under Raised Walls)';
+    } else if (World.fields.some(f => Math.hypot(hitX - f.x, hitZ - f.z) <= f.r)) {
+      GAME_STATE.cursorHoverLabel = 'Village Cropland Field';
+    } else {
+      GAME_STATE.cursorHoverLabel = c.dugAmount > 0.15 ? 'Carved Channel' : 'Soft Sun-Baked Earth';
+    }
+  }
+}
+
+let isLeftDragging = false;
+let dragHandledObjectClick = false;
+let lastShovelX = -1, lastShovelZ = -1;
+
+function initInputAndUI() {
+  const cvs = Renderer.canvas;
+
+  cvs.addEventListener('mousemove', e => {
+    updateCursorFromMouse(e.clientX, e.clientY);
+    if (GAME_STATE.screen === 'play' && isLeftDragging && !dragHandledObjectClick) {
+      const gx = GAME_STATE.cursorGridX;
+      const gz = GAME_STATE.cursorGridZ;
+      if (World.inBounds(gx, gz) && (gx !== lastShovelX || gz !== lastShovelZ)) {
+        // Interpolate along drag stroke so fast drags carve an unbroken channel
+        if (lastShovelX >= 0 && lastShovelZ >= 0) {
+          const steps = Math.max(Math.abs(gx - lastShovelX), Math.abs(gz - lastShovelZ), 1);
+          for (let i = 1; i <= steps; i++) {
+            const ix = Math.round(lastShovelX + (gx - lastShovelX) * (i / steps));
+            const iz = Math.round(lastShovelZ + (gz - lastShovelZ) * (i / steps));
+            World.shovelAt(ix, iz, GAME_STATE.shiftHeld || e.shiftKey);
+          }
+        } else {
+          World.shovelAt(gx, gz, GAME_STATE.shiftHeld || e.shiftKey);
+        }
+        lastShovelX = gx;
+        lastShovelZ = gz;
+      }
+    }
+    if (GAME_STATE.screen === 'play') updateHUD();
+  });
+
+  cvs.addEventListener('mousedown', e => {
+    AudioEngine.resume();
+    if (GAME_STATE.screen !== 'play') return;
+    updateCursorFromMouse(e.clientX, e.clientY);
+    const gx = GAME_STATE.cursorGridX;
+    const gz = GAME_STATE.cursorGridZ;
+
+    if (e.button === 0) {
+      isLeftDragging = true;
+      lastShovelX = gx;
+      lastShovelZ = gz;
+      // First check if clicking a sluice, spring gate, wall, stone, or boulder
+      if (!e.shiftKey && !GAME_STATE.shiftHeld && World.handleSingleClick(gx, gz)) {
+        dragHandledObjectClick = true;
+      } else {
+        dragHandledObjectClick = false;
+        World.shovelAt(gx, gz, GAME_STATE.shiftHeld || e.shiftKey);
+      }
+    } else if (e.button === 2) {
+      World.handleRightClick(gx, gz);
+    }
+  });
+
+  window.addEventListener('mouseup', e => {
+    if (e.button === 0) {
+      isLeftDragging = false;
+      dragHandledObjectClick = false;
+      lastShovelX = -1;
+      lastShovelZ = -1;
+    }
+  });
+
+  cvs.addEventListener('contextmenu', e => e.preventDefault());
+
+  cvs.addEventListener('wheel', e => {
+    if (GAME_STATE.screen === 'play') {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.1 : -0.1;
+      GAME_STATE.cameraTargetZoom = Math.max(0.55, Math.min(1.5, GAME_STATE.cameraTargetZoom + delta));
+    }
+  }, { passive: false });
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Shift') {
+      GAME_STATE.shiftHeld = true;
+      if (GAME_STATE.screen === 'play') updateHUD();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleEscapeKey();
+    }
+  });
+
+  window.addEventListener('keyup', e => {
+    if (e.key === 'Shift') {
+      GAME_STATE.shiftHeld = false;
+      if (GAME_STATE.screen === 'play') updateHUD();
+    }
+  });
+
+  // UI Button Bindings
+  document.getElementById('btn-skip-intro').addEventListener('click', () => {
+    AudioEngine.resume();
+    setScreen('menu');
+  });
+  document.getElementById('btn-start-game').addEventListener('click', () => {
+    AudioEngine.resume();
+    // Pick first unsaved village or current village
+    const firstUnsaved = GAME_STATE.savedVillages.findIndex(v => !v);
+    startVillage(firstUnsaved >= 0 ? firstUnsaved : 0);
+  });
+  document.getElementById('btn-open-howto').addEventListener('click', () => {
+    AudioEngine.resume();
+    setScreen('howto');
+  });
+  document.getElementById('btn-open-settings').addEventListener('click', () => {
+    AudioEngine.resume();
+    setScreen('settings');
+  });
+  document.getElementById('btn-howto-back').addEventListener('click', () => {
+    setScreen('menu');
+  });
+  document.getElementById('btn-settings-back').addEventListener('click', () => {
+    setScreen(GAME_STATE.prevMenuScreen || 'menu');
+  });
+
+  const toggleSoundFn = () => {
+    GAME_STATE.soundOn = !GAME_STATE.soundOn;
+    AudioEngine.updateSoundState();
+  };
+  document.getElementById('btn-toggle-sound').addEventListener('click', toggleSoundFn);
+  document.getElementById('btn-pause-sound').addEventListener('click', toggleSoundFn);
+
+  document.getElementById('btn-play-ending').addEventListener('click', () => {
+    AudioEngine.resume();
+    GAME_STATE.endingTimer = 0;
+    setScreen('ending');
+  });
+
+  // HUD buttons
+  document.getElementById('btn-hud-open-spring').addEventListener('click', () => {
+    AudioEngine.resume();
+    World.openSpring();
+  });
+  document.getElementById('btn-hud-restart').addEventListener('click', () => {
+    AudioEngine.resume();
+    startVillage(GAME_STATE.currentVillageIdx);
+  });
+  document.getElementById('btn-hud-pause').addEventListener('click', () => {
+    setScreen('pause');
+  });
+
+  // Pause menu buttons
+  document.getElementById('btn-pause-resume').addEventListener('click', () => {
+    setScreen('play');
+  });
+  document.getElementById('btn-pause-restart').addEventListener('click', () => {
+    startVillage(GAME_STATE.currentVillageIdx);
+  });
+  document.getElementById('btn-pause-menu').addEventListener('click', () => {
+    setScreen('menu');
+  });
+
+  // Fail screen buttons
+  document.getElementById('btn-fail-retry').addEventListener('click', () => {
+    startVillage(GAME_STATE.currentVillageIdx);
+  });
+  document.getElementById('btn-fail-menu').addEventListener('click', () => {
+    setScreen('menu');
+  });
+
+  // Between-village buttons
+  document.getElementById('btn-between-next').addEventListener('click', () => {
+    const nextIdx = Math.min(VILLAGES.length - 1, GAME_STATE.currentVillageIdx + 1);
+    startVillage(nextIdx);
+  });
+  document.getElementById('btn-between-menu').addEventListener('click', () => {
+    setScreen('menu');
+  });
+
+  // Ending scene button
+  document.getElementById('btn-ending-menu').addEventListener('click', () => {
+    setScreen('menu');
+  });
+}
+
+function handleEscapeKey() {
+  if (GAME_STATE.screen === 'play') {
+    setScreen('pause');
+  } else if (GAME_STATE.screen === 'pause') {
+    setScreen('play');
+  } else if (GAME_STATE.screen === 'howto' || GAME_STATE.screen === 'settings' || GAME_STATE.screen === 'fail' || GAME_STATE.screen === 'between' || GAME_STATE.screen === 'ending') {
+    setScreen('menu');
+  } else if (GAME_STATE.screen === 'intro') {
+    setScreen('menu');
+  }
+}
+
+// Main Game Loop
+let lastFrameTime = performance.now();
+
+function mainLoop(now) {
+  const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTime) / 1000));
+  lastFrameTime = now;
+
+  // Pause freezes timers, physics, and music completely
+  if (GAME_STATE.screen !== 'pause') {
+    AudioEngine.updateMusic(dt);
+
+    if (GAME_STATE.screen === 'intro') {
+      GAME_STATE.introTimer += dt;
+      if (Math.random() < 0.35) {
+        const rx = 5 + Math.random() * (World.gridW - 10);
+        const rz = 12 + Math.random() * (World.gridH - 15);
+        World.spawnParticles(rx, World.sampleHeight(rx, rz) + 0.3, rz, [0.82, 0.58, 0.34], 1, 1.5);
+      }
+      World.updateParticles(dt);
+      const capEl = document.getElementById('intro-caption');
+      if (capEl) {
+        if (GAME_STATE.introTimer < 4.5) {
+          capEl.textContent = "Three summers without rain have baked the river valley into cracked dust. Across every village farm, the withered crops bend toward the dry earth.";
+        } else if (GAME_STATE.introTimer < 9.5) {
+          capEl.textContent = "High in the granite peaks, the mountain springs still gush behind ancient stone sluices—waiting for a hand to carve channels down the parched hills.";
+        } else {
+          capEl.textContent = "Guide the water from village to village before hunger claims the valley, and restore the watershed to emerald life.";
+        }
+      }
+      if (GAME_STATE.introTimer >= 15.0) {
+        setScreen('menu');
+      }
+    } else if (GAME_STATE.screen === 'play') {
+      World.update(dt);
+    } else if (GAME_STATE.screen === 'ending') {
+      GAME_STATE.endingTimer += dt;
+      // Animate watershed greening across the entire valley floor
+      for (let i = 0; i < World.cells.length; i++) {
+        const c = World.cells[i];
+        if (c.type !== CELL_ROCK && c.greenness < 1.0) {
+          const wave = (GAME_STATE.endingTimer * 8.0) - (c.z * 0.65);
+          if (wave > 0) {
+            c.greenness = Math.min(1.0, c.greenness + dt * 0.55);
+          }
+        }
+      }
+      if (Math.random() < 0.4) {
+        const rx = 4 + Math.random() * (World.gridW - 8);
+        const rz = 4 + Math.random() * (World.gridH - 8);
+        World.spawnParticles(rx, World.sampleHeight(rx, rz) + 0.5, rz, [0.35, 0.95, 0.48], 2, 2.2);
+      }
+      World.updateParticles(dt);
+      World.meshDirty = true;
+      if (GAME_STATE.endingTimer >= 16.0) {
+        setScreen('menu');
+      }
+    }
+  }
+
+  Renderer.render(now * 0.001);
+  requestAnimationFrame(mainLoop);
+}
+
+// Boot the game
+window.addEventListener('DOMContentLoaded', () => {
+  Renderer.init();
+  World.loadVillage(0);
+  initInputAndUI();
+  setScreen('intro');
+  requestAnimationFrame(mainLoop);
+});
+
+
+</script>
+</body>
+</html>

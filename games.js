@@ -26,89 +26,98 @@ window.GAMES = [
     genre: 'Puzzle',
     title: 'Wellspring',
     description: 'Carve the parched hills. Guide the mountain spring. Save the watershed. Every drop counts against the village hunger clock.',
-    // Rubric and Redesign notes from saida (1).jsonl (final rubric evaluation).
+    // Rubric criteria from argon_rubric_eval_2026-10-27.json; Redesign marks and notes from saida (1).jsonl (final_game phase).
+    // Redesign core-loop and presentation marks come from the last core_loop phase in its task_chain.
     questions: [
-      {
-        "tier": "The design document",
-        "q": "**Core mechanic** — Water leaves the spring and follows the terrain downhill, changes course wherever the player has dug a channel or lifted the land, and reaches the field only when an unbroken downhill path connects spring to field."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Mechanics — the player** — The player can at least dig channels and raise walls on soft ground but not on rock faces, with each shape staying until it is reworked, and can pick up and drop small stones to dam or deflect water while boulders roll downhill on steep slopes, crushing anything in the way, and can only be nudged slowly."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Mechanics — the world** — The ground holds at least cracks, holes, and thirsty sand that swallow water, and hidden pits that open under the water's weight; the hunger meter drains from the moment the village loads and the level is lost when it empties; a village is saved when enough water reaches each of its fields, which drink only the water that arrives while the path is whole; and wasted water is water the fields never get, so losing too much of it forces a restart."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Onboarding** — The first village is a single straight downhill channel with one field so the player learns to dig before anything else exists, each later mechanic is introduced on a village where it is the only new thing, and the player can only lose by running out of time, never by a mechanic they have not met."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Enemies** — There are no living enemies; the opposition is the terrain and the clock, and the land itself resists the player."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Rewards and power-ups** — Saving a field makes its crops grow green on the spot, and a saved village carries its clean, unblocked spring forward so the next village has a fuller water supply."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Progression** — Each village sits lower in the hills and grows larger, with more fields, longer routes, and steeper drops, and later villages add boulders, then traps, then traps that interact with the player's own walls."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Interface — in play** — The in-play interface shows at least the hunger meter, the water supply, the field status, a tool hint, and the village name."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Interface — menus** — How to play shows each mechanic with a still of it in use, and a between-village screen shows the saved village turning green and the path to the next village."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Volume** — A competent first-time player needs at least fifteen minutes to beat the game."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Variety** — Later parts of the game add at least one new element — a hazard, an enemy, a mechanic or a situation — rather than only more of the same."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Curve** — The game gets harder as it goes in at least two different ways, rather than only by making things faster, and stays beatable."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Teaching** — Each mechanic can be tried at least once somewhere safe before the game depends on it."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Reward** — At least one reward changes what the player can do or where they can go, rather than only raising a number."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Opposition** — Overcoming the opposition takes at least two different player behaviours."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Session** — Each village has a defined end the player can stop at and come back from."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Bugs** — Five minutes of trying to break the game finds nothing visibly wrong — nothing floating, overlapping or drawn in the wrong place, no animation that never settles, no number that disagrees with the screen — and nothing that blocks progress or forces a reload."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Controls** — A player given no instructions works out every control and every mechanic from the game alone within the first village."
-      }
+      { tier: "Core gameplay loop", q: "**Core loop 1** — The game opens to a title over a dried-up farm, the drought scene can be watched or skipped, and the player picks a village from the main menu." },
+      { tier: "Core gameplay loop", q: "**Core loop 2** — The village loads from a top-down view with the spring gushing and the fields waiting at the far end, and the hunger meter is already running." },
+      { tier: "Core gameplay loop", q: "**Core loop 3** — The player can at least dig channels, raise walls, move stones, and open blocked paths to redirect the spring water." },
+      { tier: "Core gameplay loop", q: "**Core loop 4** — The player opens the spring, and the water spills out and follows the terrain the player shaped." },
+      { tier: "Core gameplay loop", q: "**Core loop 5** — The player fixes leaks and traps as the water runs, steering it without losing too much water to the dry ground." },
+      { tier: "Core gameplay loop", q: "**Core loop 6** — The water reaches the fields, the crops drink, and the village is saved before the hunger meter empties." },
+      { tier: "Core gameplay loop", q: "**Core loop 7** — The saved village turns green, and the player is carried to the next village down the valley, which is larger and harder." },
+      { tier: "Core gameplay loop", q: "**Core loop 8** — If the hunger meter empties first the village fails and can be retried, and if the last village is saved the ending scene plays and the watershed turns green." },
+      { tier: "The design document", q: "**Core mechanic** — Water leaves the spring and follows the terrain downhill, changes course wherever the player has dug a channel or lifted the land, and reaches the field only when an unbroken downhill path connects spring to field." },
+      { tier: "The design document", q: "**Mechanics — the player** — The player can at least dig channels and raise walls on soft ground but not on rock faces, with each shape staying until it is reworked, and can pick up and drop small stones to dam or deflect water while boulders roll downhill on steep slopes, crushing anything in the way, and can only be nudged slowly." },
+      { tier: "The design document", q: "**Mechanics — the world** — The ground holds at least cracks, holes, and thirsty sand that swallow water, and hidden pits that open under the water's weight; the hunger meter drains from the moment the village loads and the level is lost when it empties; a village is saved when enough water reaches each of its fields, which drink only the water that arrives while the path is whole; and wasted water is water the fields never get, so losing too much of it forces a restart." },
+      { tier: "The design document", q: "**Onboarding** — The first village is a single straight downhill channel with one field so the player learns to dig before anything else exists, each later mechanic is introduced on a village where it is the only new thing, and the player can only lose by running out of time, never by a mechanic they have not met." },
+      { tier: "The design document", q: "**Enemies** — There are no living enemies; the opposition is the terrain and the clock, and the land itself resists the player." },
+      { tier: "The design document", q: "**Rewards and power-ups** — Saving a field makes its crops grow green on the spot, and a saved village carries its clean, unblocked spring forward so the next village has a fuller water supply." },
+      { tier: "The design document", q: "**Progression** — Each village sits lower in the hills and grows larger, with more fields, longer routes, and steeper drops, and later villages add boulders, then traps, then traps that interact with the player's own walls." },
+      { tier: "The design document", q: "**Interface — in play** — The in-play interface shows at least the hunger meter, the water supply, the field status, a tool hint, and the village name." },
+      { tier: "The design document", q: "**Interface — menus** — How to play shows each mechanic with a still of it in use, and a between-village screen shows the saved village turning green and the path to the next village." },
+      { tier: "Content and filling", q: "**Volume** — A competent first-time player needs at least fifteen minutes to beat the game." },
+      { tier: "Content and filling", q: "**Variety** — Later parts of the game add at least one new element — a hazard, an enemy, a mechanic or a situation — rather than only more of the same." },
+      { tier: "Content and filling", q: "**Curve** — The game gets harder as it goes in at least two different ways, rather than only by making things faster, and stays beatable." },
+      { tier: "Content and filling", q: "**Teaching** — Each mechanic can be tried at least once somewhere safe before the game depends on it." },
+      { tier: "Content and filling", q: "**Reward** — At least one reward changes what the player can do or where they can go, rather than only raising a number." },
+      { tier: "Content and filling", q: "**Opposition** — Overcoming the opposition takes at least two different player behaviours." },
+      { tier: "Content and filling", q: "**Session** — Each village has a defined end the player can stop at and come back from." },
+      { tier: "Content and filling", q: "**Bugs** — Five minutes of trying to break the game finds nothing visibly wrong — nothing floating, overlapping or drawn in the wrong place, no animation that never settles, no number that disagrees with the screen — and nothing that blocks progress or forces a reload." },
+      { tier: "Content and filling", q: "**Controls** — A player given no instructions works out every control and every mechanic from the game alone within the first village." },
+      { tier: "Presentation", q: "**Art style** — The game has a deliberate 3D visual style, distinct enough to describe in one sentence, held from the first screen to the last." },
+      { tier: "Presentation", q: "**Animation** — At least every important action produces a visible reaction — particles, a shake, a squash, a flash — timed well and not overdone." },
+      { tier: "Presentation", q: "**Audio** — The game has at least music or ambience, plus sound effects at the key moments." },
+      { tier: "Presentation", q: "**UI** — The interface is understood at a glance, with the most important information standing out and matching the rest of the game visually." },
+      { tier: "Presentation", q: "**Intro** — The intro presents the premise with at least one staged scene, rather than only a title card." },
+      { tier: "Presentation", q: "**Victory — village** — Completing a village produces a moment that marks it as won, distinct from failing it." },
+      { tier: "Presentation", q: "**Victory — game** — The ending scene is distinct from any single village win and closes the premise the intro set up." },
     ],
     versions: [
-      { label: 'Gemini 4 Argon', type: 'html', file: ARGON + 'puzzle__gemini-4-argon.html' },
+      {
+        label: 'Gemini 4 Argon', type: 'html', file: ARGON + 'puzzle__gemini-4-argon.html',
+        // Rubric from argon_rubric_eval_2026-10-27.json (human-reviewed scores and comments).
+        marks: [true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, false, false, true, false, true, false, true, true, false, true, false, false, false, false, true, true, true],
+        comments: [
+          "The game opens on a 3D camera sweep over a sun-baked village-1 farm with the WELLSPRING title and three drought captions, and it can be watched (auto-advances after 15s) or skipped. The main menu has Start/How to Play/Settings and a 12-card village selector.",
+          "Villages load in an angled top-down view with the spring basin bubbling behind its gate at the top and the field plots at the bottom edge. The hunger meter starts draining on load, before any input (134s down to 131s while idle).",
+          "Left-drag digs channels, Shift+drag raises walls, right-click picks up and drops stones, and clicking rubble walls or sluice gates clears or opens them. Digging, walls and stones were driven with real mouse input, and gate/wall clicks were checked in code and simulation.",
+          "Clicking the spring gate (or the Open Spring button) releases the water. It runs down the channel the player carved through the ridge and spills along low ground elsewhere.",
+          "Tools stay usable while the water runs, and cracks, sand, open pits, faults, dry ground and map edges all drain water into a lost-water total that can fail the level. Many villages were solved by routing before opening the spring, so live steering is possible but rarely forced.",
+          "Once water reaches a field along a connected wet path, the field fills, its crops turn green and the badge reads WATERED. The village is saved with hunger time to spare.",
+          "A saved village greens over for about 2 seconds, then a VILLAGE SAVED screen with a valley map leads to the next village. Grids and field counts grow (24x26/1 field up to 36x36/4 fields), but villages 2-4 save themselves when the spring is simply opened, so 'harder' does not hold at every step.",
+          "When hunger empties, a 'Drought Prevails' screen offers Retry and Back to menu, and Retry reloads the village. Saving village 12 plays 'The Watershed Restored' ending, where a green wave sweeps the delta under a blue sky.",
+          "Water is a real heightfield simulation: it flows to lower neighbours, follows dug channels, is blocked by walls, and fields drink only from cells reached by a breadth-first search from the spring. The 'unbroken path' check is lenient: a cell that was once wet keeps counting as connected because wetness never decays.",
+          "It's possible to pick the rocks, but the controls don't work properly on that",
+          "The ground holds cracks, open pits, thirsty sand, hidden pits that collapse after enough water weight, and fault seams. Hunger drains from load and fails the level at zero, fields drink only connected arriving water, and running out of supply below the remaining need triggers a water-loss fail (seen in sims at ~29s).",
+          "Village 1 is a single straight pre-cut channel to one field, blocked by a ridge you must dig through. Each later village adds one new element with its own banner: walls (2), gates/rubble (3), stones (4), granite (5), boulders (6), cracks (7), sand (8), hidden pits (9), faults (10). Weak spots: villages 2-4 never require their new tool (opening the spring alone solves them), and a water-supply loss condition exists from village 1.",
+          "There are no creatures. The opposition is granite, rolling boulders, traps and the hunger clock.",
+          "A watered field turns green with a burst of particles on the spot. Each saved village adds +8% water supply (capped at +40%) to the next one, and the between screen announces it.",
+          "Elevation labels descend from 1,420m to 60m, grids grow from 24x26 to 36x36, fields go from 1 to 4, and slopeDrop rises from 5.2 to 8.6. Boulders arrive at village 6, traps at 7-9 and wall-interacting fault traps at 10, which matches the order the design asks for.",
+          "The HUD shows a hunger meter (seconds and %), a water supply bar, per-field badges with % and Drinking/Dry/WATERED, a NEXT DRAG pill with the cursor's hover label, and the village name and elevation. All five are present, but on 3-4 field villages the field-status panel slides under the tutorial banner and some badges are hidden (see Bugs/UI).",
+          "The between-village screen works: the village greens in-level, then a 'Village Saved' panel shows a valley map with the path to the next village. The How to Play 'stills' are crude canvas rectangles rather than images of each mechanic in use, and fault traps, hidden-pit collapse and wall-dropping have no still. A reviewer could reasonably accept the abstract diagrams as stills.",
+          "There are 12 villages, and all of them are too easy to beat",
+          "Later villages add new elements rather than only more of the same: granite that cannot be dug, rolling boulders that crush channels, cracks, thirsty sand, hidden pits that collapse, and fault seams that cave in under walls.",
+          "Even though the game gets harder, it's still too easy",
+          "Each mechanic debuts on its own village with a banner telling the player exactly what to do, and restarting is instant, so it can be tried safely. The walls/stones/sluice villages don't force the tool to be used, but the player can still try it there with no penalty.",
+          "The only carried-over reward is +8% water supply per saved village, which raises a number. Greening fields is cosmetic, all villages are unlocked from the start, and no reward unlocks a new tool, area or ability.",
+          "Clearing later villages takes at least digging routes around granite and traps plus opening sluice gates or clearing rubble. Damming with stones or walls and nudging boulders are also available.",
+          "Each village ends in a clear saved or failed state, with Back to Main Menu on the between and fail screens. The menu marks saved villages and Start continues from the first unsaved one. Progress is not saved across reloads (no localStorage), but every village can be selected from the menu at any time.",
+          "On villages with 3-4 fields (8-12) the field-status panel moves left and is drawn under the tutorial banner, hiding the first field badges. The cursor label stays on 'Mountain Spring Gate (Click to Open)' after the spring is open until the mouse moves. Sand, hidden-pit and rock shadows render as blurry glowing smears. No console errors and nothing blocked progress.",
+          "From village 1 a permanent HUD line lists every control (dig, Shift-wall, click gate/obstacle, right-click stone/boulder, scroll zoom), and village 1 includes a stone to practise right-click on. Mechanics like boulders, pits and faults can't be learned in village 1 because they don't appear there; each is explained by its village's banner instead. Whether that meets 'within the first village' depends on the reviewer's reading.",
+          "The art style looks too basic and it's not distinct",
+          "The animations are too basic",
+          "We have music and simple sound effects",
+          "The warm timber-styled panels match the game, and hunger and water bars read clearly on 1-2 field villages. On 3-4 field villages the field-status row collides with the tutorial banner and hides field badges, so the key 'which field is dry' information is obscured. The human evaluator rated UI 2/5 and called it 'buggy'.",
+          "The intro is a staged 3D scene: the camera orbits a parched village with drifting dust particles while three captions set up the drought, the springs and the goal. It is more than a title card.",
+          "Saving a village greens the whole map with a fanfare and particles, then shows a green 'VILLAGE SAVED!' panel with the valley map. Failing shows a darkened map with a red 'DROUGHT PREVAILS' panel, so the two are clearly distinct.",
+          "The ending is its own scene under a blue sky: water courses down the delta and a green wave sweeps the valley, with 'The Watershed Restored' text saying the drought is broken. This closes the intro's premise and differs from a single village win. I reached it by forcing village 12 into the saved state.",
+        ],
+      },
       {
         label: 'Redesign', type: 'html', file: 'Redesign/puzzle/index.html',
         trajectory: 'trajectories/wellspring-redesign.json',
         notes: "From the reviewer's list\nRemoved the timer. Each village now has a fixed number of moves, so the puzzles are about logic instead of rushing.\nReplaced the realistic water simulation with a predictable flow. Every tile has a fixed height, water spreads in waves to every open tile at or below its level, one unit per tile, and overflows from the farthest point when the channel is full.\nSplit planning from watching. I plan with my moves, press Open the gates, then only watch; if a field stays dry, Try again returns me to the exact plan.\nChanged the controls so nothing changes until I confirm: drag, or use the arrows and Space, to paint tiles, then pick Dig or Raise, which shows how many moves it will cost.\nAdded a multi step Undo, keyboard arrows and an on screen arrow pad. Ctrl or Z marks tiles while the cursor moves, and clicking the spring or pressing Enter opens the gates.\nRock tiles cannot be dug or raised. Small stones move one tile and plug low tiles, and boulders slide until they hit something, so a careless push can block my own channel until I undo it.\nAdded water driven levers that flip every sluice of their colour, and traps: cracks, thirsty sand, holes, hidden pits and dry clay that crumbles walls.\nBuilt twelve villages that teach one rule at a time and then combine them. Each has a tight move budget and a stored solution, and I checked that it wins with exactly that budget while doing nothing or the wrong idea loses.\nTurned the recentre button into Restart level; a double right click now recentres the camera.\n\nAlso added\nStars per village, a Level Select with one card per village, a one line callout for each new rule and a hint line that names the tile under the pointer.\nHow to Play shows a still of every rule and the current controls; Settings has a sound switch and Play ending; the pause menu has Resume, sound, Restart level and main menu.\nAfter each win the journal shows a valley map with the path to the next village, and every village after the first gets two extra water from the saved spring upstream.\nCleaned up the HUD and the board: modals cover the whole HUD, every text is at least 14 px, tile picking is exact, every tile type reads at a glance, and the island holds the whole board.\nReworked the interface for readability. Every HUD text now reads at 4.5 to 1 or better, and the dock looks like a field kit. It shows a locked look while the water runs, and the floating tile hint always matches the hint bar.\nThe journal opens as a two page book with a valley map that names the saved, current and next villages, plus notes on the next rule.\nComposed new music: a plucked melody over bass and soft chords, a livelier groove with a shaker while the water runs, and short phrases for a win and a failure.\nKept every tree, stone, flower and villager on top of the island.\nRedo 1, from the reviewer's list\nMade selection unmistakable: selected tiles lift and glow teal with a cream outline.\nLaid four large push arrows flat on the tiles around a stone or boulder, with a path to where it stops; clicking one pushes, and the push buttons sit next to Push.\nMade the spring ask before opening the gates, and the stones around it never open them.\nAdded a Mark as I move toggle to the on screen pad, and a key strip in the first villages that names Space, Z, the verbs and Enter.\nA failed flow now stays on the board for a few seconds, marking dry fields and where water was lost, with Back to plan and Restart next to the map.\nStones and boulders now slide, roll and drop into holes on screen instead of jumping, and the camera stays close until they land.\nLevel Select has Act I and Act II, and every card has its own Play or Replay button in view.\nAdded Act II: ten challenge villages designed and proven in a simulator, where the obvious route and the wrong order lose, plus high ground, a raised terrain that costs two digs per tile.\nRedo 2, from the reviewer's list\nFixed the bug behind Ringmoor: on raised ground a click picked the tile behind the pointer. Every click now picks the visible tile under it at its real height.\nSelection, hover and the keyboard cursor now sit on their own tile and are no longer drawn through the terrain in front.\nAdded view turns in 90 degree steps (Q, E or the buttons under Restart level) and a top view (T) that squares the grid on screen. The arrows follow the screen after a turn.\nA failed flow now stays on the board until I choose Try again, Restart level, Main menu or Open journal; the green dock button also reads Try again there.\nThe green Open the gates button confirms itself: a second click or a double click opens the gates.\nGrass fields can no longer be selected.\nSaving a village now celebrates with a ribbon naming it, stars stamped in with a bell, a fanfare over the dipped music, petals over the fields and villagers hopping.\nAfter two failed tries a Hint button shows the next step of the solution, and the Act II texts no longer give away the answers.\nRedo 3, from the reviewer's list\nThe flight from the menu into a village no longer follows the mouse: the camera takes the same smooth path wherever the pointer is.\nRedesigned Dunewell: the sand is one column wider and a second crack sits on the straight line, so the short route along the crack loses and the clean route around the right side, two digs longer, is the way through.\nYou were right about the stars: before this change 16 of the 22 villages could not reach three. Every village can now earn three stars: save it, save it on the first opening of the gates, and keep its water goal, shown under Water reserve while planning. Each goal is the water a correct solution leaves, and the journal shows which stars a try earned. The first opening star counts the whole attempt, so Try again and Restart level keep the count; to go for three stars again, reopen the village from Level Select.\nVideo 1 shows the three: the flight at 0:13, recorded with the mouse moving across the screen (the recording does not draw the pointer); Stillwater saved with three stars at 0:24 and its journal at 0:30; Dunewell from 0:42, where the route along the crack runs dry at 0:52 and the clean route saves it at 1:10 with two stars, since it was a second try.\nHow to beat Ringmoor\nYou were right to get stuck, and it was our fault. On raised ground a click picked the tile behind the one under the pointer, so the right moves could not be entered with the mouse. That is fixed now, and the redo 2 video played it with the mouse in the top view. Ringmoor's water goal is 1, so this solution on a first try earns three stars.\nThe solution takes all 4 moves. In the field's row, dig the high tile next to the old trench twice, then dig the next two high tiles toward the field once each.\nThe water runs down the old trench and ends inside the hill, and the overflow wells up there and walks along the notch into the field, with 1 water to spare.\nFrom the second failed try in any village, the Hint button now shows the next step of the solution.\n\nAct II solutions, one line each\nKettleford: push the stone up into the near hole first, then push the boulder left so it rolls over it into the far hole, then dig the channel to the field.\nFarwater: raise the first tile of the left trunk, which dries both decoy ditches, and raise the gap in the aqueduct; the overflow rises at the right end and runs down the aqueduct.\nElbow Pass: lower the bump, raise a stopper where the boulder must stop, push the boulder right and then down into the hole of the pass, then dig to the field.\nCrumblewick: raise the clay inside the aqueduct as a stopper, push the boulder right so it stops on the leak, then dig the missing channel tile.\nLockstep: dig the branch to the amber lever and the channel to the first field, then reach the blue lever from below through the second amber gate, and dig to the second field.\nGapstone: raise the upper gap, push the stone left so it leaves the lane and plugs the second gap, then dig two tiles after the gate.\nQuarry Hollow: lower three rim tiles, push the boulder down, push the stone down into the near hole, then push the boulder right into the far hole.\nEvenfall: lower the column of high ground under the lever; the first field fills by channel, and its overflow runs the old trench, climbs the hill and pulls the lever last, so the second field fills.\nHeadwater: push the boulder left to plug the hole by the second field, dig two below the first field to the gap, lower four ridge tiles under the lever, and dig two after the gate.",
-        marks: [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true],
+        marks: [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true],
         comments: [
+          "The game starts with a drought introduction that I can watch or skip, followed by a main menu where I can choose a village.",
+          "The village loads from above, showing the mountain spring, dry fields, and a hunger timer that starts running immediately.",
+          " I can dig channels, raise walls, move stones, and clear obstacles to create paths for the water.",
+          "I can release the spring, and the water follows the slopes and channels I created, changing direction according to the terrain.",
+          " I can identify leaks and traps while the water flows, then reshape the land to prevent unnecessary water loss.",
+          " When enough water reaches the fields, the crops recover, and I save the village if I finish before the hunger timer runs out.",
+          "The village gradually turns green after being saved, and a cinematic transition takes me to the next, larger and more challenging village.",
+          " If time runs out, I can retry the village. After saving the final village, a special ending shows the entire valley coming back to life.",
           "Water leaves the spring and spreads in steady waves over every open tile at or below its level. Dug channels lower the land and raised walls block it. A field only drinks when an unbroken path of water reaches it.",
           "I can dig channels and raise walls on soft ground, and rock refuses both. High ground needs two digs per tile, and water never climbs it. Small stones move one tile and plug low tiles, and boulders roll until they hit something. Every push slides or rolls on screen.",
           "Cracks, thirsty sand and holes drink extra water. A hidden pit looks like soil until the water opens it. Dry clay crumbles walls raised on it. Each field needs a set number of units, so wasted water fails the village.",
@@ -126,117 +135,14 @@ window.GAMES = [
           "I have to shape the land by digging, raising and cutting high ground. I also have to push stones and boulders in the right order. Act II adds overflow as a tool and levers that the water must reach in time.",
           "Each village is a separate puzzle with its own result screen, saved progress and stars. I can stop after any village and continue from Level Select.",
           "Five minutes of trying to break it found nothing floating or overlapping on any screen. The camera flight into a village keeps one smooth path whatever the mouse does. A click on any visible tile picks that tile, even on raised ground or behind a boulder. A failed flow stays on the board with dry fields and losses marked until I choose Try again, Restart level or Main menu.",
-          "A hint line and a key strip teach Space, Z, the verbs, Enter, Q, E and T in the first villages. Selected tiles glow teal, push arrows lie on the board and can be clicked, and fields cannot be selected. A double click on the green button opens the gates. After a view turn, the arrows still follow the screen."
-        ],
-      },
-    ],
-  },
-  {
-    nav: '3D Platform',
-    genre: '3D Platform',
-    title: 'The Long Slide Home',
-    description: 'Race down eight icy mountains before the clock runs out and the bird of prey snatches your lost chicks.',
-    // Rubric and Redesign notes from saida (1).jsonl (final rubric evaluation).
-    questions: [
-      {
-        "tier": "The design document",
-        "q": "**Core mechanic** — On a steep slope the player drops the mother to her belly to slide; sliding builds far more speed than running, but the faster she goes the harder she is to steer."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Mechanics — the player** — The mother can at least run, turn, and jump over packed snow and ice; loose snow slows her, while sheer ice keeps her momentum but grips less."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Mechanics — the world** — Each mountain starts a countdown when the descent begins, and the level is won by reaching the chick before it reaches zero and lost when it reaches zero. Hitting a hazard knocks the mother down and costs a little time while she gets up, without ending the run by itself; at least three kinds of hazard — crevasses, ice spurs, and falling snow slabs — line the route, and hidden chutes and ice caves cut distance down the mountain but pack tighter hazards."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Onboarding** — The first mountain is gentle and mostly open, teaching running and jumping first, then the slide on a long, safe slope, and only then setting hazards along the way, while a short overlay names each new control as it appears."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Enemies** — A bird of prey circles the mountain and swoops at the mother, forcing her off her line; it seizes the chick when the clock runs out, and on some mountains it blocks the path near the bottom as a boss that must be driven off by dodging and outmaneuvering."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Rewards and power-ups** — Fish scattered down the route reward the player with score, and each freed chick is the run's true prize; at least a speed-burst pickup and a brief shield let the player gamble on a faster line or shrug off a single knockdown."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Progression** — The rescued chicks gather into a growing flock that follows the mother between mountains, and later mountains ask more of the player's skill while adding new hazards, tighter clocks, and bosses to deal with, until the whole family reunites on the final mountain."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Interface — in play** — In play, the HUD shows at least the clock, a goal marker steering toward the chick, speed, the current run's fish count, and the boss state."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Interface — menus** — The How to Play screen shows the controls and each mechanic, and between mountains a story screen shows the growing flock and the next mountain."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Volume** — A competent first-time player needs at least fifteen minutes to beat the game."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Variety** — Later parts of the game add at least one new element — a hazard, an enemy, a mechanic or a situation — rather than only more of the same."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Curve** — The game gets harder as it goes in at least two different ways, rather than only by making things faster, and stays beatable."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Teaching** — Each mechanic can be tried at least once somewhere safe before the game depends on it."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Reward** — At least one reward changes what the player can do or where they can go, rather than only raising a number."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Opposition** — Overcoming the opposition takes at least two different player behaviours."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Session** — Each level has a defined end the player can stop at and come back from."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Bugs** — Five minutes of trying to break the game finds nothing visibly wrong — nothing floating, overlapping or drawn in the wrong place, no animation that never settles, no number that disagrees with the screen — and nothing that blocks progress or forces a reload."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Controls** — A player given no instructions works out every control and every mechanic from the game alone within the first level."
-      }
-    ],
-    versions: [
-      { label: 'Gemini 4 Argon', type: 'html', file: ARGON + '3d-platform__gemini-4-argon.html' },
-      {
-        label: 'Redesign', type: 'html', file: 'Redesign/3d-platform/index.html',
-        trajectory: 'trajectories/the-long-slide-home-redesign.json',
-        notes: "# Final Game Notes\n\n### Reviewer's Feedback\n\n- I improved the opening storyline with a longer storm sequence, a \"Press Any Key\" screen, and a skippable intro to make the beginning more engaging.\n- I improved the transition from the intro to gameplay with smoother camera movement and better anticipation before the descent.\n- I adjusted the title screen layout, enlarged the logo and buttons, and removed unnecessary supporting text to make the menu cleaner.\n- I improved the logo's letter spacing and typography to make the title easier to read.\n- I increased font sizes throughout the UI and updated the font styling for better readability and consistency.\n- I simplified the Settings menu by keeping the volume slider and making the Back button secondary.\n- I improved the How to Play menu with visual instructions, keyboard and controller mappings, and a layout that doesn't require scrolling.\n- I updated the level selection screen with clearer names, thumbnails, difficulty information, and improved button states.\n- I simplified the gameplay HUD to make important information easier to follow without covering the action.\n- I cleaned up the Pause menu and improved its layout to keep navigation simple.\n- I improved the ending sequence with closer camera framing, smoother movement, and better presentation of the final scene.\n- I adjusted the final scene's composition, lighting, and camera transitions to make the family reunion more emotional.\n- I improved the ending music and visual atmosphere to create a warmer and more hopeful conclusion.\n- I fixed the issue where the baby penguin could become unreachable near the end of a level.\n\n### Additional Gameplay Improvements\n\n- I improved player collision handling and recovery to prevent the penguin from getting stuck against obstacles.\n- I adjusted checkpoints and surrounding obstacles to make them easier to reach without accidental collisions.\n- I improved the ramps with better positioning, clearer takeoff areas, and safer landing zones.\n- I added breakable snow walls that react to high-speed sliding, making momentum more useful during gameplay.\n- I improved speed corridors with clearer entrances, smoother paths, and fewer obstacles blocking the player.\n- I reworked shortcuts with accessible cave entrances, continuous terrain, and better connections to the main routes.\n- I widened sharp turns and adjusted obstacle placement to give players more time to react.\n- I improved branching paths with safer alternatives and more challenging shortcuts to encourage different routes.\n- I added bright orange emissive ground arrows and animated directional indicators to make navigation easier at high speeds.\n- I improved collectible fish with sparkling particles, glow effects, and more satisfying collection feedback.\n- I improved blue power-ups with brighter materials, animated lightning effects, and better visibility.\n- I added a transparent blue protective shield around the penguin with impact reactions and clear expiration effects.\n- I enhanced speed power-ups with stronger wind streaks, flowing particles, and shockwave effects.\n- I improved falling rocks with visible warning zones, snow particles, camera shake, and automatic removal after impact.\n- I adjusted wolf encounters with clearer attack warnings, better positioning, and more controlled collision penalties.\n- I improved the rescued chicks so they follow the mother more naturally and react to movement and nearby dangers.\n- I added more expressive chick reactions during boss encounters to make the characters feel more alive.\n- I improved boss rock targeting and positioning to reduce unfair attacks and keep more space available for dodging.\n- I added planned gameplay sequences combining fish trails, gaps, speed boosts, ramps, and shortcuts to make each mountain more interesting.\n- I improved the difficulty progression across the four mountains by introducing more demanding route combinations.\n- I added near-miss effects with snow bursts and wind streaks to make close calls at high speed more exciting.\n- I improved atmospheric snowfall with more visible particles while keeping the track and obstacles readable.\n\n### Bug Fixes & Final Polish\n\n- I fixed the pause menu randomly opening during gameplay and repeatedly appearing after clicking Resume.\n- I corrected the audio behavior so pausing and resuming no longer change the player's sound preferences.\n- I improved snow and ice rendering to reduce flickering, overlapping surfaces, and z-fighting.\n- I adjusted object placement and terrain alignment to reduce floating props and clipping.\n- I improved particle visibility and glow effects while keeping the gameplay readable.\n- I refined the sliding speed effects with stronger snow trails and better visual feedback during fast descents.\n- I cleaned up unnecessary signs and interface elements to reduce visual clutter.\n- I prevented unwanted text selection and browser scrolling during gameplay.\n- I preserved the game's procedural 3D environments, characters, effects, and animations within a single HTML file.\n- I also created a separate final boss preview with the boss one hit away from defeat, making it easier to showcase the final battle and ending sequence.",
-        marks: [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true],
-        comments: [
-          "Sliding makes the penguin much faster than running, but reduces steering control as intended.",
-          "I implemented running, turning, jumping, deep snow slowdown, and slippery ice with reduced grip.",
-          "Each mountain has a countdown, different hazards, shortcuts, knockdowns, and clear win/fail conditions.",
-          "I need to introduce jumping before sliding, make the first practice slope longer, and reduce early hazards.",
-          "The eagle boss and timed-out chick capture work, but I still need the eagle to patrol and swoop during regular descents.",
-          "I added collectible fish, score rewards, speed boosts, and shields that protect against a knockdown.",
-          "Rescued chicks appear in story scenes, but I need them to actually follow the mother during later mountains.",
-          "The HUD displays the countdown, chick direction and distance, speed, fish count, and active boss state.",
-          "The menus and story transitions work, but I need to explain the remaining enemy and hazard types in How to Play.",
-          "I need to time a complete first-time playthrough and make sure it takes at least 15 minutes.",
-          "Later mountains introduce boss encounters, more enemies, different environments, and more challenging situations.",
-          "I increased difficulty through narrower paths, tighter starting clocks, more enemies, and tougher boss encounters.",
-          "I need safer practice opportunities for advanced hazards and boss mechanics before they become mandatory.",
-          "Fish improve running speed, while shields, speed bursts, and the hidden cave change how I can approach the route.",
-          "Players must jump, dodge, and slide through hazards, while bosses require baiting attacks and dodging at the right moment.",
-          "Each mountain has its own ending, and I save completed-level progress so players can return later.",
-          "I still need a five-minute stress test to check clipping, floating objects, animation issues, and progression blockers.",
-          "I need to teach every control and major mechanic within the first level, including a safe introduction to boss behavior."
+          "A hint line and a key strip teach Space, Z, the verbs, Enter, Q, E and T in the first villages. Selected tiles glow teal, push arrows lie on the board and can be clicked, and fields cannot be selected. A double click on the green button opens the gates. After a view turn, the arrows still follow the screen.",
+          "The game has a consistent visual style, combining warm, dry landscapes with bright turquoise water and vibrant green vegetation across all screens.",
+          " Important actions like digging, moving stones, releasing water, and restoring fields have visible animations and effects that make the gameplay more satisfying.",
+          "The game includes background music, environmental sounds, and sound effects for important actions, creating a more immersive atmosphere.",
+          "The interface clearly displays the hunger timer, water supply, field progress, and available tools, while maintaining a consistent design throughout the game.",
+          "The introduction uses an animated scene showing the landscape suffering from drought and revealing the last remaining spring, clearly establishing the story.",
+          " Saving a village triggers visible environmental changes, with crops and vegetation growing, followed by a dedicated victory screen.",
+          "Completing the final village triggers a unique ending where the entire valley becomes green again, bringing the story to a satisfying conclusion.",
         ],
       },
     ],
@@ -246,89 +152,95 @@ window.GAMES = [
     genre: 'Rhythm',
     title: 'OARSONG — Rhythm of the Northern Sea',
     description: 'Row to the beat of the war drums. Waves and weather rise with the song, pitching the ship and sweeping spray across the deck. Read the true rhythm through the storm motion — the sea never alters the musical beat.',
-    // Rubric and Redesign notes from saida (1).jsonl (final rubric evaluation).
+    // Rubric criteria from argon_rubric_eval_2026-10-27.json; Redesign marks and notes from saida (1).jsonl (final_game phase).
+    // Redesign core-loop and presentation marks come from the last core_loop phase in its task_chain.
     questions: [
-      {
-        "tier": "The design document",
-        "q": "**Core mechanic** — Notes ride four lanes over the deck toward a hit line, each lane struck with its own key; striking a note as it crosses the line rows the crew and pushes the ship forward, while striking off the beat throws the rowers out of sync and drags the ship toward sinking."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Mechanics — the player** — Every strike is judged against the beat: a clean hit rows the crew and feeds the score, a weak hit rows them but earns less, and a missed note breaks the rowers' rhythm; consecutive clean hits build a combo multiplier that raises the score each further hit earns, and any miss resets it; a single shared crew cohesion meter refills on clean hits and empties on misses, and at zero the rowers fall out of time and the ship sinks, ending the voyage; forward progress is the score, and reaching the required score before the song ends completes the voyage; a voyage is won by reaching the required score before the song ends and lost by sinking or by letting the song end short of the score."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Mechanics — the world** — Waves and weather rise as the song builds, rocking the ship and pitching the note lanes so the beat must be read through motion and spray, without ever changing the beat itself."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Onboarding** — The How to play screen explains the four lanes, the hit line and what each meter means; the first voyage brings the lanes in one at a time and lets the player find the beat before scoring demands it, and each mechanic appears with a short callout before it matters."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Enemies** — The opposition is the sea and the song rather than any enemy: rising intensity pitches the ship, spray sweeps the deck, and the song presses the player to keep a beat that keeps building, while the crew's cohesion is the meter that fights back."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Rewards and power-ups** — Clean hits pay out in score and build the combo multiplier; filling cohesion to the top unleashes a war cry that turns clean hits into bonus score until a miss ends it, and completing a voyage unlocks the next one."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Progression** — Later voyages ask more of the player's rhythm and add new things to handle — denser note patterns, rougher seas and less forgiving cohesion — rather than only raising a number."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Interface — in play** — The in-play interface shows the note lanes and hit line, the timing judgment of the last strike, the combo multiplier, the crew cohesion meter, how far the ship is from the required score, and how rough the sea and the beat are getting."
-      },
-      {
-        "tier": "The design document",
-        "q": "**Interface — menus** — Beyond the required screens, the menus add a voyage select that lets the player pick an unlocked voyage, start it, or return to the main menu, and a how-to-play explanation of the four lanes, the hit line and what each meter means."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Volume** — A competent first-time player needs at least fifteen minutes to beat the game."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Variety** — Later parts of the game add at least one new element — a hazard, an enemy, a mechanic or a situation — rather than only more of the same."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Curve** — The game gets harder as it goes in at least two different ways, rather than only by making things faster, and stays beatable."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Teaching** — Each mechanic can be tried at least once somewhere safe before the game depends on it."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Reward** — At least one reward changes what the player can do or where they can go, rather than only raising a number."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Opposition** — Overcoming the opposition takes at least two different player behaviours."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Session** — Each voyage has a defined end the player can stop at and come back from."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Bugs** — Five minutes of trying to break the game finds nothing visibly wrong — nothing floating, overlapping or drawn in the wrong place, no animation that never settles, no number that disagrees with the screen — and nothing that blocks progress or forces a reload."
-      },
-      {
-        "tier": "Content and filling",
-        "q": "**Controls** — A player given no instructions works out every control and every mechanic from the game alone within the first voyage."
-      }
+      { tier: "Core gameplay loop", q: "**Core loop 1** — The game opens with a title and a scene of the longship launching that the player can skip, and leads to a main menu with Start, How to play and Settings." },
+      { tier: "Core gameplay loop", q: "**Core loop 2** — The player can start a voyage, the song begins, and notes ride down the four lanes toward the hit line." },
+      { tier: "Core gameplay loop", q: "**Core loop 3** — The player strikes each key as its note crosses the line, rowing the crew forward and building the combo." },
+      { tier: "Core gameplay loop", q: "**Core loop 4** — Clean strikes hold the crew in sync and push the ship, while missed or mistimed strikes break the rhythm and drain the crew's cohesion." },
+      { tier: "Core gameplay loop", q: "**Core loop 5** — When the crew's cohesion empties, the ship sinks and a fail screen offers Retry and Back to the main menu." },
+      { tier: "Core gameplay loop", q: "**Core loop 6** — Reaching the required score before the song ends completes the voyage, and a results screen shows the score and the next voyage." },
+      { tier: "Core gameplay loop", q: "**Core loop 7** — The player can take the next voyage, and completing the final voyage plays the ending scene and returns to the main menu." },
+      { tier: "The design document", q: "**Core mechanic** — Notes ride four lanes over the deck toward a hit line, each lane struck with its own key; striking a note as it crosses the line rows the crew and pushes the ship forward, while striking off the beat throws the rowers out of sync and drags the ship toward sinking." },
+      { tier: "The design document", q: "**Mechanics — the player** — Every strike is judged against the beat: a clean hit rows the crew and feeds the score, a weak hit rows them but earns less, and a missed note breaks the rowers' rhythm; consecutive clean hits build a combo multiplier that raises the score each further hit earns, and any miss resets it; a single shared crew cohesion meter refills on clean hits and empties on misses, and at zero the rowers fall out of time and the ship sinks, ending the voyage; forward progress is the score, and reaching the required score before the song ends completes the voyage; a voyage is won by reaching the required score before the song ends and lost by sinking or by letting the song end short of the score." },
+      { tier: "The design document", q: "**Mechanics — the world** — Waves and weather rise as the song builds, rocking the ship and pitching the note lanes so the beat must be read through motion and spray, without ever changing the beat itself." },
+      { tier: "The design document", q: "**Onboarding** — The How to play screen explains the four lanes, the hit line and what each meter means; the first voyage brings the lanes in one at a time and lets the player find the beat before scoring demands it, and each mechanic appears with a short callout before it matters." },
+      { tier: "The design document", q: "**Enemies** — The opposition is the sea and the song rather than any enemy: rising intensity pitches the ship, spray sweeps the deck, and the song presses the player to keep a beat that keeps building, while the crew's cohesion is the meter that fights back." },
+      { tier: "The design document", q: "**Rewards and power-ups** — Clean hits pay out in score and build the combo multiplier; filling cohesion to the top unleashes a war cry that turns clean hits into bonus score until a miss ends it, and completing a voyage unlocks the next one." },
+      { tier: "The design document", q: "**Progression** — Later voyages ask more of the player's rhythm and add new things to handle — denser note patterns, rougher seas and less forgiving cohesion — rather than only raising a number." },
+      { tier: "The design document", q: "**Interface — in play** — The in-play interface shows the note lanes and hit line, the timing judgment of the last strike, the combo multiplier, the crew cohesion meter, how far the ship is from the required score, and how rough the sea and the beat are getting." },
+      { tier: "The design document", q: "**Interface — menus** — Beyond the required screens, the menus add a voyage select that lets the player pick an unlocked voyage, start it, or return to the main menu, and a how-to-play explanation of the four lanes, the hit line and what each meter means." },
+      { tier: "Content and filling", q: "**Volume** — A competent first-time player needs at least fifteen minutes to beat the game." },
+      { tier: "Content and filling", q: "**Variety** — Later parts of the game add at least one new element — a hazard, an enemy, a mechanic or a situation — rather than only more of the same." },
+      { tier: "Content and filling", q: "**Curve** — The game gets harder as it goes in at least two different ways, rather than only by making things faster, and stays beatable." },
+      { tier: "Content and filling", q: "**Teaching** — Each mechanic can be tried at least once somewhere safe before the game depends on it." },
+      { tier: "Content and filling", q: "**Reward** — At least one reward changes what the player can do or where they can go, rather than only raising a number." },
+      { tier: "Content and filling", q: "**Opposition** — Overcoming the opposition takes at least two different player behaviours." },
+      { tier: "Content and filling", q: "**Session** — Each voyage has a defined end the player can stop at and come back from." },
+      { tier: "Content and filling", q: "**Bugs** — Five minutes of trying to break the game finds nothing visibly wrong — nothing floating, overlapping or drawn in the wrong place, no animation that never settles, no number that disagrees with the screen — and nothing that blocks progress or forces a reload." },
+      { tier: "Content and filling", q: "**Controls** — A player given no instructions works out every control and every mechanic from the game alone within the first voyage." },
+      { tier: "Presentation", q: "**Art style** — The game has a deliberate 3D visual style, distinct enough to describe in one sentence, held from the first screen to the last." },
+      { tier: "Presentation", q: "**Animation** — At least every important action produces a visible reaction — particles, a shake, a squash, a flash — timed well and not overdone." },
+      { tier: "Presentation", q: "**Audio** — The game has at least music or ambience, plus sound effects at the key moments." },
+      { tier: "Presentation", q: "**UI** — The interface is understood at a glance, with the most important information standing out and matching the rest of the game visually." },
+      { tier: "Presentation", q: "**Intro** — The intro presents the premise with at least one staged scene, rather than only a title card." },
+      { tier: "Presentation", q: "**Victory — voyage** — Completing a voyage produces a moment that marks it as won, distinct from failing it." },
+      { tier: "Presentation", q: "**Victory — game** — The ending scene is distinct from any single voyage win and closes the premise the intro set up." },
     ],
     versions: [
-      { label: 'Gemini 4 Argon', type: 'html', file: ARGON + 'rhythm__gemini-4-argon.html' },
+      {
+        label: 'Gemini 4 Argon', type: 'html', file: ARGON + 'rhythm__gemini-4-argon.html',
+        // Rubric from argon_rubric_eval_2026-10-27.json (human-reviewed scores and comments).
+        marks: [true, true, true, true, true, true, true, true, true, false, true, true, true, false, true, true, false, false, false, true, true, false, true, false, true, false, false, false, true, true, true, true],
+        comments: [
+          "The game opens on the OARSONG title over a 3D scene of the longship at sea, with three captioned camera shots (Next Scene) and a skip button (also Esc/Space), then goes to a main menu with Start Voyage, Voyage Select, How to Play and Settings. The 'launch' is mostly told by the captions ('Cast off the mooring lines!'). The ship just sits on the water while the camera moves; there is no undocking action.",
+          "Start Voyage launches Voyage I. The procedural song starts on the song clock, and rune-block notes ride down four colored deck lanes toward a hit line with D/F/J/K badges.",
+          "Real D/F/J/K key presses timed to the notes registered as CLEAN hits. They raised the score, built the combo (the streak count went up to 2x) and boosted oar power and ship speed.",
+          "Clean hits refill cohesion, cut oarDesync and raise shipSpeed, which makes the cliffs scroll faster. Misses and off-beat strikes (within 330ms of a note) reset the combo, drain cohesion by missDrain, desync the oars and slow the ship. The human annotator said the crew seems to row all the time and the ship moves even on misses: oarStrokePhase always advances and speed only changes within 0.45 to 2.2, so the visual feedback is subtle.",
+          "With no input on Voyage VIII, cohesion fell to 0 after about 7s. The ship visibly heaved down and tipped into the water, then 'The Longship Foundered' appeared with Retry Voyage and Back to Main Menu. Retry restarted the voyage.",
+          "Reaching the target score triggers a horn and the 'VOYAGE COMPLETE!' banner, then a results screen. It shows the score against the required score, max combo, accuracy, the unlocked relic and a 'Next Voyage: Voyage II...' button.",
+          "An in-page autoplayer (calling the game's own handleLaneKeyDown/Up) cleared all 8 voyages in sequence. Finishing Voyage VIII went straight into the 3-shot 'Landfall at High Hall' ending, and clicking through it returned to the main menu.",
+          "There are four lanes over the deck with their own keys (D/F/J/K) and a hit line. On-beat strikes row the crew and push the ship. A strike that is off the beat while a note is near counts as an 'OFF-BEAT!' miss and drains cohesion toward sinking, and tapping with no note nearby is free.",
+          "All the required pieces are in the code and were seen in play: Clean/Weak/Miss judgments with Weak paying less (45 against 100), a combo multiplier from 1x to 5x that resets on a miss, one shared cohesion meter that refills on clean hits and drains on misses, sinking at 0, and score shown as voyage progress against a target. A voyage also fails if the song ends short of the target.",
+          "I was not able to detect visible signs of changes in the ocean",
+          "How to Play covers the lanes, hit line, judgments, cohesion, War Cry and the score target. Voyage I brings in D, F, J and K one at a time with callouts and 'Safe Practice' notes that cost no cohesion, and Voyages II and III open with safe chord and hold practice under a 'NEW MECHANIC' callout. However, scoring counts during practice, so a good player wins Voyage I at about 8s, before lanes J and K have even been introduced.",
+          "There are no enemies. The opposition is the rising sea (pitch, spray, lightning), the song's rising BPM and density, and the cohesion meter. This matches the design, though in practice voyages end before the pressure builds.",
+          "Clean hits pay score times the combo multiplier. Reaching 100% cohesion triggers the War Cry (2x, horn blast, gold banner), which ends on a miss. Completing a voyage unlocks the next one and a relic.",
+          "The code has escalation built in: BPM goes from 100 to 140, missDrain rises from 11 to 19, cleanRefill falls, and chords, holds, eighth-note streams and surges are added. But the target scores are hit within the first 7-10 seconds of every voyage, mostly while the opening notes are still flagged safe practice (misses there cost nothing). So the denser patterns and harsher cohesion that come later in each song are never reached. A perfect player won the voyages at song times of 8.5, 7.8, 8.5, 6.8, 7.4, 6.8, 7.3 and 6.5s, and an 80%-accuracy player won Voyage VIII at 10.1s.",
+          "The HUD shows the lanes with the hit line and key badges, a large timing judgment (CLEAN!/WEAK/MISS with points), the combo multiplier and streak, the cohesion bar with status text, a War Cry banner, a voyage progress bar (score / target) and a 'Sea & Song Intensity' bar with labels.",
+          "Voyage Select ('The Northern Course') shows 8 cards, locked or unlocked, with target and best scores. You select a card and press 'Set Sail on Selected Voyage' (or double-click), and there is a Back to Main Menu button. How to Play explains the lanes, hit line, judgments, cohesion, War Cry, holds and chords.",
+          "The game takes far less than fifteen minutes. The target scores are reached within about 7-10s of song time in every voyage: a perfect autoplayer finished all 8 voyages in about 60s of total play, and an 80%-accuracy player won Voyage VIII at 10s. Even with several retries, a competent first-time player would finish in a few minutes. The 2:00-2:20 song lengths are never used.",
+          "Even though the game add extra challenges they not work properly, for example the hold does not work",
+          "The difficulty levers in the code (faster BPM and note speed, more miss drain, denser charts, rougher sea pitch) would count as several kinds of difficulty, but almost none of it reaches the player. Every voyage ends about 7-10 seconds in, mostly inside the safe-practice opening bars, so later voyages are not meaningfully harder to win. Only the starting sea roughness and BPM are noticeably different.",
+          "Every mechanic gets safe-practice notes with a callout before it can cost cohesion: each lane in Voyage I, chords in Voyage II's first 3 bars and holds in Voyage III's first 3 bars. Misses on those notes only show 'PRACTICE MISS'.",
+          "Completing a voyage unlocks the next one on Voyage Select (somewhere new to go), and each relic changes the rules. For example, Sunstone Compass widens the clean window by 12ms, Dragon Prow raises starting cohesion and Shield-Wall cuts the drain by 20%. The relic effects are real in code but small.",
+          "Within the short span of each voyage, the player has to single-tap notes on beat, strike two lanes together for chords (Voyage II) and hold keys through hold tails (Voyage III).",
+          "Each voyage is one song with a clear end: a results screen or a fail screen. Progress (unlocked voyages and best scores) is kept in Voyage Select for the session. Note that nothing is saved to storage, so a page reload resets progress.",
+          "I found no console errors or blocking bugs, but there are visible problems. The voyage is declared complete about 8s into a song whose HUD says 2:00, while the tutorial callout for lane 2 is still on screen (shot 14). Cohesion can display 100% without the War Cry triggering, because 99.5 is rounded to 100% while the HUD still reads 'Fill to 100% for War Cry (0% left)' (shot 12). The annotator also reported hold-note tails disappearing early.",
+          "On-deck D/F/J/K badges sit under each lane and light up on press. Voyage I's callouts name each key as its lane comes in, and the Voyage II and III callouts explain chords and holds, so the controls are discoverable without the manual. Esc for pause is shown on the HUD Pause button.",
+          "The game has a low poly simple art style",
+          "The animations are not elaborated enough",
+          "The game features sound effects and music, but they are too similar and fail to stand out, despite being central to the experience.",
+          "At 1280x720 the HUD is clear: progress on top, cohesion and sea on the left, combo on the right, a big central judgment, all in the same gold/slate Nordic style. But it is busy, and the human annotator rated UI readability 2 and called it 'unreadable', possibly at a smaller window. A reviewer should check this at their normal window size.",
+          "The intro has three staged 3D camera shots of the longship among the fjord cliffs and towers, with captions setting up the premise: eight crossings to the High Hall, rowing by your drum and keeping cohesion. The staging is camera drift around a static ship rather than a real launch action.",
+          "A win plays a horn blast, shows a large gold 'VOYAGE COMPLETE! Target Score Reached — Landfall Ahead!' and lights bonfires on the watchtowers, then opens a gold 'VOYAGE COMPLETE!' results panel. A loss instead sinks the ship and shows a red 'THE LONGSHIP FOUNDERED' panel.",
+          "Finishing Voyage VIII skips the results and plays a separate 3-shot ending, 'Landfall at High Hall: The Northern Course is Conquered', under a purple dawn sky with a horn. Its captions close the intro's premise (arriving at the High Hall, the saga sung). It reuses the same ship and box scenery, so it is visually modest.",
+        ],
+      },
       {
         label: 'Redesign', type: 'html', file: 'Redesign/rhythm/index.html',
         trajectory: 'trajectories/oarsong-redesign.json',
         notes: "Thank you for the last note. Streak mode now feels like a reward: during the war cry the note letters are painted in the streak gold (#ffc84a) with the same dark outline as in normal play, the disc keeps its lane colour, and each note gets a soft gold halo that pulses on the beat. The letters never turn dark any more, and I measured them on this build: inside the shield, dark pixels during the war cry are now about 3 percent, close to the 1 percent of normal play, where before they jumped to 24 percent.\n\nEverything from the previous round is unchanged:\n\nGameplay\nThe hit now happens on the drum. The perfect moment is the instant a note lands on the centre of its drumhead, where the stick strikes and the sparks fly, like a gem on a Guitar Hero fret. The lanes now run all the way to the drums, rising gently so their ends meet the drumheads, and the notes slide straight onto the drumhead without jumping or hiding behind the drum. The target rings became glowing rims on the drumheads, and the bursts, beams, judgements and the practice freeze all happen there. Measured on this build: at the perfect moment a note sits within about a tenth of a drumhead width of the drumhead centre in all four lanes, against a third to a half before. The read time is unchanged, 3.5 s from the far end, and the hull still never touches the lanes, rails or drums at the largest roll.\nThe ship never stops. It now always sails at a steady cruise, clean hits push it up to full speed, and a miss slows it down smoothly instead of stopping it. Measured in all six voyages, the speed never drops below 40 percent of top speed, not even with misses or with no input. The charts no longer leave dead air: calm stretches now use spaced single notes instead of silence, and no gap between notes is longer than two beats in any voyage, where before every voyage had 7 to 11 gaps longer than a bar (up to 12.6 s). The breathing between busy phrases from the last review is kept, the note and hold counts are the same, and notes that read like an accidental double are gone.\n\nOnboarding\nThe tutorial is now two short steps: two single taps, then one hold. It pauses only at the first tap and at the hold, and the panel shows \"Step 1 / 2\" and \"Step 2 / 2\". The double press and the stray strike exercise left the practice: doubles are learned in play, announced in voyage 2 by a short callout and a few unscored doubles that do not pause, and stray strikes stay explained in How to play.\n\nDesign\nHold notes now work like Guitar Hero sustains: while held, the tail lights up and glows, it is eaten at the drumhead with a hot spot and a stream of sparks, and its note keeps ringing; on an early release the rest of the tail turns pale grey at once and fades. The timing tolerance from the last review is kept.\nThe streak number always fits inside the dark centre of the combo shield: the font scales with the number of digits, and I checked it from single digits up to 1000. Streak callouts like \"50 NOTE STREAK!\" now appear every 50 notes, as in your Guitar Hero reference.\n\nAlso added\nThe water reacts to what touches it: the oars leave foam as they row, rocks and islets wear a foam collar, dolphins and the whale splash as they surface, and the hull has a waterline foam line. Every voyage still holds 60 fps.",
-        marks: [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true],
+        marks: [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true],
         comments: [
+          "The game opens on a Click to take the drum gate with the logo, then an intro of five slow camera shots in the dusk fjord with a readable caption each that I can click through or skip, and a clean title with only the logo, Start, How to play and Settings.",
+          "Start begins Leaving the Fjord and carved D, F, J and K letters ride the four lanes toward the iron line, following the rising and falling melody of the song, low notes on D and high notes on K.",
+          "Pressing D, F, J and K as a letter crosses the line swings the commander's drumstick onto that drum, each drum plays its note of the song, the hidden crew's oars sweep together and the combo climbs.",
+          "Clean strikes push the longship forward and keep the crew spirit up, the ship coasts to a stop when the beat breaks, and a miss halts it with a lurch, cracks the note and drains the spirit bar.",
+          "When crew spirit empties the ship founders, and the fail screen The oars fall silent offers Retry voyage and Main menu.",
+          "Reaching the fathoms target before the song ends completes the voyage, the victory theme plays and the results screen shows the score and offers the next voyage.",
+          "From the results I take The Whale Road and then The Storm Skerries, and finishing the third voyage plays the ending tapestry before the main menu returns.",
           "Notes ride four lanes over the deck straight onto four war drums, each lane with its own key, D, F, J and K, and the perfect moment is when the note lands on the centre of its drumhead, where the stick strikes. A clean strike rows the crew, plays the next note of the song's melody and pushes the longship forward, while a key pressed with no note near is a stray strike that flashes the lane red, breaks the combo and drains a little cohesion.",
           "Every strike is judged against the beat without words: a clean hit fires a gold ring and a tall beam from the drum, with a quick gold flash on the drum at x3 and x4, a weak hit shows a small grey ring and a short beam, and a miss shatters the shield on the drum and dims the lane. While a hold is held its tail glows, is eaten at the drumhead with a steady stream of sparks and its note keeps ringing; letting go early turns the rest of the tail pale grey at once, and released after the first quarter it still counts as a correct hit with part of its bonus. Clean hits build the combo and the multiplier ring, any miss resets it, cohesion refills on clean hits and drains on misses, and at zero the ship sinks. Reaching the gold marker on the top bar before the song ends wins the voyage, and ending short of it loses.",
           "The sea builds inside every voyage: the sea gauge on the top bar climbs from one wave to three as the song goes on, with more wind streaks, whitecaps, rain and spray, and each voyage has its own weather and coast, from a calm dusk fjord to a night gale among the skerries, where lightning bolts strike the sea beside the ship. In voyage 6 the storm breaks into a calm coda, the sun comes out and a rainbow rises over the fjord. As the game designer asked, the lanes and the hit line stay still on screen, so the ship rocks gently while the beat never changes, and the drums sit on a fixed platform so the hull never cuts them.",
@@ -346,9 +258,145 @@ window.GAMES = [
           "The player has to tap on the beat, hold through a tail, press two keys together on doubles and keep their hands quiet between notes to avoid stray strikes.",
           "Each voyage ends on a results screen with the notes hit, the longest streak, the stars and the best score, and progress, stars and best scores are saved, so the player can stop after any voyage and come back from the voyage select.",
           "I spent time trying to break it: pausing in the middle of a hold, mashing keys, restarting, losing on purpose, switching tabs and resizing the window, and playing through all six voyages and the ending on this build. The ship never touches the drums, the rails or the sand, it never stops sailing, the numbers match the screen and nothing blocks progress.",
-          "Voyage 1 opens one lane at a time with the key drawn on each drum, the callouts name each new key, the war cry lights in the first voyage with a short callout, the Esc key sits on the HUD board with a pause icon, and the How to play pages are one click away in the pause menu."
+          "Voyage 1 opens one lane at a time with the key drawn on each drum, the callouts name each new key, the war cry lights in the first voyage with a short callout, the Esc key sits on the HUD board with a pause icon, and the How to play pages are one click away in the pause menu.",
+          "Every screen holds one look, a hand painted Norse saga at dusk where a dark oak longship with a red striped sail and a dragon at each end sails a two tone teal sea with brushed foam, past snow capped cliffs and a straw roofed village on a shingle shore, while the beat burns in dosed neon lanes on the deck.",
+          "Every strike has a visible reaction: the arm strikes, the drum skin squashes, the lane flashes its neon colour with sparks, the oars splash, and a miss cracks the shield and throws cold spray, while the scenery streams past faster with the combo.",
+          "The background score was built in my adaptive music lab: a wooden flute melody over a cello figure, a warm pad and a plucked lyre, with no drums, so the beat comes only from the four war drums I strike, and it changes for the menu, danger, victory, defeat and the ending.",
+          "The note highway, the iron hit line and the four lettered drums sit at the centre, a gold song progress bar with the seconds left runs across the top and a big streak counter with its multiplier pops beside the highway like Dance Dance Revolution, all in the carved Metamorphous lettering, and How to play is a short practice run on the deck.",
+          "The intro is five staged camera shots in the game world at dusk: the village watching the fjord, the rune drumstick handed to the captain, the twin dragon heads, the oars striking together and the ship slipping out of the fjord.",
+          "Winning a voyage plays the victory theme and gold light before the results card, while sinking drains the colour, puts out the braziers and pulls the hull under the waves before the fail card.",
+          "Finishing the storm voyage plays an ending that mirrors the intro in five shots: the storm loosening its grip, the ship turning toward the village lights and mooring in open water off the shore, fires answering from the shore, the drumstick returned and the logo over calm water.",
         ],
       },
     ],
   },
-];
+
+  {
+    nav: '3D Platform',
+    genre: '3D Platform',
+    title: 'The Long Slide Home',
+    description: 'Race down eight icy mountains before the clock runs out and the bird of prey snatches your lost chicks.',
+    // Rubric criteria from argon_rubric_eval_2026-10-27.json; Redesign marks and notes from saida (1).jsonl (final_game phase).
+    // Redesign core-loop and presentation marks come from the last core_loop phase in its task_chain.
+    questions: [
+      { tier: "Core gameplay loop", q: "**Core loop 1** — The game opens with the title and a short scene of a storm scattering the chicks down the mountain, which the player can skip, and the main menu then offers Start, How to Play, and Settings." },
+      { tier: "Core gameplay loop", q: "**Core loop 2** — The player picks Start and the mother stands at the top of an icy mountain with the clock already running." },
+      { tier: "Core gameplay loop", q: "**Core loop 3** — The player can run, jump, and belly-slide down the mountain, dodging hazards and hunting shortcuts to reach the bottom before the clock runs out." },
+      { tier: "Core gameplay loop", q: "**Core loop 4** — At any moment the player can pause, and the pause menu offers Resume, sound on/off, Restart level, and Back to the main menu." },
+      { tier: "Core gameplay loop", q: "**Core loop 5** — On some mountains a boss blocks the path near the bottom, and the player must drive it off before reaching the chick." },
+      { tier: "Core gameplay loop", q: "**Core loop 6** — Reaching the bottom before the clock runs out frees one chick, who waddles to the mother in a short scene." },
+      { tier: "Core gameplay loop", q: "**Core loop 7** — If the clock runs out first, the predator snatches the chick, and the fail screen offers Retry and Back to the main menu." },
+      { tier: "Core gameplay loop", q: "**Core loop 8** — Between mountains a story screen shows the growing family, and the player starts the next mountain, which is steeper and under a tighter clock." },
+      { tier: "Core gameplay loop", q: "**Core loop 9** — Finishing a level frees one chick and moves the family on; beating the boss on the final mountain frees the last chick, reunites the whole family, and plays the ending scene before returning to the main menu." },
+      { tier: "The design document", q: "**Core mechanic** — On a steep slope the player drops the mother to her belly to slide; sliding builds far more speed than running, but the faster she goes the harder she is to steer." },
+      { tier: "The design document", q: "**Mechanics — the player** — The mother can at least run, turn, and jump over packed snow and ice; loose snow slows her, while sheer ice keeps her momentum but grips less." },
+      { tier: "The design document", q: "**Mechanics — the world** — Each mountain starts a countdown when the descent begins, and the level is won by reaching the chick before it reaches zero and lost when it reaches zero. Hitting a hazard knocks the mother down and costs a little time while she gets up, without ending the run by itself; at least three kinds of hazard — crevasses, ice spurs, and falling snow slabs — line the route, and hidden chutes and ice caves cut distance down the mountain but pack tighter hazards." },
+      { tier: "The design document", q: "**Onboarding** — The first mountain is gentle and mostly open, teaching running and jumping first, then the slide on a long, safe slope, and only then setting hazards along the way, while a short overlay names each new control as it appears." },
+      { tier: "The design document", q: "**Enemies** — A bird of prey circles the mountain and swoops at the mother, forcing her off her line; it seizes the chick when the clock runs out, and on some mountains it blocks the path near the bottom as a boss that must be driven off by dodging and outmaneuvering." },
+      { tier: "The design document", q: "**Rewards and power-ups** — Fish scattered down the route reward the player with score, and each freed chick is the run's true prize; at least a speed-burst pickup and a brief shield let the player gamble on a faster line or shrug off a single knockdown." },
+      { tier: "The design document", q: "**Progression** — The rescued chicks gather into a growing flock that follows the mother between mountains, and later mountains ask more of the player's skill while adding new hazards, tighter clocks, and bosses to deal with, until the whole family reunites on the final mountain." },
+      { tier: "The design document", q: "**Interface — in play** — In play, the HUD shows at least the clock, a goal marker steering toward the chick, speed, the current run's fish count, and the boss state." },
+      { tier: "The design document", q: "**Interface — menus** — The How to Play screen shows the controls and each mechanic, and between mountains a story screen shows the growing flock and the next mountain." },
+      { tier: "Content and filling", q: "**Volume** — A competent first-time player needs at least fifteen minutes to beat the game." },
+      { tier: "Content and filling", q: "**Variety** — Later parts of the game add at least one new element — a hazard, an enemy, a mechanic or a situation — rather than only more of the same." },
+      { tier: "Content and filling", q: "**Curve** — The game gets harder as it goes in at least two different ways, rather than only by making things faster, and stays beatable." },
+      { tier: "Content and filling", q: "**Teaching** — Each mechanic can be tried at least once somewhere safe before the game depends on it." },
+      { tier: "Content and filling", q: "**Reward** — At least one reward changes what the player can do or where they can go, rather than only raising a number." },
+      { tier: "Content and filling", q: "**Opposition** — Overcoming the opposition takes at least two different player behaviours." },
+      { tier: "Content and filling", q: "**Session** — Each level has a defined end the player can stop at and come back from." },
+      { tier: "Content and filling", q: "**Bugs** — Five minutes of trying to break the game finds nothing visibly wrong — nothing floating, overlapping or drawn in the wrong place, no animation that never settles, no number that disagrees with the screen — and nothing that blocks progress or forces a reload." },
+      { tier: "Content and filling", q: "**Controls** — A player given no instructions works out every control and every mechanic from the game alone within the first level." },
+      { tier: "Presentation", q: "**Art style** — The game has a deliberate 3D visual style, distinct enough to describe in one sentence, held from the first screen to the last." },
+      { tier: "Presentation", q: "**Animation** — At least every important action produces a visible reaction — particles, a shake, a squash, a flash — timed well and not overdone." },
+      { tier: "Presentation", q: "**Audio** — The game has at least music or ambience, plus sound effects at the key moments." },
+      { tier: "Presentation", q: "**UI** — The interface is understood at a glance, with the most important information standing out and matching the rest of the game visually." },
+      { tier: "Presentation", q: "**Intro** — The intro presents the premise with at least one staged scene, rather than only a title card." },
+      { tier: "Presentation", q: "**Victory — level** — Completing a level produces a moment that marks it as won, distinct from failing it." },
+      { tier: "Presentation", q: "**Victory — game** — The ending scene is distinct from any single level win and closes the premise the intro set up." },
+    ],
+    versions: [
+      {
+        label: 'Gemini 4 Argon', type: 'html', file: ARGON + '3d-platform__gemini-4-argon.html',
+        // Rubric from argon_rubric_eval_2026-10-27.json (human-reviewed scores and comments).
+        marks: [true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, false, false, false, false, false, true, true, true, true],
+        comments: [
+          "The game opens on a titled 3D scene: the mother on the summit, the giant Skua swooping in, and eight chicks sliding away down the slope, with two captions. It can be skipped with a button, Esc or Space, and it moves on by itself after 7 seconds. The main menu offers Start Descent, How to Play and Settings. The storm itself is only heavy fog plus a caption ('A sudden gale...'). There is no snow or wind on screen.",
+          "Pressing Start Descent puts the mother at the top of the track (s=8). The countdown starts falling right away: 1:49.3 shows within half a second of starting Mt 1.",
+          "W/A/S/D runs and steers, Space jumps and Shift belly-slides. Sliding hit 150 km/h, against 76 km/h running. Hazards (crevasses, spurs, slabs, boulders) knock her down, and two ice-cave shortcuts per mountain are entered by steering right. A scripted bot using these inputs reached the bottom of all eight mountains before the clock ran out. Movement is tied to a spline track: she can steer side to side but always moves forward.",
+          "Esc pauses at any point in play and freezes the clock. The pause menu has Resume, Sound ON/OFF, Restart Level and Back to Main Menu. All four buttons are wired up.",
+          "Mountains 3, 6 and 8 have a boss (3, 4 and 5 hit points) in the basin near the bottom. The level cannot be won until its HP reaches 0: the player is looped back through the arena until then. The player damages it by sliding into golden crystals or belly-sliding into it mid-swoop. The bot drove off all three bosses.",
+          "Reaching the bottom plays a 3.1-second win scene. The chick hops toward the mother, the 'Pip Freed!' caption shows, and a victory jingle and chirp play. It is short and simple: the chick moves only about 3 units, and the 'ice cage shatters' in the caption is not shown (the cage just disappears).",
+          "When the clock hits zero, a fail scene shows the chick's ice cradle lifted into the sky by the Skua, with a 'Time Ran Out' caption. Then the fail screen offers Retry Mountain and Back to Main Menu. Retry restarts the same mountain with a full clock.",
+          "After each mountain a story screen shows the mother with her rescued chicks behind her, the flock count, a perk and the next mountain. Steepness rises every time (19% to 35%). The clock does not always get tighter, though. Boss mountains get more time than the mountain before them (Mt 2 104s then Mt 3 118s; Mt 5 102s then Mt 6 118s; Mt 7 105s then Mt 8 126s), and the story screen shows these larger numbers. The bot's leftover time also went up on those mountains. If the reviewer counts the boss fight as using up the extra time, this could pass.",
+          "Each win frees one chick and raises the rescued count. Beating the Apex Storm Raptor on Mt 8 frees Aurora, and the game goes straight to the 'Family Reunited' ending with all eight chicks around the mother. After 11 seconds it returns to the main menu.",
+          "Holding Shift drops her onto her belly. Top slide speed is about 150 km/h on ice, against about 76 km/h running. Steering acceleration is divided by a speed factor that grows about 4x faster while sliding (1.55 vs 0.38), so fast slides turn wide. The blind annotator also confirmed that sliding is clearly faster and harder to control.",
+          "She runs, steers left and right, and jumps. Loose snow on the outer drifts caps speed at 60% and has higher drag. Sheer blue ice has low drag, so it keeps momentum, and grip of 0.58 with slower lateral damping. 'Turn' is only lateral steering on a fixed track: she cannot turn freely or stop (holding S still moves her at about 34 km/h).",
+          "Each mountain has a countdown. Reaching the chick wins and a clock at zero loses. Hazards cause a 1.15-second knockdown and a speed cut but never end the run. Crevasses, ice spurs and falling snow slabs (which drop from above) all exist, plus rolling boulders. The two ice-cave shortcuts per mountain give a 28% distance gain on a 4.3-wide lane with extra hazards inside.",
+          "Mt 1 is wide and nearly straight for its first 42%. It opens with a run/look prompt and a single crevasse with a jump prompt. Next comes a long hazard-free sheer-ice slope with a 'New Move: The Belly Slide' overlay. Hazards begin only at s=405, introduced as spur, then crevasse, then slab, each with its own overlay. Predator swoops are held back until s>560.",
+          "The Skua circles above the player and, on a timer, marks a red ring and swoops. A hit pushes the mother sideways and knocks her down. On timeout it carries off the chick's cradle. On Mt 3, 6 and 8 it blocks the basin as a boss that is driven off by dodging swoops and hitting crystals or ramming it while sliding.",
+          "Fish lines along the route give 100 points each and are counted on the HUD. Orange speed-burst orbs give 4 seconds at up to 41 m/s and ignore loose-snow slowdown. Cyan shield orbs absorb one knockdown. Freeing each chick is the level goal.",
+          "The story screen renders the mother with the rescued chicks lined up behind her, and the count grows each time. Each chick also grants a permanent perk. Later mountains are longer, steeper and narrower, with denser hazards and more frequent swoops. Boulders join from Mt 3, bosses appear on 3/6/8, and the family reunites at the end. Clocks are not consistently tighter: boss mountains get more time.",
+          "The HUD shows the countdown clock, a goal arrow with the distance to the named chick, speed in km/h with stance and surface pills, the fish count and score, and a predator/boss bar. The bar shows swoop warnings, or the boss's integrity as hits remaining.",
+          "How to Play has four cards: the controls, the slide and surfaces, hazards/shortcuts/clock, and predator/bosses/power-ups. The slide key is left off on purpose, as the design doc asks. Between mountains, the story screen shows the growing flock rendered in 3D plus a 'Next Mountain Ahead' card with its clock, steepness and boss warning.",
+          "There are 8 mountains, but each is a 25-55 second run. A simple scripted bot beat the whole game in about 4.8 minutes of play time (25, 28, 39, 31, 32, 39, 41 and 54 seconds) and still had 64-85 seconds left on every clock. With clocks that loose, a first-time player will rarely fail. Even at twice the bot's pace, plus cutscenes and story screens, the game comes out at around 10 minutes, well short of 15.",
+          "Later mountains add rolling frost boulders, which sweep sideways. In code they appear from Mt 3 onward (mtIdx>=2), although the notes say Mt 4. They also add boss arenas with a new crystal-strike or ramming mechanic on Mt 3/6/8, and the lighting shifts from day to dusk to night.",
+          "Difficulty rises in several ways besides speed. The hazard spacing tightens (44 to about 26 m), the track narrows (17.5 to 13.2), swoops come more often (13.5s to 6.8s), boulders are added, and boss HP grows from 3 to 4 to 5. The game stays beatable, since the bot won every mountain. The overall challenge stays low, though, because the clocks leave a large margin throughout.",
+          "Mt 1 lets the player try running, one isolated crevasse jump, and sliding on a long hazard-free ice slope before hazards start. Shortcuts and swoops come later in Mt 1, each with an overlay. Missing the crevasse jump only costs a moment. The boss crystal/ram mechanic has no practice area: it is first explained by an overlay during the Mt 3 boss. Losing there only happens if the clock runs out, which is lenient.",
+          "The shield lets the player take one hit without a knockdown. The speed burst lets her cross loose snow at full speed. The permanent flock perks change her abilities: a free shield at the start of each mountain, higher jumps, faster recovery and better ice grip.",
+          "Getting past the opposition takes steering around the swoop rings and hazards, jumping crevasses and spurs, and sliding into crystals or the boss to damage it. The annotator noted that the boss arena keeps looping the player back, and that this repetition eventually lands hits for them. That weakens how much skill the boss needs.",
+          "Each mountain ends in a win or fail scene, followed by the story or fail screen with Back to Main Menu. Rescued and unlocked counts are saved to localStorage, and the main menu has a mountain grid to pick from. The unlock is never enforced, though: any mountain can be picked from the start.",
+          "There are no console errors, but several visible problems. The HUD's predator/boss bar draws on top of the pause menu panel. In the ice caves the camera clips into the arch geometry, and the shield bubble hides the mother. The boss arena silently teleports the player back up the slope until the boss is beaten. In the intro, the mother stays tinted red and keeps tumbling. The blind annotator also clipped through the blue archways into a lower floor section.",
+          "There is a bug that I'm teletransported to the top of the mountain in loop",
+          "The game has a consistent low-poly which does not pass the quality bar",
+          "The animations are bugged , and sometimes when I'm hit i can go below the floor",
+          "A procedural Web Audio arpeggio loop plays as music, with a calmer variant in menus and a faster tempo when the clock is urgent. Wind or slide noise plays at speed. There are separate sound effects for jump, slide, fish, power-up, knockdown, shield break, screech, boss hit, chirp, victory and fail. Audio could not be heard headless, but the annotator rated it 4/5.",
+          "The UI is built from dark glass cards in a matching icy palette. The clock is large and centred at the top, and speed is large at bottom-left, so the key numbers stand out. The HUD is fairly busy, with five cards and a centre overlay, and the boss bar overlaps the pause panel. The annotator rated UI 4/5.",
+          "The intro is a staged 3D scene, not just a title card. The camera sways over the summit as the Skua swoops past and the eight chicks slide away down the slope while the mother is knocked over, with two captions setting up the premise. The 'storm' itself is only thick fog: no falling snow or wind is shown.",
+          "A win plays a victory jingle and chirp, the chick hops to the mother at the bottom, and a gold 'Pip Freed!' caption shows before the story screen. A loss is clearly different: a descending fail tune and screech, the cradle carried off into the sky, and a red 'Time Ran Out!' screen.",
+          "The ending is its own 'Family Reunited' screen. The camera orbits the mother as all eight chicks circle and hop around her under warmer light. The captions name all eight chicks, show the final score and say the bird of prey is gone, closing the storm and Skua premise from the intro. It is clearly distinct from a single-level win.",
+        ],
+      },
+      {
+        label: 'Redesign', type: 'html', file: 'Redesign/3d-platform/index.html',
+        trajectory: 'trajectories/the-long-slide-home-redesign.json',
+        notes: "# Final Game Notes\n\n### Reviewer's Feedback\n\n- I improved the opening storyline with a longer storm sequence, a \"Press Any Key\" screen, and a skippable intro to make the beginning more engaging.\n- I improved the transition from the intro to gameplay with smoother camera movement and better anticipation before the descent.\n- I adjusted the title screen layout, enlarged the logo and buttons, and removed unnecessary supporting text to make the menu cleaner.\n- I improved the logo's letter spacing and typography to make the title easier to read.\n- I increased font sizes throughout the UI and updated the font styling for better readability and consistency.\n- I simplified the Settings menu by keeping the volume slider and making the Back button secondary.\n- I improved the How to Play menu with visual instructions, keyboard and controller mappings, and a layout that doesn't require scrolling.\n- I updated the level selection screen with clearer names, thumbnails, difficulty information, and improved button states.\n- I simplified the gameplay HUD to make important information easier to follow without covering the action.\n- I cleaned up the Pause menu and improved its layout to keep navigation simple.\n- I improved the ending sequence with closer camera framing, smoother movement, and better presentation of the final scene.\n- I adjusted the final scene's composition, lighting, and camera transitions to make the family reunion more emotional.\n- I improved the ending music and visual atmosphere to create a warmer and more hopeful conclusion.\n- I fixed the issue where the baby penguin could become unreachable near the end of a level.\n\n### Additional Gameplay Improvements\n\n- I improved player collision handling and recovery to prevent the penguin from getting stuck against obstacles.\n- I adjusted checkpoints and surrounding obstacles to make them easier to reach without accidental collisions.\n- I improved the ramps with better positioning, clearer takeoff areas, and safer landing zones.\n- I added breakable snow walls that react to high-speed sliding, making momentum more useful during gameplay.\n- I improved speed corridors with clearer entrances, smoother paths, and fewer obstacles blocking the player.\n- I reworked shortcuts with accessible cave entrances, continuous terrain, and better connections to the main routes.\n- I widened sharp turns and adjusted obstacle placement to give players more time to react.\n- I improved branching paths with safer alternatives and more challenging shortcuts to encourage different routes.\n- I added bright orange emissive ground arrows and animated directional indicators to make navigation easier at high speeds.\n- I improved collectible fish with sparkling particles, glow effects, and more satisfying collection feedback.\n- I improved blue power-ups with brighter materials, animated lightning effects, and better visibility.\n- I added a transparent blue protective shield around the penguin with impact reactions and clear expiration effects.\n- I enhanced speed power-ups with stronger wind streaks, flowing particles, and shockwave effects.\n- I improved falling rocks with visible warning zones, snow particles, camera shake, and automatic removal after impact.\n- I adjusted wolf encounters with clearer attack warnings, better positioning, and more controlled collision penalties.\n- I improved the rescued chicks so they follow the mother more naturally and react to movement and nearby dangers.\n- I added more expressive chick reactions during boss encounters to make the characters feel more alive.\n- I improved boss rock targeting and positioning to reduce unfair attacks and keep more space available for dodging.\n- I added planned gameplay sequences combining fish trails, gaps, speed boosts, ramps, and shortcuts to make each mountain more interesting.\n- I improved the difficulty progression across the four mountains by introducing more demanding route combinations.\n- I added near-miss effects with snow bursts and wind streaks to make close calls at high speed more exciting.\n- I improved atmospheric snowfall with more visible particles while keeping the track and obstacles readable.\n\n### Bug Fixes & Final Polish\n\n- I fixed the pause menu randomly opening during gameplay and repeatedly appearing after clicking Resume.\n- I corrected the audio behavior so pausing and resuming no longer change the player's sound preferences.\n- I improved snow and ice rendering to reduce flickering, overlapping surfaces, and z-fighting.\n- I adjusted object placement and terrain alignment to reduce floating props and clipping.\n- I improved particle visibility and glow effects while keeping the gameplay readable.\n- I refined the sliding speed effects with stronger snow trails and better visual feedback during fast descents.\n- I cleaned up unnecessary signs and interface elements to reduce visual clutter.\n- I prevented unwanted text selection and browser scrolling during gameplay.\n- I preserved the game's procedural 3D environments, characters, effects, and animations within a single HTML file.\n- I also created a separate final boss preview with the boss one hit away from defeat, making it easier to showcase the final battle and ending sequence.",
+        marks: [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true],
+        comments: [
+          "Partial. The title and the Play, How to Play, and Options menus are there, but the initial scene of the storm scattering the puppies and the option to skip it are missing.",
+          "The game starts with the mother penguin at the top of the mountain, and the countdown begins as soon as gameplay starts",
+          "Running, jumping, sliding, and dodging obstacles are implemented. Alternative routes exist, but there is no evidence of shortcuts that actually reduce time or distance.",
+          "I included a pause menu that lets players resume, toggle sound, restart the level, or return to the main menu",
+          "There are wolves that chase and attack the character, but no boss with its own combat system that needs to be defeated or driven away to free the cub.",
+          "When I reach the refuge before time runs out, a rescue scene plays where the chick walks toward its mother and they reunite.",
+          "The timer runs out, leading to the defeat screen with Retry and Main Menu options, but there is no animation of the predator capturing the cub.",
+          "The game features only one playable mountain, with no interstitial narrative screens, growing family, new descents, or progressive reduction of time.",
+          "After rescuing a single cub, you can go straight to the end. There is no final mountain with a boss, no need to rescue the remaining cubs, or to reunite the whole family.",
+          "Sliding makes the penguin much faster than running, but reduces steering control as intended.",
+          "I implemented running, turning, jumping, deep snow slowdown, and slippery ice with reduced grip.",
+          "Each mountain has a countdown, different hazards, shortcuts, knockdowns, and clear win/fail conditions.",
+          "I need to introduce jumping before sliding, make the first practice slope longer, and reduce early hazards.",
+          "The eagle boss and timed-out chick capture work, but I still need the eagle to patrol and swoop during regular descents.",
+          "I added collectible fish, score rewards, speed boosts, and shields that protect against a knockdown.",
+          "Rescued chicks appear in story scenes, but I need them to actually follow the mother during later mountains.",
+          "The HUD displays the countdown, chick direction and distance, speed, fish count, and active boss state.",
+          "The menus and story transitions work, but I need to explain the remaining enemy and hazard types in How to Play.",
+          "I need to time a complete first-time playthrough and make sure it takes at least 15 minutes.",
+          "Later mountains introduce boss encounters, more enemies, different environments, and more challenging situations.",
+          "I increased difficulty through narrower paths, tighter starting clocks, more enemies, and tougher boss encounters.",
+          "I need safer practice opportunities for advanced hazards and boss mechanics before they become mandatory.",
+          "Fish improve running speed, while shields, speed bursts, and the hidden cave change how I can approach the route.",
+          "Players must jump, dodge, and slide through hazards, while bosses require baiting attacks and dodging at the right moment.",
+          "Each mountain has its own ending, and I save completed-level progress so players can return later.",
+          "I still need a five-minute stress test to check clipping, floating objects, animation issues, and progression blockers.",
+          "I need to teach every control and major mechanic within the first level, including a safe introduction to boss behavior.",
+          "I kept a consistent, charming stylized 3D art style with soft snowy environments, rounded characters, and a cohesive winter atmosphere throughout the game.",
+          "I added visible reactions to the main actions, including snow particles, jumping and landing animations, collision effects, and character movements.",
+          "I included background music, mountain ambience, and sound effects for jumping, collecting fish, collisions, and rescuing the chick.",
+          "I kept the interface clean and consistent, with a clear countdown, speed indicator, collected fish counter, and progress bar.",
+          "There is an animated 3D scene in the menu and a cinematic transition to the descent, but no staged narrative presentation explaining the separation of the puppies.",
+          "I created a distinct level victory sequence with the chick reunion, a rescue message, and a completion screen that is different from the failure screen",
+          "There is a separate final scene after the level victory, with its own camera and closing message. However, it does not conclude the story of all the puppies.",
+        ],
+      },
+    ],
+  },];

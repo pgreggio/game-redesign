@@ -249,13 +249,15 @@ const svg = (name, size=15, sw=1.8, extra='') =>
 
 /* ---------- scores, computed from marks ----------
    Questions with `rating: true` take a 1–5 number; every other question is a
-   pass/fail check. null (or a missing mark) means "not scored yet". */
+   pass/fail check. null (or a missing mark) means "not scored" and is left
+   out of that version's totals. */
 function score(g, v){
   const qs = g.questions || [], marks = v.marks || [];
   const out = { passed:0, total:0, scored:false, tiers:{}, ratings:[] };
   qs.forEach((q,i) => {
     const m = marks[i];
-    if (m !== null && m !== undefined) out.scored = true;
+    if (m === null || m === undefined) return;   // not scored: left out of the totals
+    out.scored = true;
     if (q.rating){ if (typeof m === 'number') out.ratings.push(m); return; }
     const t = out.tiers[q.tier] ||= [0,0];
     t[1]++; out.total++;

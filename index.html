@@ -280,7 +280,7 @@ function drawHead(){
   const g = DATA[state.game];
   if (!g){ $('head').innerHTML = '<h1>No games yet</h1>'; return; }
   $('head').innerHTML = `
-    <div class="kicker">${esc(g.genre || 'Game')} · ${state.game + 1} of ${DATA.length}</div>
+    <div class="kicker">Game ${state.game + 1} of ${DATA.length}</div>
     <h1>${esc(g.title)}</h1>
     ${g.description ? `<div class="prompt">
       <div class="label">${esc(g.descLabel || 'Prompt')}</div>

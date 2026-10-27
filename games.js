@@ -32,7 +32,109 @@ window.GAMES = [
     genre: 'Puzzle',
     title: 'Wellspring',
     description: 'Carve the parched hills. Guide the mountain spring. Save the watershed. Every drop counts against the village hunger clock.',
-    versions: [{ label: 'Gemini 4 Argon', type: 'html', file: ARGON + 'puzzle__gemini-4-argon.html' }],
+    // Rubric and Redesign notes from saida (1).jsonl (final rubric evaluation).
+    questions: [
+      {
+        "tier": "The design document",
+        "q": "**Core mechanic** — Water leaves the spring and follows the terrain downhill, changes course wherever the player has dug a channel or lifted the land, and reaches the field only when an unbroken downhill path connects spring to field."
+      },
+      {
+        "tier": "The design document",
+        "q": "**Mechanics — the player** — The player can at least dig channels and raise walls on soft ground but not on rock faces, with each shape staying until it is reworked, and can pick up and drop small stones to dam or deflect water while boulders roll downhill on steep slopes, crushing anything in the way, and can only be nudged slowly."
+      },
+      {
+        "tier": "The design document",
+        "q": "**Mechanics — the world** — The ground holds at least cracks, holes, and thirsty sand that swallow water, and hidden pits that open under the water's weight; the hunger meter drains from the moment the village loads and the level is lost when it empties; a village is saved when enough water reaches each of its fields, which drink only the water that arrives while the path is whole; and wasted water is water the fields never get, so losing too much of it forces a restart."
+      },
+      {
+        "tier": "The design document",
+        "q": "**Onboarding** — The first village is a single straight downhill channel with one field so the player learns to dig before anything else exists, each later mechanic is introduced on a village where it is the only new thing, and the player can only lose by running out of time, never by a mechanic they have not met."
+      },
+      {
+        "tier": "The design document",
+        "q": "**Enemies** — There are no living enemies; the opposition is the terrain and the clock, and the land itself resists the player."
+      },
+      {
+        "tier": "The design document",
+        "q": "**Rewards and power-ups** — Saving a field makes its crops grow green on the spot, and a saved village carries its clean, unblocked spring forward so the next village has a fuller water supply."
+      },
+      {
+        "tier": "The design document",
+        "q": "**Progression** — Each village sits lower in the hills and grows larger, with more fields, longer routes, and steeper drops, and later villages add boulders, then traps, then traps that interact with the player's own walls."
+      },
+      {
+        "tier": "The design document",
+        "q": "**Interface — in play** — The in-play interface shows at least the hunger meter, the water supply, the field status, a tool hint, and the village name."
+      },
+      {
+        "tier": "The design document",
+        "q": "**Interface — menus** — How to play shows each mechanic with a still of it in use, and a between-village screen shows the saved village turning green and the path to the next village."
+      },
+      {
+        "tier": "Content and filling",
+        "q": "**Volume** — A competent first-time player needs at least fifteen minutes to beat the game."
+      },
+      {
+        "tier": "Content and filling",
+        "q": "**Variety** — Later parts of the game add at least one new element — a hazard, an enemy, a mechanic or a situation — rather than only more of the same."
+      },
+      {
+        "tier": "Content and filling",
+        "q": "**Curve** — The game gets harder as it goes in at least two different ways, rather than only by making things faster, and stays beatable."
+      },
+      {
+        "tier": "Content and filling",
+        "q": "**Teaching** — Each mechanic can be tried at least once somewhere safe before the game depends on it."
+      },
+      {
+        "tier": "Content and filling",
+        "q": "**Reward** — At least one reward changes what the player can do or where they can go, rather than only raising a number."
+      },
+      {
+        "tier": "Content and filling",
+        "q": "**Opposition** — Overcoming the opposition takes at least two different player behaviours."
+      },
+      {
+        "tier": "Content and filling",
+        "q": "**Session** — Each village has a defined end the player can stop at and come back from."
+      },
+      {
+        "tier": "Content and filling",
+        "q": "**Bugs** — Five minutes of trying to break the game finds nothing visibly wrong — nothing floating, overlapping or drawn in the wrong place, no animation that never settles, no number that disagrees with the screen — and nothing that blocks progress or forces a reload."
+      },
+      {
+        "tier": "Content and filling",
+        "q": "**Controls** — A player given no instructions works out every control and every mechanic from the game alone within the first village."
+      }
+    ],
+    versions: [
+      { label: 'Gemini 4 Argon', type: 'html', file: ARGON + 'puzzle__gemini-4-argon.html' },
+      {
+        label: 'Redesign', type: 'html', file: 'Redesign/puzzle/index.html',
+        notes: "From the reviewer's list\nRemoved the timer. Each village now has a fixed number of moves, so the puzzles are about logic instead of rushing.\nReplaced the realistic water simulation with a predictable flow. Every tile has a fixed height, water spreads in waves to every open tile at or below its level, one unit per tile, and overflows from the farthest point when the channel is full.\nSplit planning from watching. I plan with my moves, press Open the gates, then only watch; if a field stays dry, Try again returns me to the exact plan.\nChanged the controls so nothing changes until I confirm: drag, or use the arrows and Space, to paint tiles, then pick Dig or Raise, which shows how many moves it will cost.\nAdded a multi step Undo, keyboard arrows and an on screen arrow pad. Ctrl or Z marks tiles while the cursor moves, and clicking the spring or pressing Enter opens the gates.\nRock tiles cannot be dug or raised. Small stones move one tile and plug low tiles, and boulders slide until they hit something, so a careless push can block my own channel until I undo it.\nAdded water driven levers that flip every sluice of their colour, and traps: cracks, thirsty sand, holes, hidden pits and dry clay that crumbles walls.\nBuilt twelve villages that teach one rule at a time and then combine them. Each has a tight move budget and a stored solution, and I checked that it wins with exactly that budget while doing nothing or the wrong idea loses.\nTurned the recentre button into Restart level; a double right click now recentres the camera.\n\nAlso added\nStars per village, a Level Select with one card per village, a one line callout for each new rule and a hint line that names the tile under the pointer.\nHow to Play shows a still of every rule and the current controls; Settings has a sound switch and Play ending; the pause menu has Resume, sound, Restart level and main menu.\nAfter each win the journal shows a valley map with the path to the next village, and every village after the first gets two extra water from the saved spring upstream.\nCleaned up the HUD and the board: modals cover the whole HUD, every text is at least 14 px, tile picking is exact, every tile type reads at a glance, and the island holds the whole board.\nReworked the interface for readability. Every HUD text now reads at 4.5 to 1 or better, and the dock looks like a field kit. It shows a locked look while the water runs, and the floating tile hint always matches the hint bar.\nThe journal opens as a two page book with a valley map that names the saved, current and next villages, plus notes on the next rule.\nComposed new music: a plucked melody over bass and soft chords, a livelier groove with a shaker while the water runs, and short phrases for a win and a failure.\nKept every tree, stone, flower and villager on top of the island.\nRedo 1, from the reviewer's list\nMade selection unmistakable: selected tiles lift and glow teal with a cream outline.\nLaid four large push arrows flat on the tiles around a stone or boulder, with a path to where it stops; clicking one pushes, and the push buttons sit next to Push.\nMade the spring ask before opening the gates, and the stones around it never open them.\nAdded a Mark as I move toggle to the on screen pad, and a key strip in the first villages that names Space, Z, the verbs and Enter.\nA failed flow now stays on the board for a few seconds, marking dry fields and where water was lost, with Back to plan and Restart next to the map.\nStones and boulders now slide, roll and drop into holes on screen instead of jumping, and the camera stays close until they land.\nLevel Select has Act I and Act II, and every card has its own Play or Replay button in view.\nAdded Act II: ten challenge villages designed and proven in a simulator, where the obvious route and the wrong order lose, plus high ground, a raised terrain that costs two digs per tile.\nRedo 2, from the reviewer's list\nFixed the bug behind Ringmoor: on raised ground a click picked the tile behind the pointer. Every click now picks the visible tile under it at its real height.\nSelection, hover and the keyboard cursor now sit on their own tile and are no longer drawn through the terrain in front.\nAdded view turns in 90 degree steps (Q, E or the buttons under Restart level) and a top view (T) that squares the grid on screen. The arrows follow the screen after a turn.\nA failed flow now stays on the board until I choose Try again, Restart level, Main menu or Open journal; the green dock button also reads Try again there.\nThe green Open the gates button confirms itself: a second click or a double click opens the gates.\nGrass fields can no longer be selected.\nSaving a village now celebrates with a ribbon naming it, stars stamped in with a bell, a fanfare over the dipped music, petals over the fields and villagers hopping.\nAfter two failed tries a Hint button shows the next step of the solution, and the Act II texts no longer give away the answers.\nRedo 3, from the reviewer's list\nThe flight from the menu into a village no longer follows the mouse: the camera takes the same smooth path wherever the pointer is.\nRedesigned Dunewell: the sand is one column wider and a second crack sits on the straight line, so the short route along the crack loses and the clean route around the right side, two digs longer, is the way through.\nYou were right about the stars: before this change 16 of the 22 villages could not reach three. Every village can now earn three stars: save it, save it on the first opening of the gates, and keep its water goal, shown under Water reserve while planning. Each goal is the water a correct solution leaves, and the journal shows which stars a try earned. The first opening star counts the whole attempt, so Try again and Restart level keep the count; to go for three stars again, reopen the village from Level Select.\nVideo 1 shows the three: the flight at 0:13, recorded with the mouse moving across the screen (the recording does not draw the pointer); Stillwater saved with three stars at 0:24 and its journal at 0:30; Dunewell from 0:42, where the route along the crack runs dry at 0:52 and the clean route saves it at 1:10 with two stars, since it was a second try.\nHow to beat Ringmoor\nYou were right to get stuck, and it was our fault. On raised ground a click picked the tile behind the one under the pointer, so the right moves could not be entered with the mouse. That is fixed now, and the redo 2 video played it with the mouse in the top view. Ringmoor's water goal is 1, so this solution on a first try earns three stars.\nThe solution takes all 4 moves. In the field's row, dig the high tile next to the old trench twice, then dig the next two high tiles toward the field once each.\nThe water runs down the old trench and ends inside the hill, and the overflow wells up there and walks along the notch into the field, with 1 water to spare.\nFrom the second failed try in any village, the Hint button now shows the next step of the solution.\n\nAct II solutions, one line each\nKettleford: push the stone up into the near hole first, then push the boulder left so it rolls over it into the far hole, then dig the channel to the field.\nFarwater: raise the first tile of the left trunk, which dries both decoy ditches, and raise the gap in the aqueduct; the overflow rises at the right end and runs down the aqueduct.\nElbow Pass: lower the bump, raise a stopper where the boulder must stop, push the boulder right and then down into the hole of the pass, then dig to the field.\nCrumblewick: raise the clay inside the aqueduct as a stopper, push the boulder right so it stops on the leak, then dig the missing channel tile.\nLockstep: dig the branch to the amber lever and the channel to the first field, then reach the blue lever from below through the second amber gate, and dig to the second field.\nGapstone: raise the upper gap, push the stone left so it leaves the lane and plugs the second gap, then dig two tiles after the gate.\nQuarry Hollow: lower three rim tiles, push the boulder down, push the stone down into the near hole, then push the boulder right into the far hole.\nEvenfall: lower the column of high ground under the lever; the first field fills by channel, and its overflow runs the old trench, climbs the hill and pulls the lever last, so the second field fills.\nHeadwater: push the boulder left to plug the hole by the second field, dig two below the first field to the gap, lower four ridge tiles under the lever, and dig two after the gate.",
+        marks: [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true],
+        comments: [
+          "Water leaves the spring and spreads in steady waves over every open tile at or below its level. Dug channels lower the land and raised walls block it. A field only drinks when an unbroken path of water reaches it.",
+          "I can dig channels and raise walls on soft ground, and rock refuses both. High ground needs two digs per tile, and water never climbs it. Small stones move one tile and plug low tiles, and boulders roll until they hit something. Every push slides or rolls on screen.",
+          "Cracks, thirsty sand and holes drink extra water. A hidden pit looks like soil until the water opens it. Dry clay crumbles walls raised on it. Each field needs a set number of units, so wasted water fails the village.",
+          "Stillwater is one straight channel to one field, so digging comes first. Every later village opens with a callout naming its only new rule. How to Play shows a still of each rule. A village is lost only by spending water or moves badly.",
+          "There are no living enemies. The opposition is the terrain, the limited moves and the thirsty ground. A careless boulder push can block my own channel until I undo it.",
+          "Each field turns green the moment it is full. Saving a village now celebrates: a ribbon names it and the stars stamp in with a bell. A fanfare rises over the dipped music while petals fall and villagers hop. Every village after the first gets two extra water, and three stars are possible in every village: save it, save it on the first opening and keep its water goal.",
+          "Act I grows from a small board with one field to a wide valley with three fields. Act II adds ten harder villages with high ground, overflow puzzles and ordered pushes. The last one, Headwater, combines every tool.",
+          "The HUD shows moves left, the water reserve with the village's star goal, and every field with its units of need. A hint line names the tile under the pointer and its rule, and the lesson stays on the top card while I plan. Under Restart level, three buttons turn the view and switch to a top view. Every label is dark ink on parchment and stays readable.",
+          "How to Play shows ten rules, each with a still drawn from real game tiles. After a win the village turns green. The journal then opens like a book, with a valley map naming the saved, current and next villages. A river journey leads to the next one.",
+          "There are twenty two villages with exact move budgets. Act I teaches each rule, and Act II holds ten real puzzles. By our estimate a first time player needs about forty five minutes for both acts.",
+          "Act I adds a new element in almost every village. Act II brings high ground and overflow used on purpose to cross obstacles. It also adds clay that holds a boulder before it crumbles, and lever chains in two colours.",
+          "Difficulty grows in board size, number of fields, combined rules and tighter water, never by speed. In Act II the obvious route and the wrong order always lose. Every village has a solution that fits its budget exactly.",
+          "Each rule first appears in a small village where it is the only new thing, and a callout names it. Ringmoor's callout teaches high ground: dig twice to cut through, and water never climbs it. Dunewell lets the short route along a crack fail, so the water a crack drinks is learned by trying. After two failed tries a Hint button shows the next step without spending moves.",
+          "Saving a village unlocks the next one and carries two extra water downstream. Level Select keeps every saved village open to replay for three stars, and the journal shows which stars each try earned.",
+          "I have to shape the land by digging, raising and cutting high ground. I also have to push stones and boulders in the right order. Act II adds overflow as a tool and levers that the water must reach in time.",
+          "Each village is a separate puzzle with its own result screen, saved progress and stars. I can stop after any village and continue from Level Select.",
+          "Five minutes of trying to break it found nothing floating or overlapping on any screen. The camera flight into a village keeps one smooth path whatever the mouse does. A click on any visible tile picks that tile, even on raised ground or behind a boulder. A failed flow stays on the board with dry fields and losses marked until I choose Try again, Restart level or Main menu.",
+          "A hint line and a key strip teach Space, Z, the verbs, Enter, Q, E and T in the first villages. Selected tiles glow teal, push arrows lie on the board and can be clicked, and fields cannot be selected. A double click on the green button opens the gates. After a view turn, the arrows still follow the screen."
+        ],
+      },
+    ],
   },
   {
     nav: 'Racing',
@@ -46,7 +148,7 @@ window.GAMES = [
     genre: '3D Platform',
     title: 'The Long Slide Home',
     description: 'Race down eight icy mountains before the clock runs out and the bird of prey snatches your lost chicks.',
-    // Rubric and Redesign notes from Redesign/exported_tasks_231 (final rubric evaluation).
+    // Rubric and Redesign notes from saida (1).jsonl (final rubric evaluation).
     questions: [
       {
         "tier": "The design document",
@@ -155,7 +257,7 @@ window.GAMES = [
     genre: 'Rhythm',
     title: 'OARSONG — Rhythm of the Northern Sea',
     description: 'Row to the beat of the war drums. Waves and weather rise with the song, pitching the ship and sweeping spray across the deck. Read the true rhythm through the storm motion — the sea never alters the musical beat.',
-    // Rubric and Redesign notes from Redesign/exported_tasks_231 (final rubric evaluation).
+    // Rubric and Redesign notes from saida (1).jsonl (final rubric evaluation).
     questions: [
       {
         "tier": "The design document",

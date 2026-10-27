@@ -1,4 +1,5 @@
-# Source export: only needed to rebuild the Redesign entries, not to view the page.
+# Source exports: only needed to rebuild the Redesign entries, not to view the page.
 Redesign/exported_tasks_*.jsonl
+saida*.jsonl
 
 .DS_Store

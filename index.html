@@ -315,8 +315,8 @@ function drawStage(){
   $('stagebar').innerHTML = !v ? '' : `
     <div class="stage-id"><b>${esc(v.label)}</b><span>${esc(v.file || 'No file registered')}</span></div>
     <div class="tools">
-      <button class="tool" id="traj" aria-label="Download trajectory"
-              title="${esc(t ? `Download trajectory (${fileName(t)})` : 'No trajectory for this version')}" ${t ? '' : 'disabled'}>${svg('dl')}</button>
+      ${t ? `<button class="tool text" id="traj" aria-label="Download trajectory"
+              title="${esc(`Download trajectory (${fileName(t)})`)}">${svg('dl')}Trajectory</button>` : ''}
       <button class="tool" id="reload" aria-label="Restart game" title="Restart (R)">${svg('reload')}</button>
       <button class="tool" id="full" aria-label="Open full screen" title="Full screen (F)">${svg('full')}</button>
     </div>`;

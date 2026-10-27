@@ -66,6 +66,7 @@ window.GAMES = [
     versions: [
       {
         label: 'Gemini 4 Argon', type: 'html', file: ARGON + 'puzzle__gemini-4-argon.html',
+        trajectory: ARGON + 'trajectory/puzzle__gemini-4-argon.json',
         // Rubric from argon_rubric_eval_2026-10-27.json (human-reviewed scores and comments).
         marks: [true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, false, false, true, false, true, false, true, true, false, true, false, false, false, false, true, true, true],
         comments: [
@@ -191,6 +192,7 @@ window.GAMES = [
     versions: [
       {
         label: 'Gemini 4 Argon', type: 'html', file: ARGON + 'rhythm__gemini-4-argon.html',
+        trajectory: ARGON + 'trajectory/rhythm__gemini-4-argon.json',
         // Rubric from argon_rubric_eval_2026-10-27.json (human-reviewed scores and comments).
         marks: [true, true, true, true, true, true, true, true, true, false, true, true, true, false, true, true, false, false, false, true, true, false, true, false, true, false, false, false, true, true, true, true],
         comments: [
@@ -317,6 +319,7 @@ window.GAMES = [
     versions: [
       {
         label: 'Gemini 4 Argon', type: 'html', file: ARGON + '3d-platform__gemini-4-argon.html',
+        trajectory: ARGON + 'trajectory/3d-platform__gemini-4-argon.json',
         // Rubric from argon_rubric_eval_2026-10-27.json (human-reviewed scores and comments).
         marks: [true, true, true, true, true, true, true, false, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, true, true, false, false, false, false, false, true, true, true, true],
         comments: [

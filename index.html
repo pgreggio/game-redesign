@@ -94,8 +94,18 @@ a{color:var(--accent)} a:hover{color:var(--accent-2)}
 .tool:disabled:hover{background:var(--panel)}
 .tool svg{display:block}
 
-.notes{padding:16px 20px;background:var(--sunk);border-bottom:1px solid var(--line);font-size:13.5px;color:var(--text-3)}
-.notes[hidden]{display:none}
+#notesbox[hidden]{display:none}
+.notes-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.notes-box summary{display:flex;align-items:center;gap:8px;padding:14px 18px;cursor:pointer;list-style:none;
+                   font-size:14px;font-weight:600;user-select:none}
+.notes-box summary::-webkit-details-marker{display:none}
+.notes-box summary small{font-size:12.5px;font-weight:400;color:var(--dim)}
+.notes-box summary::after{content:'';margin-left:auto;width:0;height:0;border-left:5px solid var(--dim);
+                          border-top:5px solid transparent;border-bottom:5px solid transparent;transition:transform .15s}
+.notes-box[open] summary::after{transform:rotate(90deg)}
+.notes-box summary:hover{background:var(--hover)}
+.notes{padding:16px 20px;max-height:60vh;overflow-y:auto;background:var(--sunk);border-top:1px solid var(--line);
+       font-size:13.5px;color:var(--text-3)}
 .notes h1{font-size:15px;margin:0 0 10px;color:var(--text)}
 .notes h2{font-size:13.5px;margin:16px 0 6px;color:var(--text)}
 .notes h3{font-size:13px;margin:14px 0 6px;color:var(--text)}
@@ -199,9 +209,10 @@ button.dot.n:hover{background:#4A2219}
 
         <section class="stage">
           <div class="stage-bar" id="stagebar"></div>
-          <div class="notes" id="notes" hidden></div>
           <div class="holder" id="holder"></div>
         </section>
+
+        <section id="notesbox" hidden></section>
 
         <section class="rubric" id="rubric"></section>
       </div>
@@ -300,22 +311,28 @@ function drawStage(){
   $('stagebar').innerHTML = !v ? '' : `
     <div class="stage-id"><b>${esc(v.label)}</b><span>${esc(v.file || 'No file registered')}</span></div>
     <div class="tools">
-      ${v.notes ? `<button class="tool text ${state.notes?'on':''}" id="notesbtn" aria-expanded="${state.notes}">${svg('notes')}Notes</button>` : ''}
       <button class="tool" id="traj" aria-label="Download trajectory"
               title="${esc(t ? `Download trajectory (${fileName(t)})` : 'No trajectory for this version')}" ${t ? '' : 'disabled'}>${svg('dl')}</button>
       <button class="tool" id="reload" aria-label="Restart game" title="Restart (R)">${svg('reload')}</button>
       <button class="tool" id="full" aria-label="Open full screen" title="Full screen (F)">${svg('full')}</button>
     </div>`;
+  drawNotes();
   if (!v) return;
-  const nb = $('notesbtn');
-  if (nb) nb.onclick = () => { state.notes = !state.notes; drawStage(); };
   if (t) $('traj').onclick = downloadTrajectory;
   $('reload').onclick = loadScene;
   $('full').onclick = openFull;
+}
 
-  const notes = $('notes');
-  notes.hidden = !(v.notes && state.notes);
-  notes.innerHTML = notes.hidden ? '' : md(v.notes);
+/* ---------- notes: collapsible section under the preview ---------- */
+function drawNotes(){
+  const box = $('notesbox'), v = cur();
+  box.hidden = !v?.notes;
+  if (box.hidden){ box.innerHTML = ''; return; }
+  box.innerHTML = `<details class="notes-box" id="notesdetails" ${state.notes ? 'open' : ''}>
+      <summary>${svg('notes')}<span>Notes</span><small>${esc(v.label)}</small></summary>
+      <div class="notes">${md(v.notes)}</div>
+    </details>`;
+  $('notesdetails').ontoggle = e => { state.notes = e.target.open; };
 }
 
 function emptyStage(title, sub){

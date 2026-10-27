@@ -283,7 +283,7 @@ function drawHead(){
     <div class="kicker">${esc(g.genre || 'Game')} · ${state.game + 1} of ${DATA.length}</div>
     <h1>${esc(g.title)}</h1>
     ${g.description ? `<div class="prompt">
-      <div class="label">${esc(g.descLabel || 'About')}</div>
+      <div class="label">${esc(g.descLabel || 'Prompt')}</div>
       <p class="ptext ${state.open?'open':''}" id="ptext">${esc(g.description)}</p>
       <button class="link" id="expand" hidden>${state.open ? 'Show less' : 'Show more'}</button>
     </div>` : ''}`;

@@ -58,6 +58,8 @@ a{color:var(--accent)} a:hover{color:var(--accent-2)}
 /* main */
 .main{flex:999 1 560px;min-width:0;padding:32px 40px 64px}
 .wrap{max-width:1120px;width:100%;display:flex;flex-direction:column;gap:28px}
+/* with the menu hidden, the content (and the preview) grows into the freed space, up to the render width */
+.layout.collapsed .wrap{max-width:1600px}
 
 .head{display:flex;flex-direction:column;gap:12px}
 .kicker{font-size:12px;font-weight:500;color:var(--dim);letter-spacing:.02em}

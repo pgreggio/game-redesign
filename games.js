@@ -21,13 +21,6 @@ const ARGON = 'Gemini 4 Argon Games/';
 
 window.GAMES = [
   {
-    nav: 'Shooting',
-    genre: 'Shooting',
-    title: 'Lone Officer — Tactical Bank Rescue',
-    description: 'Dispatch reports an armed syndicate has locked down the First National Bank. SWAT is twenty minutes out. You are at the front doors right now — alone. Rescue every hostage, then get out through the green EXIT door.',
-    versions: [{ label: 'Gemini 4 Argon', type: 'html', file: ARGON + 'shooting__gemini-4-argon.html' }],
-  },
-  {
     nav: 'Puzzle',
     genre: 'Puzzle',
     title: 'Wellspring',
@@ -135,13 +128,6 @@ window.GAMES = [
         ],
       },
     ],
-  },
-  {
-    nav: 'Racing',
-    genre: 'Racing',
-    title: 'Courier Chaos — 3D Motorcycle Delivery Racing',
-    description: 'Ride a delivery motorcycle through the city and drop off the package before the delivery clock hits zero, or the customer cancels the order.',
-    versions: [{ label: 'Gemini 4 Argon', type: 'html', file: ARGON + 'racing__gemini-4-argon.html' }],
   },
   {
     nav: '3D Platform',

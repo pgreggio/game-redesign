@@ -205,11 +205,6 @@ button.crit:hover .desc{text-decoration:underline}
 .score{border:0;background:none;padding:4px 8px;border-radius:6px;font-family:var(--mono);font-size:13.5px;
        font-variant-numeric:tabular-nums}
 .score:hover{background:var(--hover)}
-.tier-s{font-size:12px;color:var(--dim)}
-.where{display:flex;gap:6px;flex-wrap:wrap}
-.chip{border:1px solid var(--line);background:none;border-radius:999px;padding:1px 10px;font-size:12px;color:var(--text-3)}
-.chip:hover{background:var(--hover);color:var(--text)}
-.fails{font-family:var(--mono);font-size:13.5px;color:var(--fail-fg);background:var(--fail-bg);border-radius:6px;padding:1px 9px}
 
 @media (max-width:700px){
   .bar{padding:12px 16px}
@@ -544,7 +539,6 @@ function drawRubric(){
 
 /* ---------- overview: all samples, added up per version ----------
    Versions are matched across samples by label, rubric tiers by name. */
-const areaOf = q => /^\*\*(.+?)\*\*\s*[—–-]/.exec(String(q.q ?? ''))?.[1] || 'Other';
 function consolidate(){
   const labels = [...new Set(DATA.flatMap(g => (g.versions || []).map(v => v.label)))];
   const tiers  = [...new Set(DATA.flatMap(g => (g.questions || []).filter(q => !q.rating).map(q => q.tier)))];
@@ -560,18 +554,7 @@ function consolidate(){
     out.avg = out.ratings.length ? out.ratings.reduce((a,b) => a+b, 0) / out.ratings.length : null;
     return out;
   });
-  // failed checks grouped by the criterion's area tag, with the samples they failed in
-  const areas = {};
-  DATA.forEach((g,gi) => (g.questions || []).forEach((q,r) => {
-    if (q.rating) return;
-    (g.versions || []).forEach((v,k) => {
-      if (v.marks?.[r] !== false) return;
-      const a = areas[areaOf(q)] ||= { name:areaOf(q), tier:q.tier, n:{}, all:0, where:new Map() };
-      a.n[v.label] = (a.n[v.label] || 0) + 1; a.all++;
-      if (!a.where.has(gi)) a.where.set(gi, k);
-    });
-  }));
-  return { labels, tiers, per, areas:Object.values(areas).sort((a,b) => b.all - a.all) };
+  return { labels, tiers, per };
 }
 
 function drawCover(){
@@ -613,14 +596,6 @@ function drawCover(){
       }).join('') + `</div>`;
   });
 
-  let fails = hrow('Area');
-  c.areas.forEach(a => fails += `<div class="grid r" ${cols}><div class="crit">
-      <div class="q"><span class="area">${esc(a.name)}</span><span class="tier-s">${esc(a.tier.split('—')[0].trim())}</span></div>
-      <div class="where">${[...a.where].map(([gi,k]) =>
-        `<button class="chip pick" data-g="${gi}" data-k="${k}">${name(DATA[gi])}</button>`).join('')}</div>
-    </div>` +
-    c.labels.map(l => `<div class="cell">${a.n[l] ? `<span class="fails" title="${a.n[l]} failed">${a.n[l]}</span>` : `<span class="u">–</span>`}</div>`).join('') + `</div>`);
-
   $('cover').innerHTML = `
     <section class="sec">
       <div class="rubric-h"><h2>By version</h2><span>All games combined</span></div>
@@ -633,11 +608,6 @@ function drawCover(){
     <section class="sec">
       <div class="rubric-h"><h2>By Game</h2><span>Checks passed per version</span></div>
       <div class="table"><div class="table-in">${samples}</div></div>
-    </section>
-    <section class="sec">
-      <div class="rubric-h"><h2>Where checks failed</h2><span>Failed checks by area, most first</span></div>
-      ${c.areas.length ? `<div class="table"><div class="table-in">${fails}</div></div>`
-                       : `<p class="lede">No failed checks.</p>`}
     </section>`;
   $('cover').querySelectorAll('.pick').forEach(b =>
     b.onclick = () => go(+b.dataset.g, +b.dataset.k));

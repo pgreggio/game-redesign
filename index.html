@@ -119,10 +119,10 @@ a{color:var(--accent)} a:hover{color:var(--accent-2)}
 .notes code{font-family:var(--mono);font-size:12px;background:var(--hover);padding:1px 5px;border-radius:4px}
 .notes hr{border:0;border-top:1px solid var(--line);margin:16px 0}
 
-.holder{aspect-ratio:16/9;max-height:80vh;background:var(--stage);position:relative;overflow:hidden}
+.holder{width:100%;aspect-ratio:16/9;max-height:80vh;background:var(--stage);position:relative;overflow:hidden}
 .holder iframe,.holder model-viewer{width:100%;height:100%;border:0;display:block}
-/* games render at a desktop size and shrink to the box, so their HUD keeps full-screen proportions */
-.holder iframe.scaled{position:absolute;left:50%;top:50%;width:1600px;height:900px;
+/* games render 900px tall at the box's shape and shrink to it, so their HUD keeps full-screen proportions */
+.holder iframe.scaled{position:absolute;left:50%;top:50%;width:var(--fw,1600px);height:900px;
                       transform:translate(-50%,-50%) scale(var(--fit,1))}
 .holder model-viewer{background:var(--stage);--poster-color:transparent}
 .holder:fullscreen{height:100%}
@@ -383,10 +383,15 @@ function loadScene(){
   holder.appendChild(f);
 }
 
-const SCENE_W = 1600, SCENE_H = 900;                  // keep in sync with .holder iframe.scaled
+// Renders 900px tall and as wide as the box's shape needs (1600px at 16:9), then scales to the box,
+// so it always fills the box: on short windows the box gets wider than 16:9 and the frame widens with it.
+const SCENE_H = 900;                                   // keep in sync with .holder iframe.scaled
 function fitScene(){
   const h = $('holder');
-  h.style.setProperty('--fit', Math.min(h.clientWidth / SCENE_W, h.clientHeight / SCENE_H));
+  if (!h.clientHeight) return;
+  const fit = h.clientHeight / SCENE_H;
+  h.style.setProperty('--fit', fit);
+  h.style.setProperty('--fw', h.clientWidth / fit + 'px');
 }
 new ResizeObserver(fitScene).observe($('holder'));
 

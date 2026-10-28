@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Revelo: Games in Gemini 4 Argon &amp; Revelo Redesign OTS</title>
+<title>Revelo: Games in Gemini 4 Argon &amp; Revelo Rebuild OTS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -220,7 +220,7 @@ button.crit:hover .desc{text-decoration:underline}
             aria-label="Hide game menu" title="Hide game menu (M)"></button>
     <div class="brand"><div class="logo">R</div><b>Revelo</b></div>
     <span class="slash" aria-hidden="true">/</span>
-    <span class="sub">Games in Gemini 4 Argon &amp; Revelo Redesign OTS</span>
+    <span class="sub">Games in Gemini 4 Argon &amp; Revelo Rebuild OTS</span>
   </header>
 
   <div class="layout" id="layout">
@@ -557,17 +557,21 @@ function consolidate(){
   return { labels, tiers, per };
 }
 
+// The cover spells out whose version it is; the game pages keep the short tab label.
+const COVER_LABEL = { 'Rebuild':'Revelo Rebuild' };
+const coverLabel = l => esc(COVER_LABEL[l] || l);
+
 function drawCover(){
   const c = consolidate();
   const cols = `style="grid-template-columns:minmax(0,1fr) repeat(${c.labels.length},120px)"`;
   const hrow = first => `<div class="grid hrow" ${cols}><span class="th">${first}</span>` +
-    c.labels.map(l => `<span class="th">${esc(l)}</span>`).join('') + `</div>`;
+    c.labels.map(l => `<span class="th">${coverLabel(l)}</span>`).join('') + `</div>`;
   const frac = ([p, n]) => n ? `${p}/${n}<span class="pct">${pct(p, n)}</span>` : '—';
   const name = g => esc(g.nav || g.title);
 
   const tiles = c.per.map(p => {
     const r = ratio(p);
-    return `<div class="tile"><span class="tile-l">${esc(p.label)}</span>
+    return `<div class="tile"><span class="tile-l">${coverLabel(p.label)}</span>
       <span class="tile-v" style="color:${tone(r)}">${r === null ? '—' : pct(p.passed, p.total)}</span>
       <div class="meter"><i style="width:${(r ?? 0) * 100}%;background:${tone(r)}"></i></div>
       <span class="tile-s">${p.scored ? `${p.passed} of ${p.total} checks passed · ${p.total - p.passed} failed` : 'Not scored'}</span>
@@ -592,7 +596,7 @@ function drawCover(){
         if (k < 0) return `<div class="cell"><span class="u" title="No such version">–</span></div>`;
         const s = score(g, g.versions[k]);
         return `<div class="cell"><button class="score pick" data-g="${gi}" data-k="${k}" style="color:${tone(ratio(s))}"
-          title="Open ${name(g)} · ${esc(l)}">${scoreText(s)}</button></div>`;
+          title="Open ${name(g)} · ${coverLabel(l)}">${scoreText(s)}</button></div>`;
       }).join('') + `</div>`;
   });
 
